@@ -6,6 +6,7 @@ from app.schemas.animal import (
     AnimalCreate,
     AnimalDetailResponse,
     AnimalListResponse,
+    AnimalStatsResponse,
     AnimalUpdate,
 )
 from app.services import animal as animal_service
@@ -17,6 +18,11 @@ router = APIRouter(prefix="/animals", tags=["animals"])
 @router.get("", response_model=list[AnimalListResponse])
 def list_animals(db: Session = Depends(get_db)) -> list[AnimalListResponse]:
     return animal_service.list_active_animals(db)
+
+
+@router.get("/stats", response_model=AnimalStatsResponse)
+def get_animal_stats(db: Session = Depends(get_db)) -> AnimalStatsResponse:
+    return animal_service.get_animal_stats(db)
 
 
 @router.post(

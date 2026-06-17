@@ -49,3 +49,8 @@ class AnimalDetailResponse(BaseModel):
     is_active: bool | None
     created_at: datetime | None
     updated_at: datetime | None
+
+class AnimalStatsResponse(BaseModel):
+    total_active: int
+    male_count: int
+    female_count: int

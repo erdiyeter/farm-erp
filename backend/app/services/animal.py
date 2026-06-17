@@ -2,8 +2,11 @@ from sqlalchemy.orm import Session
 
 from app.models.animal import Animal
 from app.repositories import animal as animal_repository
-from app.schemas.animal import AnimalCreate, AnimalUpdate
-
+from app.schemas.animal import (
+    AnimalCreate,
+    AnimalStatsResponse,
+    AnimalUpdate,
+)
 
 def list_active_animals(db: Session) -> list[Animal]:
     return animal_repository.get_active_animals(db)
@@ -43,3 +46,10 @@ def update_animal(
 def soft_delete_animal(db: Session, animal_id: int) -> Animal:
     animal = get_animal(db, animal_id)
     return animal_repository.soft_delete_animal(db, animal)
+
+def get_animal_stats(db: Session) -> AnimalStatsResponse:
+    return AnimalStatsResponse(
+        total_active=animal_repository.get_total_active_animals(db),
+        male_count=animal_repository.get_male_animals_count(db),
+        female_count=animal_repository.get_female_animals_count(db),
+    )

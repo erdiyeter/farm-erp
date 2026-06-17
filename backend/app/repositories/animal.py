@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.animal import Animal
@@ -49,3 +49,25 @@ def soft_delete_animal(db: Session, animal: Animal) -> Animal:
     db.commit()
     db.refresh(animal)
     return animal
+
+def get_total_active_animals(db: Session) -> int:
+    statement = select(func.count()).where(Animal.is_active.is_(True))
+    return db.scalar(statement) or 0
+
+
+def get_male_animals_count(db: Session) -> int:
+    statement = (
+        select(func.count())
+        .where(Animal.is_active.is_(True))
+        .where(Animal.sex == "Male")
+    )
+    return db.scalar(statement) or 0
+
+
+def get_female_animals_count(db: Session) -> int:
+    statement = (
+        select(func.count())
+        .where(Animal.is_active.is_(True))
+        .where(Animal.sex == "Female")
+    )
+    return db.scalar(statement) or 0
