@@ -15,6 +15,8 @@ import FinanceRecords from "./pages/FinanceRecords";
 import FinanceDetail from "./pages/FinanceDetail";
 import FinanceEdit from "./pages/FinanceEdit";
 import HealthRecords from "./pages/HealthRecords";
+import HealthRecordDetail from "./pages/HealthRecordDetail";
+import HealthRecordEdit from "./pages/HealthRecordEdit";
 import "./App.css";
 
 function App() {
@@ -67,6 +69,14 @@ function App() {
             <Route path="/finance/:id" element={<FinanceDetail />} />
             <Route path="/finance/:id/edit" element={<FinanceEdit />} />
             <Route path="/health-records" element={<HealthRecords />} />
+            <Route
+              path="/health-records/:id"
+              element={<HealthRecordDetail />}
+            />
+            <Route
+              path="/health-records/:id/edit"
+              element={<HealthRecordEdit />}
+            />
           </Routes>          
         </main>
       </div>

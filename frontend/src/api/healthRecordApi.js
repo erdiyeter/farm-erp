@@ -47,3 +47,45 @@ export async function createHealthRecord(data) {
 
   return response.json();
 }
+
+export async function getHealthRecordById(id) {
+  const response = await fetch(`${API_BASE_URL}/health-records/${id}`);
+
+  if (!response.ok) {
+    throw new Error(
+      await getHealthRecordError(response, "Failed to fetch health record")
+    );
+  }
+
+  return response.json();
+}
+
+export async function updateHealthRecord(id, data) {
+  const response = await fetch(`${API_BASE_URL}/health-records/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await getHealthRecordError(response, "Failed to update health record")
+    );
+  }
+
+  return response.json();
+}
+
+export async function deleteHealthRecord(id) {
+  const response = await fetch(`${API_BASE_URL}/health-records/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await getHealthRecordError(response, "Failed to delete health record")
+    );
+  }
+}
