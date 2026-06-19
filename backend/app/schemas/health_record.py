@@ -23,6 +23,18 @@ class HealthRecordCreate(HealthRecordBase):
     pass
 
 
+class HealthRecordUpdate(BaseModel):
+    animal_id: int | None = None
+    record_type: HealthRecordType | None = None
+    diagnosis: str | None = Field(default=None, max_length=150)
+    treatment: str | None = None
+    medicine_name: str | None = Field(default=None, max_length=150)
+    dosage: str | None = Field(default=None, max_length=100)
+    record_date: date | None = None
+    withdrawal_end_date: date | None = None
+    notes: str | None = None
+
+
 class HealthRecordResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
