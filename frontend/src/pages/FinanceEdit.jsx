@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
-  createFinanceRecord,
-  getFinanceRecords,
+  getFinanceRecord,
+  updateFinanceRecord,
 } from "../api/financeApi";
-import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
-import PageHeader from "../components/PageHeader";
 
 const initialFormData = {
   record_type: "income",
@@ -16,8 +15,10 @@ const initialFormData = {
   description: "",
 };
 
-function FinanceRecords() {
-  const [records, setRecords] = useState([]);
+function FinanceEdit() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -25,10 +26,17 @@ function FinanceRecords() {
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-    async function loadFinanceRecords() {
+    async function loadFinanceRecord() {
       try {
-        const data = await getFinanceRecords();
-        setRecords(data);
+        const record = await getFinanceRecord(id);
+
+        setFormData({
+          record_type: record.record_type || "income",
+          category: record.category || "",
+          amount: record.amount ?? "",
+          record_date: record.record_date || "",
+          description: record.description || "",
+        });
       } catch (err) {
         setError(err.message);
       } finally {
@@ -36,8 +44,8 @@ function FinanceRecords() {
       }
     }
 
-    loadFinanceRecords();
-  }, []);
+    loadFinanceRecord();
+  }, [id]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -63,11 +71,9 @@ function FinanceRecords() {
     };
 
     try {
-      await createFinanceRecord(payload);
-      const data = await getFinanceRecords();
-      setRecords(data);
-      setFormData(initialFormData);
-      setSuccessMessage("Finance record created successfully.");
+      await updateFinanceRecord(id, payload);
+      setSuccessMessage("Finance record updated successfully.");
+      setTimeout(() => navigate(`/finance/${id}`), 700);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -75,12 +81,17 @@ function FinanceRecords() {
     }
   }
 
+  if (loading) {
+    return <Loading text="Loading finance record..." className="status-text" />;
+  }
+
+  if (error && !saving && !successMessage) {
+    return <ErrorMessage message={error} className="error-text" />;
+  }
+
   return (
     <div className="page-card">
-      <PageHeader
-        title="Finance Records"
-        subtitle="Create and review income and expense records"
-      />
+      <h1>Edit Finance Record</h1>
 
       {error && <ErrorMessage message={error} className="error-text" />}
       {successMessage && <p className="status-text">{successMessage}</p>}
@@ -152,51 +163,15 @@ function FinanceRecords() {
         </div>
 
         <button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Create Finance Record"}
+          {saving ? "Saving..." : "Save"}
         </button>
+
+        <Link to={`/finance/${id}`}>
+          <button type="button">Cancel</button>
+        </Link>
       </form>
-
-      {loading ? (
-        <Loading text="Loading finance records..." className="status-text" />
-      ) : records.length === 0 ? (
-        <p className="empty-text">No finance records found.</p>
-      ) : (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Type</th>
-              <th>Category</th>
-              <th>Amount</th>
-              <th>Date</th>
-              <th>Description</th>
-              <th>Created At</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {records.map((record) => (
-              <tr key={record.id}>
-                <td>{record.id}</td>
-                <td>{record.record_type}</td>
-                <td>{record.category}</td>
-                <td>{record.amount}</td>
-                <td>{record.record_date}</td>
-                <td>{record.description || "-"}</td>
-                <td>{record.created_at || "-"}</td>
-                <td>
-                  <ButtonLink to={`/finance/${record.id}`} variant="secondary">
-                    View
-                  </ButtonLink>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
     </div>
   );
 }
 
-export default FinanceRecords;
+export default FinanceEdit;

@@ -12,8 +12,8 @@ import InventoryItemEdit from "./pages/InventoryItemEdit";
 import InventoryMovements from "./pages/InventoryMovements";
 import InventoryDashboard from "./pages/InventoryDashboard";
 import FinanceRecords from "./pages/FinanceRecords";
-import FinanceRecordDetail from "./pages/FinanceRecordDetail";
-import FinanceRecordEdit from "./pages/FinanceRecordEdit";
+import FinanceDetail from "./pages/FinanceDetail";
+import FinanceEdit from "./pages/FinanceEdit";
 import "./App.css";
 
 function App() {
@@ -62,8 +62,8 @@ function App() {
               element={<InventoryMovements />}
             />
             <Route path="/finance" element={<FinanceRecords />} />
-            <Route path="/finance/:id" element={<FinanceRecordDetail />} />
-            <Route path="/finance/:id/edit" element={<FinanceRecordEdit />} />
+            <Route path="/finance/:id" element={<FinanceDetail />} />
+            <Route path="/finance/:id/edit" element={<FinanceEdit />} />
           </Routes>          
         </main>
       </div>
