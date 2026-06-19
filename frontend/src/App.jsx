@@ -14,6 +14,7 @@ import InventoryDashboard from "./pages/InventoryDashboard";
 import FinanceRecords from "./pages/FinanceRecords";
 import FinanceDetail from "./pages/FinanceDetail";
 import FinanceEdit from "./pages/FinanceEdit";
+import HealthRecords from "./pages/HealthRecords";
 import "./App.css";
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
             <Link to="/inventory/items">Inventory Items</Link>
             <Link to="/inventory/movements">Inventory Movements</Link>
             <Link to="/finance">Finance</Link>
+            <Link to="/health-records">Health Records</Link>
           </div>
         </nav>
 
@@ -64,6 +66,7 @@ function App() {
             <Route path="/finance" element={<FinanceRecords />} />
             <Route path="/finance/:id" element={<FinanceDetail />} />
             <Route path="/finance/:id/edit" element={<FinanceEdit />} />
+            <Route path="/health-records" element={<HealthRecords />} />
           </Routes>          
         </main>
       </div>
