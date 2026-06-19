@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers.animal import router as animal_router
 from app.routers.dashboard import router as dashboard_router
 from app.routers.finance import router as finance_router
+from app.routers.health_record import router as health_record_router
 from app.routers.inventory import router as inventory_router
 from app.routers.milk_record import router as milk_record_router
 from app.routers.vaccination import router as vaccination_router
@@ -22,6 +23,7 @@ app.add_middleware(
 app.include_router(animal_router, prefix="/api/v1")
 app.include_router(dashboard_router, prefix="/api/v1")
 app.include_router(finance_router, prefix="/api/v1/finance")
+app.include_router(health_record_router, prefix="/api/v1")
 app.include_router(inventory_router, prefix="/api/v1")
 app.include_router(milk_record_router, prefix="/api/v1")
 app.include_router(vaccination_router, prefix="/api/v1")
