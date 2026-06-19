@@ -106,3 +106,27 @@ Offline sync için yerel kayıt kuyruğu.
 
 # Not
 Eski dosyalardaki UUID, event_guid, trigger/outcome yapısı ileride değerlidir. Ancak MVP'de bunları erken eklemek öğrenme sürecini gereksiz zorlaştırır.
+
+---
+
+# Implemented Layer 2 Tables
+
+## financial_records
+Finance income and expense records.
+
+```sql
+CREATE TABLE financial_records (
+    id SERIAL PRIMARY KEY,
+    record_type VARCHAR(20) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    amount NUMERIC(10,2) NOT NULL,
+    record_date DATE NOT NULL,
+    description TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    CONSTRAINT ck_financial_records_record_type
+        CHECK (record_type IN ('income', 'expense')),
+    CONSTRAINT ck_financial_records_amount_positive
+        CHECK (amount > 0)
+);
+```

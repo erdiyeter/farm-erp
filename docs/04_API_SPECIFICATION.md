@@ -124,3 +124,39 @@ Response:
   "detail": "Animal not found"
 }
 ```
+
+---
+
+# Finance API
+
+## GET /finance
+Lists active finance records newest-first.
+
+## POST /finance
+Creates an income or expense record.
+
+Request:
+```json
+{
+  "record_type": "income",
+  "category": "Milk sales",
+  "amount": 1250.50,
+  "record_date": "2026-06-19",
+  "description": "Daily milk income"
+}
+```
+
+## GET /finance/{id}
+Returns one active finance record.
+
+## PATCH /finance/{id}
+Partially updates one active finance record.
+
+## DELETE /finance/{id}
+Soft deletes one finance record by setting it inactive.
+
+Validation:
+- `record_type`: `income` or `expense`
+- `amount`: greater than 0
+- `category`: not empty
+- `record_date`: required

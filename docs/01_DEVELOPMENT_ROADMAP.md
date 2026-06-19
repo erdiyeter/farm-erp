@@ -127,3 +127,16 @@ AI bu projenin erken aşama özelliği değildir. AI için önce gerçek veri ge
 - Kod düzenleme
 - Basit testler
 - Katman 1 kapanışı
+ 
+
+## Sprint 7
+- Inventory module backend and frontend
+- Inventory items CRUD
+- Inventory movements
+- Inventory summary and low stock view
+
+## Sprint 8
+- Finance module backend and frontend
+- Finance records create/list/detail/edit/delete
+- Soft delete support
+- Finance module MVP closure
