@@ -14,13 +14,39 @@ const initialFormData = {
   is_completed: false,
 };
 
+function getTodayText() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function Alarms() {
   const [alarms, setAlarms] = useState([]);
   const [formData, setFormData] = useState(initialFormData);
+  const [activeFilter, setActiveFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  const today = getTodayText();
+  const filteredAlarms = alarms.filter((alarm) => {
+    if (activeFilter === "open") {
+      return !alarm.is_completed;
+    }
+
+    if (activeFilter === "completed") {
+      return alarm.is_completed;
+    }
+
+    if (activeFilter === "overdue") {
+      return !alarm.is_completed && alarm.due_date < today;
+    }
+
+    if (activeFilter === "upcoming") {
+      return !alarm.is_completed && alarm.due_date >= today;
+    }
+
+    return true;
+  });
 
   useEffect(() => {
     async function loadAlarms() {
@@ -171,9 +197,25 @@ function Alarms() {
         </button>
       </form>
 
+      <div>
+        <label>
+          Filter:
+          <select
+            value={activeFilter}
+            onChange={(event) => setActiveFilter(event.target.value)}
+          >
+            <option value="all">All alarms</option>
+            <option value="open">Open alarms</option>
+            <option value="completed">Completed alarms</option>
+            <option value="overdue">Overdue alarms</option>
+            <option value="upcoming">Upcoming alarms</option>
+          </select>
+        </label>
+      </div>
+
       {loading ? (
         <Loading text="Loading alarms..." className="status-text" />
-      ) : alarms.length === 0 ? (
+      ) : filteredAlarms.length === 0 ? (
         <p className="empty-text">No alarms found.</p>
       ) : (
         <table className="data-table">
@@ -192,7 +234,7 @@ function Alarms() {
           </thead>
 
           <tbody>
-            {alarms.map((alarm) => (
+            {filteredAlarms.map((alarm) => (
               <tr key={alarm.id}>
                 <td>{alarm.id}</td>
                 <td>{alarm.title}</td>

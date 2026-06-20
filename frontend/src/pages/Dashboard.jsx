@@ -4,17 +4,34 @@ import Loading from "../components/Loading";
 import ErrorMessage from "../components/ErrorMessage";
 import KpiCard from "../components/KpiCard";
 import { getDashboardStats } from "../api/dashboardApi";
+import { getAlarms } from "../api/alarmApi";
+
+function getTodayText() {
+  return new Date().toISOString().slice(0, 10);
+}
 
 function Dashboard() {
   const [stats, setStats] = useState(null);
+  const [alarms, setAlarms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const today = getTodayText();
+  const openAlarms = alarms.filter((alarm) => !alarm.is_completed);
+  const upcomingAlarms = openAlarms.filter(
+    (alarm) => alarm.due_date >= today
+  );
+  const overdueAlarms = openAlarms.filter((alarm) => alarm.due_date < today);
 
   useEffect(() => {
     async function loadDashboardStats() {
       try {
-        const data = await getDashboardStats();
-        setStats(data);
+        const [dashboardData, alarmData] = await Promise.all([
+          getDashboardStats(),
+          getAlarms(),
+        ]);
+        setStats(dashboardData);
+        setAlarms(alarmData);
       } catch {
         setError("Unable to load dashboard data.");
       } finally {
@@ -52,6 +69,23 @@ function Dashboard() {
       <div className="dashboard-links">
         <Link to="/animals">Animals</Link>
       </div>
+
+      <section className="dashboard-section">
+        <div className="dashboard-section-header">
+          <h2>Alarm Summary</h2>
+          <p>Open, upcoming, and overdue manual alarms</p>
+        </div>
+
+        <div className="dashboard-kpi-grid">
+          <KpiCard title="Total Open Alarms" value={openAlarms.length} />
+          <KpiCard title="Upcoming Alarms" value={upcomingAlarms.length} />
+          <KpiCard title="Overdue Alarms" value={overdueAlarms.length} />
+        </div>
+
+        <div className="dashboard-links">
+          <Link to="/alarms">View Alarms</Link>
+        </div>
+      </section>
 
       <section className="dashboard-section">
         <div className="dashboard-section-header">
