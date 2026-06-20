@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.animal import Animal
+from app.models.health_record import HealthRecord
 from app.models.milk_record import MilkRecord
 from app.models.withdrawal_lock import WithdrawalLock
 
@@ -41,6 +42,38 @@ def get_recent_milk_records(
         .limit(limit)
     )
     return list(db.scalars(statement).all())
+
+
+def count_health_records(db: Session) -> int:
+    statement = select(func.count()).select_from(HealthRecord)
+    return db.scalar(statement) or 0
+
+
+def count_today_health_records(db: Session) -> int:
+    today = date.today()
+    statement = select(func.count()).where(
+        HealthRecord.record_date == today
+    )
+    return db.scalar(statement) or 0
+
+
+def count_last_7_days_health_records(db: Session) -> int:
+    today = date.today()
+    start_date = today - timedelta(days=6)
+    statement = select(func.count()).where(
+        HealthRecord.record_date >= start_date,
+        HealthRecord.record_date <= today,
+    )
+    return db.scalar(statement) or 0
+
+
+def count_active_withdrawal_health_records(db: Session) -> int:
+    today = date.today()
+    statement = select(func.count()).where(
+        HealthRecord.withdrawal_end_date.is_not(None),
+        HealthRecord.withdrawal_end_date >= today,
+    )
+    return db.scalar(statement) or 0
 
 
 def count_active_withdrawal_locks(db: Session) -> int:

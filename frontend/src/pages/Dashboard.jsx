@@ -84,6 +84,36 @@ function Dashboard() {
 
       <section className="dashboard-section">
         <div className="dashboard-section-header">
+          <h2>Health Summary</h2>
+          <p>Recent health records and active withdrawal periods</p>
+        </div>
+
+        <div className="dashboard-kpi-grid">
+          <KpiCard
+            title="Total Health Records"
+            value={stats.total_health_records}
+          />
+          <KpiCard
+            title="Today Health Records"
+            value={stats.today_health_records}
+          />
+          <KpiCard
+            title="Last 7 Days Health Records"
+            value={stats.last_7_days_health_records}
+          />
+          <KpiCard
+            title="Active Withdrawal Health Records"
+            value={stats.active_withdrawal_health_records}
+          />
+        </div>
+
+        <div className="dashboard-links">
+          <Link to="/health-records">View Health Records</Link>
+        </div>
+      </section>
+
+      <section className="dashboard-section">
+        <div className="dashboard-section-header">
           <h2>Alarm Summary</h2>
           <p>Open, upcoming, and overdue manual alarms</p>
         </div>

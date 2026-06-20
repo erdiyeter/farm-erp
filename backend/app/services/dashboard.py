@@ -5,6 +5,16 @@ from app.schemas.dashboard import DashboardResponse
 
 
 def get_dashboard_summary(db: Session) -> DashboardResponse:
+    total_health_records = dashboard_repository.count_health_records(db)
+    today_health_records = (
+        dashboard_repository.count_today_health_records(db)
+    )
+    last_7_days_health_records = (
+        dashboard_repository.count_last_7_days_health_records(db)
+    )
+    active_withdrawal_health_records = (
+        dashboard_repository.count_active_withdrawal_health_records(db)
+    )
     active_withdrawal_locks = (
         dashboard_repository.count_active_withdrawal_locks(db)
     )
@@ -23,6 +33,10 @@ def get_dashboard_summary(db: Session) -> DashboardResponse:
         last_7_days_milk_liters=float(
             dashboard_repository.get_last_7_days_milk_total(db)
         ),
+        total_health_records=total_health_records,
+        today_health_records=today_health_records,
+        last_7_days_health_records=last_7_days_health_records,
+        active_withdrawal_health_records=active_withdrawal_health_records,
         active_withdrawal_locks=active_withdrawal_locks,
         withdrawal_locks_expiring_today=expiring_today,
         overdue_withdrawal_locks=overdue_withdrawal_locks,
