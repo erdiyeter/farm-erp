@@ -101,8 +101,8 @@
 
 .dashboard-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
 }
 
 .dashboard-kpi-card,
@@ -115,6 +115,7 @@
 
 .dashboard-kpi-card {
   padding: 20px;
+  min-height: 112px;
 }
 
 .dashboard-kpi-card h2 {
@@ -139,6 +140,10 @@
 }
 
 .dashboard-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 16px;
 }
 
@@ -151,7 +156,15 @@
   color: #666;
 }
 
+.dashboard-section-link {
+  flex-shrink: 0;
+  color: #222;
+  font-weight: 600;
+  text-decoration: none;
+}
+
 .dashboard-records-table {
+  margin-top: 16px;
   overflow-x: auto;
 }
 

@@ -57,96 +57,42 @@ function Dashboard() {
         <p>Manage your farm modules from one central place.</p>
       </div>
 
-      <div className="dashboard-kpi-grid">
-        <KpiCard title="Total Animals" value={stats.total_animals} />
-        <KpiCard title="Today Milk Liters" value={stats.today_milk_liters} />
-        <KpiCard
-          title="Last 7 Days Milk Liters"
-          value={stats.last_7_days_milk_liters}
-        />
-      </div>
-
-      <div className="dashboard-links">
-        <Link to="/animals">Animals</Link>
-      </div>
-
       <section className="dashboard-section">
         <div className="dashboard-section-header">
-          <h2>Withdrawal Lock Summary</h2>
-          <p>Active, expiring, and overdue withdrawal periods</p>
+          <div>
+            <h2>Animals</h2>
+            <p>Current animal count</p>
+          </div>
+          <Link className="dashboard-section-link" to="/animals">
+            View Animals
+          </Link>
         </div>
 
         <div className="dashboard-kpi-grid">
-          <KpiCard
-            title="Active Withdrawal Locks"
-            value={stats.active_withdrawal_locks}
-          />
-          <KpiCard
-            title="Expiring Today"
-            value={stats.withdrawal_locks_expiring_today}
-          />
-          <KpiCard
-            title="Overdue Locks"
-            value={stats.overdue_withdrawal_locks}
-          />
-        </div>
-
-        <div className="dashboard-links">
-          <Link to="/withdrawal-locks">View Withdrawal Locks</Link>
+          <KpiCard title="Total Animals" value={stats.total_animals} />
         </div>
       </section>
 
       <section className="dashboard-section">
         <div className="dashboard-section-header">
-          <h2>Health Summary</h2>
-          <p>Recent health records and active withdrawal periods</p>
+          <div>
+            <h2>Milk Production</h2>
+            <p>Current milk production totals and recent entries</p>
+          </div>
+          <Link className="dashboard-section-link" to="/milk-records">
+            View Milk Records
+          </Link>
         </div>
 
         <div className="dashboard-kpi-grid">
           <KpiCard
-            title="Total Health Records"
-            value={stats.total_health_records}
+            title="Today Milk Liters"
+            value={stats.today_milk_liters}
           />
           <KpiCard
-            title="Today Health Records"
-            value={stats.today_health_records}
+            title="Last 7 Days Milk Liters"
+            value={stats.last_7_days_milk_liters}
           />
-          <KpiCard
-            title="Last 7 Days Health Records"
-            value={stats.last_7_days_health_records}
-          />
-          <KpiCard
-            title="Active Withdrawal Health Records"
-            value={stats.active_withdrawal_health_records}
-          />
-        </div>
-
-        <div className="dashboard-links">
-          <Link to="/health-records">View Health Records</Link>
-        </div>
-      </section>
-
-      <section className="dashboard-section">
-        <div className="dashboard-section-header">
-          <h2>Alarm Summary</h2>
-          <p>Open, upcoming, and overdue manual alarms</p>
-        </div>
-
-        <div className="dashboard-kpi-grid">
-          <KpiCard title="Total Open Alarms" value={openAlarms.length} />
-          <KpiCard title="Upcoming Alarms" value={upcomingAlarms.length} />
-          <KpiCard title="Overdue Alarms" value={overdueAlarms.length} />
-        </div>
-
-        <div className="dashboard-links">
-          <Link to="/alarms">View Alarms</Link>
-        </div>
-      </section>
-
-      <section className="dashboard-section">
-        <div className="dashboard-section-header">
-          <h2>Recent Records</h2>
-          <p>Latest milk production entries</p>
         </div>
 
         {stats.recent_records.length === 0 ? (
@@ -180,6 +126,82 @@ function Dashboard() {
             </table>
           </div>
         )}
+      </section>
+
+      <section className="dashboard-section">
+        <div className="dashboard-section-header">
+          <div>
+            <h2>Health Records</h2>
+            <p>Recent health records and active withdrawal periods</p>
+          </div>
+          <Link className="dashboard-section-link" to="/health-records">
+            View Health Records
+          </Link>
+        </div>
+
+        <div className="dashboard-kpi-grid">
+          <KpiCard
+            title="Total Health Records"
+            value={stats.total_health_records}
+          />
+          <KpiCard
+            title="Today Health Records"
+            value={stats.today_health_records}
+          />
+          <KpiCard
+            title="Last 7 Days Health Records"
+            value={stats.last_7_days_health_records}
+          />
+          <KpiCard
+            title="Active Withdrawal Health Records"
+            value={stats.active_withdrawal_health_records}
+          />
+        </div>
+      </section>
+
+      <section className="dashboard-section">
+        <div className="dashboard-section-header">
+          <div>
+            <h2>Withdrawal Locks</h2>
+            <p>Active, expiring, and overdue withdrawal periods</p>
+          </div>
+          <Link className="dashboard-section-link" to="/withdrawal-locks">
+            View Withdrawal Locks
+          </Link>
+        </div>
+
+        <div className="dashboard-kpi-grid">
+          <KpiCard
+            title="Active Withdrawal Locks"
+            value={stats.active_withdrawal_locks}
+          />
+          <KpiCard
+            title="Expiring Today"
+            value={stats.withdrawal_locks_expiring_today}
+          />
+          <KpiCard
+            title="Overdue Locks"
+            value={stats.overdue_withdrawal_locks}
+          />
+        </div>
+      </section>
+
+      <section className="dashboard-section">
+        <div className="dashboard-section-header">
+          <div>
+            <h2>Alarms</h2>
+            <p>Open, upcoming, and overdue manual alarms</p>
+          </div>
+          <Link className="dashboard-section-link" to="/alarms">
+            View Alarms
+          </Link>
+        </div>
+
+        <div className="dashboard-kpi-grid">
+          <KpiCard title="Total Open Alarms" value={openAlarms.length} />
+          <KpiCard title="Upcoming Alarms" value={upcomingAlarms.length} />
+          <KpiCard title="Overdue Alarms" value={overdueAlarms.length} />
+        </div>
       </section>
     </div>
   );
