@@ -16,13 +16,34 @@ const initialFormData = {
   reason: "",
 };
 
+function getTodayText() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function WithdrawalLocks() {
   const [locks, setLocks] = useState([]);
   const [formData, setFormData] = useState(initialFormData);
+  const [activeFilter, setActiveFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const today = getTodayText();
+  const filteredLocks = locks.filter((lock) => {
+    if (activeFilter === "active") {
+      return lock.is_active === true && lock.end_date >= today;
+    }
+
+    if (activeFilter === "expired") {
+      return lock.end_date < today;
+    }
+
+    if (activeFilter === "released") {
+      return lock.is_active === false;
+    }
+
+    return true;
+  });
 
   useEffect(() => {
     async function loadWithdrawalLocks() {
@@ -155,6 +176,21 @@ function WithdrawalLocks() {
         </button>
       </form>
 
+      <div>
+        <label>
+          Filter:
+          <select
+            value={activeFilter}
+            onChange={(event) => setActiveFilter(event.target.value)}
+          >
+            <option value="all">All</option>
+            <option value="active">Active</option>
+            <option value="expired">Expired</option>
+            <option value="released">Released</option>
+          </select>
+        </label>
+      </div>
+
       {loading ? (
         <Loading
           text="Loading withdrawal locks..."
@@ -162,6 +198,8 @@ function WithdrawalLocks() {
         />
       ) : locks.length === 0 ? (
         <p className="empty-text">No withdrawal locks found.</p>
+      ) : filteredLocks.length === 0 ? (
+        <p className="empty-text">No withdrawal locks match this filter.</p>
       ) : (
         <table className="data-table">
           <thead>
@@ -180,7 +218,7 @@ function WithdrawalLocks() {
           </thead>
 
           <tbody>
-            {locks.map((lock) => (
+            {filteredLocks.map((lock) => (
               <tr key={lock.id}>
                 <td>{lock.id}</td>
                 <td>{lock.animal_id}</td>
