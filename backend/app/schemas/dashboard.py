@@ -18,4 +18,7 @@ class DashboardResponse(BaseModel):
     total_animals: int
     today_milk_liters: float
     last_7_days_milk_liters: float
+    active_withdrawal_locks: int
+    withdrawal_locks_expiring_today: int
+    overdue_withdrawal_locks: int
     recent_records: list[DashboardRecentRecord]

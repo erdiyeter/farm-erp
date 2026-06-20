@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.models.animal import Animal
 from app.models.milk_record import MilkRecord
+from app.models.withdrawal_lock import WithdrawalLock
 
 
 def count_active_animals(db: Session) -> int:
@@ -40,3 +41,30 @@ def get_recent_milk_records(
         .limit(limit)
     )
     return list(db.scalars(statement).all())
+
+
+def count_active_withdrawal_locks(db: Session) -> int:
+    today = date.today()
+    statement = select(func.count()).where(
+        WithdrawalLock.is_active.is_(True),
+        WithdrawalLock.end_date >= today,
+    )
+    return db.scalar(statement) or 0
+
+
+def count_withdrawal_locks_expiring_today(db: Session) -> int:
+    today = date.today()
+    statement = select(func.count()).where(
+        WithdrawalLock.is_active.is_(True),
+        WithdrawalLock.end_date == today,
+    )
+    return db.scalar(statement) or 0
+
+
+def count_overdue_withdrawal_locks(db: Session) -> int:
+    today = date.today()
+    statement = select(func.count()).where(
+        WithdrawalLock.is_active.is_(True),
+        WithdrawalLock.end_date < today,
+    )
+    return db.scalar(statement) or 0

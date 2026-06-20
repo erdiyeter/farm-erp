@@ -64,6 +64,18 @@ function Dashboard() {
           title="Last 7 Days Milk Liters"
           value={stats.last_7_days_milk_liters}
         />
+        <KpiCard
+          title="Active Withdrawal Locks"
+          value={stats.active_withdrawal_locks}
+        />
+        <KpiCard
+          title="Expiring Today"
+          value={stats.withdrawal_locks_expiring_today}
+        />
+        <KpiCard
+          title="Overdue Locks"
+          value={stats.overdue_withdrawal_locks}
+        />
       </div>
 
       <div className="dashboard-links">
