@@ -1,3 +1,4 @@
+from app.models.alarm import Alarm
 from app.models.animal import Animal
 from app.models.finance import FinancialRecord
 from app.models.health_record import HealthRecord
@@ -9,6 +10,7 @@ from app.models.withdrawal_lock import WithdrawalLock
 
 __all__ = [
     "Animal",
+    "Alarm",
     "FinancialRecord",
     "HealthRecord",
     "InventoryItem",

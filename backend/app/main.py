@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.routers.alarm import router as alarm_router
 from app.routers.animal import router as animal_router
 from app.routers.dashboard import router as dashboard_router
 from app.routers.finance import router as finance_router
@@ -21,6 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(alarm_router, prefix="/api/v1")
 app.include_router(animal_router, prefix="/api/v1")
 app.include_router(dashboard_router, prefix="/api/v1")
 app.include_router(finance_router, prefix="/api/v1/finance")
