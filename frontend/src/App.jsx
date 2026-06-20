@@ -18,6 +18,8 @@ import HealthRecords from "./pages/HealthRecords";
 import HealthRecordDetail from "./pages/HealthRecordDetail";
 import HealthRecordEdit from "./pages/HealthRecordEdit";
 import WithdrawalLocks from "./pages/WithdrawalLocks";
+import WithdrawalLockDetail from "./pages/WithdrawalLockDetail";
+import WithdrawalLockEdit from "./pages/WithdrawalLockEdit";
 import "./App.css";
 
 function App() {
@@ -80,6 +82,14 @@ function App() {
               element={<HealthRecordEdit />}
             />
             <Route path="/withdrawal-locks" element={<WithdrawalLocks />} />
+            <Route
+              path="/withdrawal-locks/:id"
+              element={<WithdrawalLockDetail />}
+            />
+            <Route
+              path="/withdrawal-locks/:id/edit"
+              element={<WithdrawalLockEdit />}
+            />
           </Routes>          
         </main>
       </div>

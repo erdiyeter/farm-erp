@@ -19,7 +19,7 @@ async function getWithdrawalLockError(response, fallbackMessage) {
 }
 
 export async function getWithdrawalLocks() {
-  const response = await fetch(API_BASE_URL);
+  const response = await fetch(`${API_BASE_URL}/active`);
 
   if (!response.ok) {
     throw new Error(
@@ -47,6 +47,59 @@ export async function createWithdrawalLock(data) {
       await getWithdrawalLockError(
         response,
         "Failed to create withdrawal lock"
+      )
+    );
+  }
+
+  return response.json();
+}
+
+export async function getWithdrawalLockById(id) {
+  const response = await fetch(`${API_BASE_URL}/${id}`);
+
+  if (!response.ok) {
+    throw new Error(
+      await getWithdrawalLockError(
+        response,
+        "Failed to fetch withdrawal lock"
+      )
+    );
+  }
+
+  return response.json();
+}
+
+export async function updateWithdrawalLock(id, data) {
+  const response = await fetch(`${API_BASE_URL}/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await getWithdrawalLockError(
+        response,
+        "Failed to update withdrawal lock"
+      )
+    );
+  }
+
+  return response.json();
+}
+
+export async function deleteWithdrawalLock(id) {
+  const response = await fetch(`${API_BASE_URL}/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await getWithdrawalLockError(
+        response,
+        "Failed to delete withdrawal lock"
       )
     );
   }

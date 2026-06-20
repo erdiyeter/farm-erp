@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
-  createWithdrawalLock,
-  getWithdrawalLocks,
+  getWithdrawalLockById,
+  updateWithdrawalLock,
 } from "../api/withdrawalLockApi";
-import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
-import PageHeader from "../components/PageHeader";
 
 const initialFormData = {
   animal_id: "",
@@ -14,21 +13,31 @@ const initialFormData = {
   start_date: "",
   end_date: "",
   reason: "",
+  is_active: true,
 };
 
-function WithdrawalLocks() {
-  const [locks, setLocks] = useState([]);
+function WithdrawalLockEdit() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-    async function loadWithdrawalLocks() {
+    async function loadWithdrawalLock() {
       try {
-        const data = await getWithdrawalLocks();
-        setLocks(data);
+        const lock = await getWithdrawalLockById(id);
+
+        setFormData({
+          animal_id: lock.animal_id ?? "",
+          health_record_id: lock.health_record_id ?? "",
+          start_date: lock.start_date || "",
+          end_date: lock.end_date || "",
+          reason: lock.reason || "",
+          is_active: lock.is_active ?? true,
+        });
       } catch (err) {
         setError(err.message);
       } finally {
@@ -36,15 +45,15 @@ function WithdrawalLocks() {
       }
     }
 
-    loadWithdrawalLocks();
-  }, []);
+    loadWithdrawalLock();
+  }, [id]);
 
   function handleChange(event) {
-    const { name, value } = event.target;
+    const { name, value, type, checked } = event.target;
 
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   }
 
@@ -52,7 +61,6 @@ function WithdrawalLocks() {
     event.preventDefault();
     setSaving(true);
     setError("");
-    setSuccessMessage("");
 
     const payload = {
       animal_id: Number(formData.animal_id),
@@ -62,14 +70,12 @@ function WithdrawalLocks() {
       start_date: formData.start_date,
       end_date: formData.end_date,
       reason: formData.reason || null,
+      is_active: formData.is_active,
     };
 
     try {
-      await createWithdrawalLock(payload);
-      const data = await getWithdrawalLocks();
-      setLocks(data);
-      setFormData(initialFormData);
-      setSuccessMessage("Withdrawal lock created successfully.");
+      await updateWithdrawalLock(id, payload);
+      navigate(`/withdrawal-locks/${id}`);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -77,15 +83,24 @@ function WithdrawalLocks() {
     }
   }
 
+  if (loading) {
+    return (
+      <Loading
+        text="Loading withdrawal lock..."
+        className="status-text"
+      />
+    );
+  }
+
+  if (error && !saving) {
+    return <ErrorMessage message={error} className="error-text" />;
+  }
+
   return (
     <div className="page-card">
-      <PageHeader
-        title="Withdrawal Locks"
-        subtitle="Create and review manual withdrawal periods"
-      />
+      <h1>Edit Withdrawal Lock</h1>
 
       {error && <ErrorMessage message={error} className="error-text" />}
-      {successMessage && <p className="status-text">{successMessage}</p>}
 
       <form onSubmit={handleSubmit}>
         <div>
@@ -150,62 +165,28 @@ function WithdrawalLocks() {
           </label>
         </div>
 
+        <div>
+          <label>
+            Active:
+            <input
+              type="checkbox"
+              name="is_active"
+              checked={formData.is_active}
+              onChange={handleChange}
+            />
+          </label>
+        </div>
+
         <button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Create Withdrawal Lock"}
+          {saving ? "Saving..." : "Save"}
         </button>
+
+        <Link to={`/withdrawal-locks/${id}`}>
+          <button type="button">Cancel</button>
+        </Link>
       </form>
-
-      {loading ? (
-        <Loading
-          text="Loading withdrawal locks..."
-          className="status-text"
-        />
-      ) : locks.length === 0 ? (
-        <p className="empty-text">No withdrawal locks found.</p>
-      ) : (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Animal ID</th>
-              <th>Health Record ID</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Reason</th>
-              <th>Active</th>
-              <th>Created At</th>
-              <th>Updated At</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {locks.map((lock) => (
-              <tr key={lock.id}>
-                <td>{lock.id}</td>
-                <td>{lock.animal_id}</td>
-                <td>{lock.health_record_id || "-"}</td>
-                <td>{lock.start_date}</td>
-                <td>{lock.end_date}</td>
-                <td>{lock.reason || "-"}</td>
-                <td>{lock.is_active ? "Yes" : "No"}</td>
-                <td>{lock.created_at || "-"}</td>
-                <td>{lock.updated_at || "-"}</td>
-                <td>
-                  <ButtonLink
-                    to={`/withdrawal-locks/${lock.id}`}
-                    variant="secondary"
-                  >
-                    View
-                  </ButtonLink>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
     </div>
   );
 }
 
-export default WithdrawalLocks;
+export default WithdrawalLockEdit;
