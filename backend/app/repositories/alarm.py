@@ -16,6 +16,16 @@ def get_alarm_by_id(db: Session, alarm_id: int) -> Alarm | None:
     return db.get(Alarm, alarm_id)
 
 
+def get_alarm_by_title_and_type(
+    db: Session, title: str, alarm_type: str
+) -> Alarm | None:
+    statement = select(Alarm).where(
+        Alarm.title == title,
+        Alarm.alarm_type == alarm_type,
+    )
+    return db.scalar(statement)
+
+
 def create_alarm(db: Session, alarm_data: AlarmCreate) -> Alarm:
     alarm = Alarm(**alarm_data.model_dump())
     db.add(alarm)
