@@ -23,10 +23,26 @@ const initialFormData = {
 function HealthRecords() {
   const [records, setRecords] = useState([]);
   const [formData, setFormData] = useState(initialFormData);
+  const [activeFilter, setActiveFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const filteredRecords = records.filter((record) => {
+    if (activeFilter === "checkup") {
+      return record.record_type === "checkup";
+    }
+
+    if (activeFilter === "treatment") {
+      return record.record_type === "treatment";
+    }
+
+    if (activeFilter === "vaccination") {
+      return record.record_type === "vaccination";
+    }
+
+    return true;
+  });
 
   const treatmentCount = records.filter(
     (record) => record.record_type === "treatment"
@@ -217,10 +233,27 @@ function HealthRecords() {
         <KpiCard title="Checkups" value={checkupCount} />
       </div>
 
+      <div>
+        <label>
+          Filter:
+          <select
+            value={activeFilter}
+            onChange={(event) => setActiveFilter(event.target.value)}
+          >
+            <option value="all">All Records</option>
+            <option value="checkup">Checkups</option>
+            <option value="treatment">Treatments</option>
+            <option value="vaccination">Vaccinations</option>
+          </select>
+        </label>
+      </div>
+
       {loading ? (
         <Loading text="Loading health records..." className="status-text" />
       ) : records.length === 0 ? (
         <p className="empty-text">No health records found.</p>
+      ) : filteredRecords.length === 0 ? (
+        <p className="empty-text">No health records match this filter.</p>
       ) : (
         <table className="data-table">
           <thead>
@@ -239,7 +272,7 @@ function HealthRecords() {
           </thead>
 
           <tbody>
-            {records.map((record) => (
+            {filteredRecords.map((record) => (
               <tr key={record.id}>
                 <td>{record.id}</td>
                 <td>{record.animal_id}</td>
