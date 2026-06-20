@@ -17,6 +17,7 @@ import FinanceEdit from "./pages/FinanceEdit";
 import HealthRecords from "./pages/HealthRecords";
 import HealthRecordDetail from "./pages/HealthRecordDetail";
 import HealthRecordEdit from "./pages/HealthRecordEdit";
+import WithdrawalLocks from "./pages/WithdrawalLocks";
 import "./App.css";
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
             <Link to="/inventory/movements">Inventory Movements</Link>
             <Link to="/finance">Finance</Link>
             <Link to="/health-records">Health Records</Link>
+            <Link to="/withdrawal-locks">Withdrawal Locks</Link>
           </div>
         </nav>
 
@@ -77,6 +79,7 @@ function App() {
               path="/health-records/:id/edit"
               element={<HealthRecordEdit />}
             />
+            <Route path="/withdrawal-locks" element={<WithdrawalLocks />} />
           </Routes>          
         </main>
       </div>
