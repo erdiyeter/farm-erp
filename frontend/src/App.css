@@ -156,11 +156,26 @@
   color: #666;
 }
 
-.dashboard-section-link {
+.dashboard-nav-link {
+  align-self: flex-start;
   flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #eee;
   color: #222;
+  font-size: 14px;
   font-weight: 600;
   text-decoration: none;
+}
+
+.dashboard-nav-link:hover {
+  background: #ddd;
+}
+
+.dashboard-export-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .dashboard-records-table {

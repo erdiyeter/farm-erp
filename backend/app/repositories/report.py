@@ -8,6 +8,7 @@ from app.models.animal import Animal
 from app.models.finance import FinancialRecord
 from app.models.health_record import HealthRecord
 from app.models.milk_record import MilkRecord
+from app.models.withdrawal_lock import WithdrawalLock
 
 
 def count_animals(db: Session) -> int:
@@ -76,3 +77,23 @@ def count_financial_records_by_type(
         FinancialRecord.record_type == record_type,
     )
     return db.scalar(statement) or 0
+
+
+def list_animals_for_export(db: Session) -> list[Animal]:
+    statement = select(Animal).order_by(Animal.id)
+    return list(db.scalars(statement).all())
+
+
+def list_health_records_for_export(db: Session) -> list[HealthRecord]:
+    statement = select(HealthRecord).order_by(HealthRecord.id)
+    return list(db.scalars(statement).all())
+
+
+def list_withdrawal_locks_for_export(db: Session) -> list[WithdrawalLock]:
+    statement = select(WithdrawalLock).order_by(WithdrawalLock.id)
+    return list(db.scalars(statement).all())
+
+
+def list_milk_records_for_export(db: Session) -> list[MilkRecord]:
+    statement = select(MilkRecord).order_by(MilkRecord.id)
+    return list(db.scalars(statement).all())
