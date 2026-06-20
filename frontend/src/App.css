@@ -38,6 +38,14 @@
   font-weight: 600;
 }
 
+.filter-bar {
+  margin: 20px 0 16px;
+}
+
+.filter-bar select {
+  margin-left: 8px;
+}
+
 .primary-button,
 .secondary-button {
   display: inline-block;
@@ -164,6 +172,7 @@
 .nav-links {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 20px;
 }
 

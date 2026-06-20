@@ -176,7 +176,7 @@ function WithdrawalLocks() {
         </button>
       </form>
 
-      <div>
+      <div className="filter-bar">
         <label>
           Filter:
           <select
@@ -201,46 +201,48 @@ function WithdrawalLocks() {
       ) : filteredLocks.length === 0 ? (
         <p className="empty-text">No withdrawal locks match this filter.</p>
       ) : (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Animal ID</th>
-              <th>Health Record ID</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Reason</th>
-              <th>Active</th>
-              <th>Created At</th>
-              <th>Updated At</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredLocks.map((lock) => (
-              <tr key={lock.id}>
-                <td>{lock.id}</td>
-                <td>{lock.animal_id}</td>
-                <td>{lock.health_record_id || "-"}</td>
-                <td>{lock.start_date}</td>
-                <td>{lock.end_date}</td>
-                <td>{lock.reason || "-"}</td>
-                <td>{lock.is_active ? "Yes" : "No"}</td>
-                <td>{lock.created_at || "-"}</td>
-                <td>{lock.updated_at || "-"}</td>
-                <td>
-                  <ButtonLink
-                    to={`/withdrawal-locks/${lock.id}`}
-                    variant="secondary"
-                  >
-                    View
-                  </ButtonLink>
-                </td>
+        <div className="dashboard-records-table">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Animal ID</th>
+                <th>Health Record ID</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Reason</th>
+                <th>Active</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {filteredLocks.map((lock) => (
+                <tr key={lock.id}>
+                  <td>{lock.id}</td>
+                  <td>{lock.animal_id}</td>
+                  <td>{lock.health_record_id || "-"}</td>
+                  <td>{lock.start_date}</td>
+                  <td>{lock.end_date}</td>
+                  <td>{lock.reason || "-"}</td>
+                  <td>{lock.is_active ? "Yes" : "No"}</td>
+                  <td>{lock.created_at || "-"}</td>
+                  <td>{lock.updated_at || "-"}</td>
+                  <td>
+                    <ButtonLink
+                      to={`/withdrawal-locks/${lock.id}`}
+                      variant="secondary"
+                    >
+                      View
+                    </ButtonLink>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

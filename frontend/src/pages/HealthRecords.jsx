@@ -233,7 +233,7 @@ function HealthRecords() {
         <KpiCard title="Checkups" value={checkupCount} />
       </div>
 
-      <div>
+      <div className="filter-bar">
         <label>
           Filter:
           <select
@@ -255,46 +255,48 @@ function HealthRecords() {
       ) : filteredRecords.length === 0 ? (
         <p className="empty-text">No health records match this filter.</p>
       ) : (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Animal ID</th>
-              <th>Type</th>
-              <th>Date</th>
-              <th>Diagnosis</th>
-              <th>Treatment</th>
-              <th>Medication</th>
-              <th>Notes</th>
-              <th>Created At</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredRecords.map((record) => (
-              <tr key={record.id}>
-                <td>{record.id}</td>
-                <td>{record.animal_id}</td>
-                <td>{record.record_type}</td>
-                <td>{record.record_date}</td>
-                <td>{record.diagnosis || "-"}</td>
-                <td>{record.treatment || "-"}</td>
-                <td>{record.medicine_name || "-"}</td>
-                <td>{record.notes || "-"}</td>
-                <td>{record.created_at || "-"}</td>
-                <td>
-                  <ButtonLink
-                    to={`/health-records/${record.id}`}
-                    variant="secondary"
-                  >
-                    View
-                  </ButtonLink>
-                </td>
+        <div className="dashboard-records-table">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Animal ID</th>
+                <th>Type</th>
+                <th>Date</th>
+                <th>Diagnosis</th>
+                <th>Treatment</th>
+                <th>Medication</th>
+                <th>Notes</th>
+                <th>Created At</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {filteredRecords.map((record) => (
+                <tr key={record.id}>
+                  <td>{record.id}</td>
+                  <td>{record.animal_id}</td>
+                  <td>{record.record_type}</td>
+                  <td>{record.record_date}</td>
+                  <td>{record.diagnosis || "-"}</td>
+                  <td>{record.treatment || "-"}</td>
+                  <td>{record.medicine_name || "-"}</td>
+                  <td>{record.notes || "-"}</td>
+                  <td>{record.created_at || "-"}</td>
+                  <td>
+                    <ButtonLink
+                      to={`/health-records/${record.id}`}
+                      variant="secondary"
+                    >
+                      View
+                    </ButtonLink>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

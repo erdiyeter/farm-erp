@@ -197,7 +197,7 @@ function Alarms() {
         </button>
       </form>
 
-      <div>
+      <div className="filter-bar">
         <label>
           Filter:
           <select
@@ -215,44 +215,51 @@ function Alarms() {
 
       {loading ? (
         <Loading text="Loading alarms..." className="status-text" />
-      ) : filteredAlarms.length === 0 ? (
+      ) : alarms.length === 0 ? (
         <p className="empty-text">No alarms found.</p>
+      ) : filteredAlarms.length === 0 ? (
+        <p className="empty-text">No alarms match this filter.</p>
       ) : (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Title</th>
-              <th>Type</th>
-              <th>Priority</th>
-              <th>Due Date</th>
-              <th>Completed</th>
-              <th>Description</th>
-              <th>Created At</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredAlarms.map((alarm) => (
-              <tr key={alarm.id}>
-                <td>{alarm.id}</td>
-                <td>{alarm.title}</td>
-                <td>{alarm.alarm_type}</td>
-                <td>{alarm.priority}</td>
-                <td>{alarm.due_date}</td>
-                <td>{alarm.is_completed ? "Yes" : "No"}</td>
-                <td>{alarm.description || "-"}</td>
-                <td>{alarm.created_at || "-"}</td>
-                <td>
-                  <ButtonLink to={`/alarms/${alarm.id}`} variant="secondary">
-                    View
-                  </ButtonLink>
-                </td>
+        <div className="dashboard-records-table">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Priority</th>
+                <th>Due Date</th>
+                <th>Completed</th>
+                <th>Description</th>
+                <th>Created At</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {filteredAlarms.map((alarm) => (
+                <tr key={alarm.id}>
+                  <td>{alarm.id}</td>
+                  <td>{alarm.title}</td>
+                  <td>{alarm.alarm_type}</td>
+                  <td>{alarm.priority}</td>
+                  <td>{alarm.due_date}</td>
+                  <td>{alarm.is_completed ? "Yes" : "No"}</td>
+                  <td>{alarm.description || "-"}</td>
+                  <td>{alarm.created_at || "-"}</td>
+                  <td>
+                    <ButtonLink
+                      to={`/alarms/${alarm.id}`}
+                      variant="secondary"
+                    >
+                      View
+                    </ButtonLink>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
