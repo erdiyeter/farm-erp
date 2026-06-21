@@ -3,6 +3,7 @@ import {
   createHealthRecord,
   getHealthRecords,
 } from "../api/healthRecordApi";
+import { getInventoryItems } from "../api/inventoryApi";
 import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import KpiCard from "../components/KpiCard";
@@ -16,11 +17,14 @@ const initialFormData = {
   diagnosis: "",
   treatment: "",
   medication: "",
+  dosage: "",
+  inventory_item_id: "",
   notes: "",
 };
 
 function HealthRecords() {
   const [records, setRecords] = useState([]);
+  const [inventoryItems, setInventoryItems] = useState([]);
   const [formData, setFormData] = useState(initialFormData);
   const [activeFilter, setActiveFilter] = useState("all");
   const [loading, setLoading] = useState(true);
@@ -59,8 +63,12 @@ function HealthRecords() {
   useEffect(() => {
     async function loadHealthRecords() {
       try {
-        const data = await getHealthRecords();
-        setRecords(data);
+        const [recordData, itemData] = await Promise.all([
+          getHealthRecords(),
+          getInventoryItems(),
+        ]);
+        setRecords(recordData);
+        setInventoryItems(itemData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -77,6 +85,9 @@ function HealthRecords() {
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
+      ...(name === "record_type" && value !== "treatment"
+        ? { inventory_item_id: "" }
+        : {}),
     }));
   }
 
@@ -93,13 +104,25 @@ function HealthRecords() {
       diagnosis: formData.diagnosis || null,
       treatment: formData.treatment || null,
       medicine_name: formData.medication || null,
+      dosage:
+        formData.record_type === "treatment"
+          ? formData.dosage || null
+          : null,
+      inventory_item_id:
+        formData.record_type === "treatment" && formData.inventory_item_id
+          ? Number(formData.inventory_item_id)
+          : null,
       notes: formData.notes || null,
     };
 
     try {
       await createHealthRecord(payload);
-      const data = await getHealthRecords();
-      setRecords(data);
+      const [recordData, itemData] = await Promise.all([
+        getHealthRecords(),
+        getInventoryItems(),
+      ]);
+      setRecords(recordData);
+      setInventoryItems(itemData);
       setFormData(initialFormData);
       setSuccessMessage("Health record created successfully.");
     } catch (err) {
@@ -149,6 +172,41 @@ function HealthRecords() {
             </select>
           </label>
         </div>
+
+        {formData.record_type === "treatment" && (
+          <>
+            <div>
+              <label>
+                Dosage:
+                <input
+                  name="dosage"
+                  value={formData.dosage}
+                  onChange={handleChange}
+                  required={Boolean(formData.inventory_item_id)}
+                  placeholder="Numeric when consuming inventory"
+                />
+              </label>
+            </div>
+
+            <div>
+              <label>
+                Inventory Item:
+                <select
+                  name="inventory_item_id"
+                  value={formData.inventory_item_id}
+                  onChange={handleChange}
+                >
+                  <option value="">No inventory consumption</option>
+                  {inventoryItems.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} ({item.current_quantity} {item.unit})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </>
+        )}
 
         <div>
           <label>

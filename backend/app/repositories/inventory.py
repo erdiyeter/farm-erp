@@ -70,17 +70,31 @@ def get_inventory_movements(db: Session) -> list[InventoryMovement]:
     return list(db.scalars(statement).all())
 
 
+def get_inventory_movement_by_notes(
+    db: Session, notes: str
+) -> InventoryMovement | None:
+    statement = select(InventoryMovement).where(
+        InventoryMovement.notes == notes,
+        InventoryMovement.movement_type == "out",
+    )
+    return db.scalar(statement)
+
+
 def create_inventory_movement(
     db: Session,
     item: InventoryItem,
     movement_data: InventoryMovementCreate,
     new_quantity: Decimal,
+    commit: bool = True,
 ) -> InventoryMovement:
     movement = InventoryMovement(**movement_data.model_dump())
     item.current_quantity = new_quantity
     item.updated_at = datetime.now(timezone.utc)
     db.add(movement)
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(movement)
     db.refresh(item)
     return movement

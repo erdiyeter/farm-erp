@@ -112,6 +112,24 @@ function HealthRecordDetail() {
         <strong>Created At:</strong> {record.created_at || "-"}
       </p>
 
+      {record.inventory_consumption && (
+        <div className="report-detail-section">
+          <h2>Inventory Consumption</h2>
+          <p>
+            <strong>Inventory Item Name:</strong>{" "}
+            {record.inventory_consumption.item_name}
+          </p>
+          <p>
+            <strong>Consumed Quantity:</strong>{" "}
+            {record.inventory_consumption.quantity}
+          </p>
+          <p>
+            <strong>Movement Date:</strong>{" "}
+            {record.inventory_consumption.movement_date}
+          </p>
+        </div>
+      )}
+
       <ButtonLink to="/health-records" variant="secondary">
         Back to Health Records
       </ButtonLink>

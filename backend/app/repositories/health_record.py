@@ -24,11 +24,18 @@ def get_health_records_by_animal_id(
 
 
 def create_health_record(
-    db: Session, health_record_data: HealthRecordCreate
+    db: Session,
+    health_record_data: HealthRecordCreate,
+    commit: bool = True,
 ) -> HealthRecord:
-    health_record = HealthRecord(**health_record_data.model_dump())
+    health_record = HealthRecord(
+        **health_record_data.model_dump(exclude={"inventory_item_id"})
+    )
     db.add(health_record)
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(health_record)
     return health_record
 
@@ -43,13 +50,17 @@ def update_health_record(
     db: Session,
     health_record: HealthRecord,
     health_record_data: HealthRecordUpdate,
+    commit: bool = True,
 ) -> HealthRecord:
     for field, value in health_record_data.model_dump(
-        exclude_unset=True
+        exclude_unset=True, exclude={"inventory_item_id"}
     ).items():
         setattr(health_record, field, value)
 
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(health_record)
     return health_record
 

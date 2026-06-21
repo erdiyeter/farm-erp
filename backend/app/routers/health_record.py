@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.health_record import (
     HealthRecordCreate,
+    HealthRecordDetailResponse,
     HealthRecordResponse,
     HealthRecordUpdate,
 )
@@ -67,14 +68,14 @@ def list_health_records_by_animal(
 
 @router.get(
     "/health-records/{health_record_id}",
-    response_model=HealthRecordResponse,
+    response_model=HealthRecordDetailResponse,
 )
 def get_health_record(
     health_record_id: int,
     db: Session = Depends(get_db),
-) -> HealthRecordResponse:
+) -> HealthRecordDetailResponse:
     try:
-        return health_record_service.get_health_record(
+        return health_record_service.get_health_record_detail(
             db, health_record_id
         )
     except LookupError as exc:

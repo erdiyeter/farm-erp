@@ -47,7 +47,9 @@ def list_inventory_movements(db: Session) -> list[InventoryMovement]:
 
 
 def create_inventory_movement(
-    db: Session, movement_data: InventoryMovementCreate
+    db: Session,
+    movement_data: InventoryMovementCreate,
+    commit: bool = True,
 ) -> InventoryMovement:
     item = get_inventory_item(db, movement_data.item_id)
     current_quantity = item.current_quantity or Decimal("0")
@@ -64,5 +66,5 @@ def create_inventory_movement(
         raise ValueError("Invalid inventory movement")
 
     return inventory_repository.create_inventory_movement(
-        db, item, movement_data, new_quantity
+        db, item, movement_data, new_quantity, commit
     )

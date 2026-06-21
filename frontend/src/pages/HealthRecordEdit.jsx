@@ -4,6 +4,7 @@ import {
   getHealthRecordById,
   updateHealthRecord,
 } from "../api/healthRecordApi";
+import { getInventoryItems } from "../api/inventoryApi";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 
@@ -15,6 +16,7 @@ const initialFormData = {
   treatment: "",
   medicine_name: "",
   dosage: "",
+  inventory_item_id: "",
   withdrawal_end_date: "",
   notes: "",
 };
@@ -24,6 +26,9 @@ function HealthRecordEdit() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState(initialFormData);
+  const [inventoryItems, setInventoryItems] = useState([]);
+  const [hasInventoryConsumption, setHasInventoryConsumption] =
+    useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -31,7 +36,10 @@ function HealthRecordEdit() {
   useEffect(() => {
     async function loadHealthRecord() {
       try {
-        const record = await getHealthRecordById(id);
+        const [record, items] = await Promise.all([
+          getHealthRecordById(id),
+          getInventoryItems(),
+        ]);
 
         setFormData({
           animal_id: record.animal_id ?? "",
@@ -41,9 +49,13 @@ function HealthRecordEdit() {
           treatment: record.treatment || "",
           medicine_name: record.medicine_name || "",
           dosage: record.dosage || "",
+          inventory_item_id:
+            record.inventory_consumption?.item_id ?? "",
           withdrawal_end_date: record.withdrawal_end_date || "",
           notes: record.notes || "",
         });
+        setInventoryItems(items);
+        setHasInventoryConsumption(Boolean(record.inventory_consumption));
       } catch (err) {
         setError(err.message);
       } finally {
@@ -60,6 +72,9 @@ function HealthRecordEdit() {
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
+      ...(name === "record_type" && value !== "treatment"
+        ? { inventory_item_id: "" }
+        : {}),
     }));
   }
 
@@ -76,6 +91,10 @@ function HealthRecordEdit() {
       treatment: formData.treatment || null,
       medicine_name: formData.medicine_name || null,
       dosage: formData.dosage || null,
+      inventory_item_id:
+        formData.record_type === "treatment" && formData.inventory_item_id
+          ? Number(formData.inventory_item_id)
+          : null,
       withdrawal_end_date: formData.withdrawal_end_date || null,
       notes: formData.notes || null,
     };
@@ -125,6 +144,7 @@ function HealthRecordEdit() {
               name="record_type"
               value={formData.record_type}
               onChange={handleChange}
+              disabled={hasInventoryConsumption}
               required
             >
               <option value="treatment">treatment</option>
@@ -143,6 +163,7 @@ function HealthRecordEdit() {
               name="record_date"
               value={formData.record_date}
               onChange={handleChange}
+              disabled={hasInventoryConsumption}
               required
             />
           </label>
@@ -181,16 +202,45 @@ function HealthRecordEdit() {
           </label>
         </div>
 
-        <div>
-          <label>
-            Dosage:
-            <input
-              name="dosage"
-              value={formData.dosage}
-              onChange={handleChange}
-            />
-          </label>
-        </div>
+        {formData.record_type === "treatment" && (
+          <>
+            <div>
+              <label>
+                Dosage:
+                <input
+                  name="dosage"
+                  value={formData.dosage}
+                  onChange={handleChange}
+                  disabled={hasInventoryConsumption}
+                  required={Boolean(formData.inventory_item_id)}
+                  placeholder="Numeric when consuming inventory"
+                />
+              </label>
+            </div>
+
+            <div>
+              <label>
+                Inventory Item:
+                <select
+                  name="inventory_item_id"
+                  value={formData.inventory_item_id}
+                  onChange={handleChange}
+                  disabled={hasInventoryConsumption}
+                >
+                  <option value="">No inventory consumption</option>
+                  {inventoryItems.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} ({item.current_quantity} {item.unit})
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {hasInventoryConsumption && (
+                <p>Inventory consumption has already been recorded.</p>
+              )}
+            </div>
+          </>
+        )}
 
         <div>
           <label>

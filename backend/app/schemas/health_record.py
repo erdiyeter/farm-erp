@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from decimal import Decimal
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -20,7 +21,7 @@ class HealthRecordBase(BaseModel):
 
 
 class HealthRecordCreate(HealthRecordBase):
-    pass
+    inventory_item_id: int | None = None
 
 
 class HealthRecordUpdate(BaseModel):
@@ -33,6 +34,7 @@ class HealthRecordUpdate(BaseModel):
     record_date: date | None = None
     withdrawal_end_date: date | None = None
     notes: str | None = None
+    inventory_item_id: int | None = None
 
 
 class HealthRecordResponse(BaseModel):
@@ -49,3 +51,14 @@ class HealthRecordResponse(BaseModel):
     withdrawal_end_date: date | None
     notes: str | None
     created_at: datetime | None
+
+
+class HealthInventoryConsumption(BaseModel):
+    item_id: int
+    item_name: str
+    quantity: Decimal
+    movement_date: date
+
+
+class HealthRecordDetailResponse(HealthRecordResponse):
+    inventory_consumption: HealthInventoryConsumption | None = None
