@@ -30,6 +30,23 @@ export async function getHealthRecords() {
   return response.json();
 }
 
+export async function getHealthRecordsByAnimalId(animalId) {
+  const response = await fetch(
+    `${API_BASE_URL}/health-records/animal/${animalId}`
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      await getHealthRecordError(
+        response,
+        "Failed to fetch animal health records"
+      )
+    );
+  }
+
+  return response.json();
+}
+
 export async function createHealthRecord(data) {
   const response = await fetch(`${API_BASE_URL}/health-records`, {
     method: "POST",
