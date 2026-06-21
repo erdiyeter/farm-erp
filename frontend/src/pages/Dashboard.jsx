@@ -319,14 +319,27 @@ function Dashboard() {
           <Loading text="Loading reports..." className="status-text" />
         ) : reportSummary && reportDetails ? (
           <>
+            <div className="report-section-header">
+              <h3>Reporting Summary</h3>
+              <p>Key totals for the applied date range.</p>
+            </div>
             <div className="dashboard-kpi-grid report-kpi-grid">
-              <KpiCard title="Total Animals" value={reportSummary.total_animals} />
-              <KpiCard title="Total Milk Records" value={reportSummary.total_milk_records} />
-              <KpiCard title="Total Milk Liters" value={reportSummary.total_milk_liters} />
-              <KpiCard title="Total Health Records" value={reportSummary.total_health_records} />
-              <KpiCard title="Total Income" value={reportSummary.total_income} />
-              <KpiCard title="Total Expense" value={reportSummary.total_expense} />
-              <KpiCard title="Active Withdrawal Locks" value={reportSummary.active_withdrawal_locks} />
+              <KpiCard
+                title="Total Milk"
+                value={reportSummary.total_milk_liters}
+              />
+              <KpiCard
+                title="Average Daily Milk"
+                value={reportSummary.average_daily_milk}
+              />
+              <KpiCard
+                title="Total Health Records"
+                value={reportSummary.total_health_records}
+              />
+              <KpiCard
+                title="Active Withdrawal Locks"
+                value={reportSummary.active_withdrawal_locks}
+              />
               <KpiCard title="Open Alarms" value={reportSummary.open_alarms} />
             </div>
 

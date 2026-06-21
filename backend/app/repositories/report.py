@@ -150,6 +150,19 @@ def get_filtered_milk_total(
     return db.scalar(statement) or Decimal("0")
 
 
+def count_filtered_milk_days(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> int:
+    statement = select(func.count(func.distinct(MilkRecord.record_date)))
+    if start_date:
+        statement = statement.where(MilkRecord.record_date >= start_date)
+    if end_date:
+        statement = statement.where(MilkRecord.record_date <= end_date)
+    return db.scalar(statement) or 0
+
+
 def count_filtered_health_records(
     db: Session,
     start_date: date | None = None,

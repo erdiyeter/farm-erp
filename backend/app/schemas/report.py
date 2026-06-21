@@ -35,6 +35,7 @@ class ReportSummary(BaseModel):
     total_animals: int
     total_milk_records: int
     total_milk_liters: float
+    average_daily_milk: float
     total_health_records: int
     total_income: float
     total_expense: float

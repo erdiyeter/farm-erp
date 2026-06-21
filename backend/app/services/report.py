@@ -63,16 +63,20 @@ def get_report_summary(
     start_date: date | None = None,
     end_date: date | None = None,
 ) -> ReportSummary:
+    total_milk = report_repository.get_filtered_milk_total(
+        db, start_date, end_date
+    )
+    milk_days = report_repository.count_filtered_milk_days(
+        db, start_date, end_date
+    )
+
     return ReportSummary(
         total_animals=report_repository.count_animals(db),
         total_milk_records=report_repository.count_filtered_milk_records(
             db, start_date, end_date
         ),
-        total_milk_liters=float(
-            report_repository.get_filtered_milk_total(
-                db, start_date, end_date
-            )
-        ),
+        total_milk_liters=float(total_milk),
+        average_daily_milk=float(total_milk / milk_days) if milk_days else 0,
         total_health_records=report_repository.count_filtered_health_records(
             db, start_date, end_date
         ),
