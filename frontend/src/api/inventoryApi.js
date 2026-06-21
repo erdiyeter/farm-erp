@@ -1,3 +1,5 @@
+import { authenticatedFetch } from "./apiClient";
+
 const API_BASE_URL = "http://127.0.0.1:8000/api/v1/inventory";
 
 async function getInventoryError(response, fallbackMessage) {
@@ -19,7 +21,7 @@ async function getInventoryError(response, fallbackMessage) {
 }
 
 export async function getInventoryItems() {
-  const response = await fetch(`${API_BASE_URL}/items`);
+  const response = await authenticatedFetch(`${API_BASE_URL}/items`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch inventory items");
@@ -29,7 +31,7 @@ export async function getInventoryItems() {
 }
 
 export async function getInventoryItemById(id) {
-  const response = await fetch(`${API_BASE_URL}/items/${id}`);
+  const response = await authenticatedFetch(`${API_BASE_URL}/items/${id}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch inventory item");
@@ -39,7 +41,7 @@ export async function getInventoryItemById(id) {
 }
 
 export async function createInventoryItem(itemData) {
-  const response = await fetch(`${API_BASE_URL}/items`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/items`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -57,7 +59,7 @@ export async function createInventoryItem(itemData) {
 }
 
 export async function updateInventoryItem(id, itemData) {
-  const response = await fetch(`${API_BASE_URL}/items/${id}`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/items/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -75,7 +77,7 @@ export async function updateInventoryItem(id, itemData) {
 }
 
 export async function deactivateInventoryItem(id) {
-  const response = await fetch(`${API_BASE_URL}/items/${id}`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/items/${id}`, {
     method: "DELETE",
   });
 
@@ -92,7 +94,7 @@ export async function deactivateInventoryItem(id) {
 }
 
 export async function getInventoryMovements() {
-  const response = await fetch(`${API_BASE_URL}/movements`);
+  const response = await authenticatedFetch(`${API_BASE_URL}/movements`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch inventory movements");
@@ -102,7 +104,7 @@ export async function getInventoryMovements() {
 }
 
 export async function createInventoryMovement(movementData) {
-  const response = await fetch(`${API_BASE_URL}/movements`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/movements`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

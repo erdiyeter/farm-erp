@@ -1,9 +1,10 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers.alarm import router as alarm_router
 from app.routers.animal import router as animal_router
 from app.routers.auth import router as auth_router
+from app.routers.auth import require_roles
 from app.routers.dashboard import router as dashboard_router
 from app.routers.finance import router as finance_router
 from app.routers.health_record import router as health_record_router
@@ -25,15 +26,61 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(alarm_router, prefix="/api/v1")
-app.include_router(animal_router, prefix="/api/v1")
+app.include_router(
+    alarm_router,
+    prefix="/api/v1",
+    dependencies=[Depends(require_roles("admin", "veterinarian"))],
+)
+app.include_router(
+    animal_router,
+    prefix="/api/v1",
+    dependencies=[
+        Depends(require_roles("admin", "worker", "veterinarian"))
+    ],
+)
 app.include_router(auth_router, prefix="/api/v1")
-app.include_router(dashboard_router, prefix="/api/v1")
-app.include_router(finance_router, prefix="/api/v1/finance")
-app.include_router(health_record_router, prefix="/api/v1")
-app.include_router(inventory_router, prefix="/api/v1")
-app.include_router(milk_record_router, prefix="/api/v1")
-app.include_router(report_router, prefix="/api/v1")
-app.include_router(settings_router, prefix="/api/v1")
-app.include_router(vaccination_router, prefix="/api/v1")
-app.include_router(withdrawal_lock_router, prefix="/api/v1")
+app.include_router(
+    dashboard_router,
+    prefix="/api/v1",
+    dependencies=[Depends(require_roles("admin", "worker"))],
+)
+app.include_router(
+    finance_router,
+    prefix="/api/v1/finance",
+    dependencies=[Depends(require_roles("admin"))],
+)
+app.include_router(
+    health_record_router,
+    prefix="/api/v1",
+    dependencies=[Depends(require_roles("admin", "veterinarian"))],
+)
+app.include_router(
+    inventory_router,
+    prefix="/api/v1",
+    dependencies=[Depends(require_roles("admin", "worker"))],
+)
+app.include_router(
+    milk_record_router,
+    prefix="/api/v1",
+    dependencies=[Depends(require_roles("admin", "worker"))],
+)
+app.include_router(
+    report_router,
+    prefix="/api/v1",
+    dependencies=[Depends(require_roles("admin", "veterinarian"))],
+)
+app.include_router(
+    settings_router,
+    prefix="/api/v1",
+    dependencies=[Depends(require_roles("admin"))],
+)
+app.include_router(
+    vaccination_router,
+    prefix="/api/v1",
+    dependencies=[Depends(require_roles("admin"))],
+)
+app.include_router(
+    withdrawal_lock_router,
+    prefix="/api/v1",
+    dependencies=[Depends(require_roles("admin", "veterinarian"))],
+)

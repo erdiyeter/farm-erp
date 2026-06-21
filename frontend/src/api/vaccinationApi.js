@@ -1,3 +1,5 @@
+import { authenticatedFetch } from "./apiClient";
+
 const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
 
 async function getCreateVaccinationError(response) {
@@ -19,7 +21,7 @@ async function getCreateVaccinationError(response) {
 }
 
 export async function getVaccinations() {
-  const response = await fetch(`${API_BASE_URL}/vaccinations`);
+  const response = await authenticatedFetch(`${API_BASE_URL}/vaccinations`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch vaccination records");
@@ -29,7 +31,7 @@ export async function getVaccinations() {
 }
 
 export async function createVaccination(vaccinationData) {
-  const response = await fetch(`${API_BASE_URL}/vaccinations`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/vaccinations`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -45,7 +47,7 @@ export async function createVaccination(vaccinationData) {
 }
 
 export async function getVaccinationsByAnimalId(animalId) {
-  const response = await fetch(
+  const response = await authenticatedFetch(
     `${API_BASE_URL}/animals/${animalId}/vaccinations`
   );
 

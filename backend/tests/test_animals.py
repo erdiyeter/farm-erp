@@ -39,3 +39,32 @@ def test_animal_crud_stats_validation_and_soft_delete(db) -> None:
         animal_service.get_animal_stats(db).total_active
         == initial_stats.total_active
     )
+
+
+@pytest.mark.parametrize("operation", ["get", "update", "delete"])
+def test_animal_missing_id_raises_lookup_error(db, operation) -> None:
+    missing_id = 2_000_000_000
+
+    with pytest.raises(LookupError, match="Animal not found"):
+        if operation == "get":
+            animal_service.get_animal(db, missing_id)
+        elif operation == "update":
+            animal_service.update_animal(
+                db, missing_id, AnimalUpdate(name="Missing")
+            )
+        else:
+            animal_service.soft_delete_animal(db, missing_id)
+
+
+def test_animal_update_rejects_duplicate_ear_tag(db) -> None:
+    first = animal_service.create_animal(
+        db, AnimalCreate(ear_tag=f"FIRST-{uuid4().hex[:12]}")
+    )
+    second = animal_service.create_animal(
+        db, AnimalCreate(ear_tag=f"SECOND-{uuid4().hex[:12]}")
+    )
+
+    with pytest.raises(ValueError, match="Ear tag already exists"):
+        animal_service.update_animal(
+            db, second.id, AnimalUpdate(ear_tag=first.ear_tag)
+        )

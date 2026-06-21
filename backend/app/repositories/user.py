@@ -21,6 +21,7 @@ def create_default_admin(db: Session, password_hash: str) -> User:
         full_name="Farm Admin",
         email=DEFAULT_ADMIN_EMAIL,
         password_hash=password_hash,
+        role="admin",
         is_active=True,
     )
     db.add(user)

@@ -1,7 +1,9 @@
+import { authenticatedFetch } from "./apiClient";
+
 const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
 
 export async function getDashboardStats() {
-  const response = await fetch(`${API_BASE_URL}/dashboard`);
+  const response = await authenticatedFetch(`${API_BASE_URL}/dashboard`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch dashboard statistics");
@@ -25,7 +27,7 @@ function getReportQuery(startDate, endDate) {
 }
 
 async function getReportResponse(path, startDate, endDate) {
-  const response = await fetch(
+  const response = await authenticatedFetch(
     `${API_BASE_URL}/reports/${path}${getReportQuery(startDate, endDate)}`
   );
 
@@ -53,4 +55,26 @@ export function getReportSummary(startDate = "", endDate = "") {
 
 export function getReportDetails(startDate = "", endDate = "") {
   return getReportResponse("details", startDate, endDate);
+}
+
+export async function downloadReportCsv(
+  path,
+  filename,
+  startDate = "",
+  endDate = ""
+) {
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/reports/${path}${getReportQuery(startDate, endDate)}`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to export report");
+  }
+
+  const downloadUrl = URL.createObjectURL(await response.blob());
+  const link = document.createElement("a");
+  link.href = downloadUrl;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(downloadUrl);
 }

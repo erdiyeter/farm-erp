@@ -1,3 +1,5 @@
+import { authenticatedFetch } from "./apiClient";
+
 const API_URL = "http://127.0.0.1:8000/api/v1/settings";
 
 async function getSettingsError(response, fallbackMessage) {
@@ -19,7 +21,7 @@ async function getSettingsError(response, fallbackMessage) {
 }
 
 export async function getSettings() {
-  const response = await fetch(API_URL);
+  const response = await authenticatedFetch(API_URL);
 
   if (!response.ok) {
     throw new Error(
@@ -31,7 +33,7 @@ export async function getSettings() {
 }
 
 export async function updateSettings(data) {
-  const response = await fetch(API_URL, {
+  const response = await authenticatedFetch(API_URL, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

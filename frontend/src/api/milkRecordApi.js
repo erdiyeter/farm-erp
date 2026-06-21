@@ -1,3 +1,5 @@
+import { authenticatedFetch } from "./apiClient";
+
 const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
 
 async function getCreateMilkRecordError(response) {
@@ -19,7 +21,7 @@ async function getCreateMilkRecordError(response) {
 }
 
 export async function getMilkRecords() {
-  const response = await fetch(`${API_BASE_URL}/milk-records`);
+  const response = await authenticatedFetch(`${API_BASE_URL}/milk-records`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch milk records");
@@ -29,7 +31,7 @@ export async function getMilkRecords() {
 }
 
 export async function createMilkRecord(milkRecordData) {
-  const response = await fetch(`${API_BASE_URL}/milk-records`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/milk-records`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -45,7 +47,7 @@ export async function createMilkRecord(milkRecordData) {
 }
 
 export async function getMilkRecordsByAnimalId(animalId) {
-  const response = await fetch(
+  const response = await authenticatedFetch(
     `${API_BASE_URL}/animals/${animalId}/milk-records`
   );
 

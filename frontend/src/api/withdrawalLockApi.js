@@ -1,3 +1,5 @@
+import { authenticatedFetch } from "./apiClient";
+
 const API_BASE_URL = "http://127.0.0.1:8000/api/v1/withdrawal-locks";
 
 async function getWithdrawalLockError(response, fallbackMessage) {
@@ -19,7 +21,7 @@ async function getWithdrawalLockError(response, fallbackMessage) {
 }
 
 export async function getWithdrawalLocks() {
-  const response = await fetch(API_BASE_URL);
+  const response = await authenticatedFetch(API_BASE_URL);
 
   if (!response.ok) {
     throw new Error(
@@ -34,7 +36,7 @@ export async function getWithdrawalLocks() {
 }
 
 export async function createWithdrawalLock(data) {
-  const response = await fetch(API_BASE_URL, {
+  const response = await authenticatedFetch(API_BASE_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -55,7 +57,7 @@ export async function createWithdrawalLock(data) {
 }
 
 export async function getWithdrawalLockById(id) {
-  const response = await fetch(`${API_BASE_URL}/${id}`);
+  const response = await authenticatedFetch(`${API_BASE_URL}/${id}`);
 
   if (!response.ok) {
     throw new Error(
@@ -70,7 +72,7 @@ export async function getWithdrawalLockById(id) {
 }
 
 export async function updateWithdrawalLock(id, data) {
-  const response = await fetch(`${API_BASE_URL}/${id}`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/${id}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -91,7 +93,7 @@ export async function updateWithdrawalLock(id, data) {
 }
 
 export async function deleteWithdrawalLock(id) {
-  const response = await fetch(`${API_BASE_URL}/${id}`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/${id}`, {
     method: "DELETE",
   });
 

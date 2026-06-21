@@ -49,10 +49,20 @@ def test_reporting_summary_filters_and_csv_export(db) -> None:
 
     assert summary.total_milk_records == initial.total_milk_records + 1
     assert summary.total_milk_liters == initial.total_milk_liters + 12.5
+    assert summary.average_daily_milk == 12.5
     assert summary.total_health_records == initial.total_health_records + 1
-    assert str(milk_in_range.id) in milk_csv
-    assert str(milk_outside_range.id) not in milk_csv
-    assert str(health_record.id) in health_csv
+    assert any(
+        row.startswith(f"{milk_in_range.id},")
+        for row in milk_csv.splitlines()
+    )
+    assert not any(
+        row.startswith(f"{milk_outside_range.id},")
+        for row in milk_csv.splitlines()
+    )
+    assert any(
+        row.startswith(f"{health_record.id},")
+        for row in health_csv.splitlines()
+    )
 
 
 def test_reporting_rejects_invalid_date_range() -> None:
@@ -61,3 +71,19 @@ def test_reporting_rejects_invalid_date_range() -> None:
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "start_date cannot be after end_date"
+
+
+def test_reporting_empty_filtered_period_returns_zero_values(db) -> None:
+    empty_date = date(9999, 12, 31)
+    summary = report_service.get_report_summary(db, empty_date, empty_date)
+    details = report_service.get_report_details(db, empty_date, empty_date)
+
+    assert summary.total_milk_records == 0
+    assert summary.total_milk_liters == 0
+    assert summary.average_daily_milk == 0
+    assert summary.total_health_records == 0
+    assert summary.total_income == 0
+    assert summary.total_expense == 0
+    assert details.milk_records == []
+    assert details.health_records == []
+    assert details.financial_records == []

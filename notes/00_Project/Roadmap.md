@@ -1,107 +1,39 @@
 # Farm ERP Roadmap
 
-## Project Status
+`PROJECT_STATUS.md` is the source of truth for completed work. This document contains planned direction only.
 
-Current Stage:
+## Completed Baseline
 
-- MVP Development
+- MVP modules, reporting, settings, and JWT authentication.
+- Detailed animal operational profile.
+- Inventory and health treatment integration.
+- User roles and role-based endpoint authorization.
+- PostgreSQL rollback-based backend test infrastructure and expanded coverage.
+- Sprint 56 documentation alignment.
 
-Completed Layers:
+## Current Phase
 
-- Layer 1 — Animal Module MVP
-- Layer 2 — Inventory Module MVP
-- Finance Module (In Progress)
+Post-MVP operational stabilization is complete through the documentation refactor. New work should remain small, testable, and consistent with the existing monolith.
 
----
+## Planned Layer 3
 
-## Layer 1 — Animal Management
+Layer 3 remains planned and has not started.
 
-Status: Completed
+- Mastitis risk scoring.
+- Milk yield prediction.
+- Golden List and Black List.
+- AI assistant.
+- RFID, NFC, or QR integration.
+- Offline support.
+- Mobile application.
 
-Scope:
+Breeding management also remains a previously planned future module and has not started.
 
-- Animal CRUD
-- Animal Detail
-- Animal Update
-- Soft Delete
-- Frontend Integration
-- Dashboard Integration
+Each item requires a separately approved sprint. This roadmap does not define implementation architecture or commit the project to all items.
 
-Completed.
+## Explicitly Not Planned Now
 
----
-
-## Layer 2 — Inventory
-
-Status: Completed
-
-Scope:
-
-- Inventory Items
-- Inventory Movements
-- Stock Tracking
-- Inventory Dashboard
-- Frontend Integration
-
-Completed.
-
----
-
-## Layer 3 — Finance
-
-Status: In Progress
-
-Scope:
-
-- Income Records
-- Expense Records
-- Finance Dashboard
-- Financial Summary
-
-Current Focus.
-
----
-
-## Layer 4 — Breeding
-
-Status: Planned
-
-Scope:
-
-- Breeding Records
-- Pregnancy Tracking
-- Birth Tracking
-
----
-
-## Layer 5 — Health
-
-Status: Planned
-
-Scope:
-
-- Vaccinations
-- Treatments
-- Medical Records
-
----
-
-## Layer 6 — Reporting
-
-Status: Future
-
-Scope:
-
-- Production Reports
-- Financial Reports
-- Inventory Reports
-
----
-
-## Long-Term Goals
-
-- Multi-farm support
-- User management
-- Permissions
-- Advanced reporting
-- Mobile support
+- Microservices or event-driven architecture.
+- Redis, Celery, message queues, or background workers.
+- Multiple databases or speculative infrastructure.
+- Advanced permission matrices beyond the current three roles.

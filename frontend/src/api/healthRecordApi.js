@@ -1,3 +1,5 @@
+import { authenticatedFetch } from "./apiClient";
+
 const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
 
 async function getHealthRecordError(response, fallbackMessage) {
@@ -19,7 +21,7 @@ async function getHealthRecordError(response, fallbackMessage) {
 }
 
 export async function getHealthRecords() {
-  const response = await fetch(`${API_BASE_URL}/health-records`);
+  const response = await authenticatedFetch(`${API_BASE_URL}/health-records`);
 
   if (!response.ok) {
     throw new Error(
@@ -31,7 +33,7 @@ export async function getHealthRecords() {
 }
 
 export async function getHealthRecordsByAnimalId(animalId) {
-  const response = await fetch(
+  const response = await authenticatedFetch(
     `${API_BASE_URL}/health-records/animal/${animalId}`
   );
 
@@ -48,7 +50,7 @@ export async function getHealthRecordsByAnimalId(animalId) {
 }
 
 export async function createHealthRecord(data) {
-  const response = await fetch(`${API_BASE_URL}/health-records`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/health-records`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -66,7 +68,9 @@ export async function createHealthRecord(data) {
 }
 
 export async function getHealthRecordById(id) {
-  const response = await fetch(`${API_BASE_URL}/health-records/${id}`);
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/health-records/${id}`
+  );
 
   if (!response.ok) {
     throw new Error(
@@ -78,7 +82,7 @@ export async function getHealthRecordById(id) {
 }
 
 export async function updateHealthRecord(id, data) {
-  const response = await fetch(`${API_BASE_URL}/health-records/${id}`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/health-records/${id}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -96,7 +100,7 @@ export async function updateHealthRecord(id, data) {
 }
 
 export async function deleteHealthRecord(id) {
-  const response = await fetch(`${API_BASE_URL}/health-records/${id}`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/health-records/${id}`, {
     method: "DELETE",
   });
 

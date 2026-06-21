@@ -1,80 +1,51 @@
 # Architecture Decisions
 
-## AD-001
+This file records accepted rationale. Current technical details belong in `README.md`.
 
-Decision:
+## AD-001 - Application Stack
 
-Use React + FastAPI + PostgreSQL.
+**Decision:** Use React, FastAPI, and PostgreSQL.
 
-Reason:
+**Reason:** The stack is simple, proven, and appropriate for the learning and farm-management goals.
 
-Simple, proven, easy to learn.
+**Status:** Accepted.
 
-Status:
+## AD-002 - Layered Monolith
 
-Accepted
+**Decision:** Keep one monolithic backend with model, repository, service, and router layers.
 
----
+**Reason:** It separates responsibilities without distributed-system complexity.
 
-## AD-002
+**Status:** Accepted.
 
-Decision:
+## AD-003 - Selective Soft Deletion
 
-Use layered backend architecture.
+**Decision:** Preserve historical Animals, Finance records, Withdrawal Locks, and Inventory Items using their existing active-state behavior.
 
-Model
-→ Repository
-→ Service
-→ Router
+**Reason:** Operational history must remain available where the implemented module requires it.
 
-Reason:
+**Status:** Accepted.
 
-Clear separation of responsibilities.
+## AD-004 - JWT Authentication and Fixed Roles
 
-Status:
+**Decision:** Use JWT access tokens and three fixed roles: admin, worker, and veterinarian.
 
-Accepted
+**Reason:** This provides understandable MVP authorization without a role-management subsystem or permission matrix.
 
----
+**Status:** Accepted.
 
-## AD-003
+## AD-005 - PostgreSQL Test Isolation
 
-Decision:
+**Decision:** Run backend tests against PostgreSQL inside rollback-only outer transactions.
 
-Use soft delete for Animals.
+**Reason:** Tests exercise real database behavior while leaving persistent data unchanged.
 
-Reason:
+**Status:** Accepted.
 
-Historical data should not be lost.
+## AD-006 - Infrastructure Restraint
 
-Status:
+**Decision:** Do not add microservices, events, queues, caching, or background workers without a documented requirement.
 
-Accepted
+**Reason:** Current workloads do not justify added operational complexity.
 
----
-
-## AD-004
-
-Decision:
-
-Keep MVP monolithic.
-
-Reason:
-
-Avoid unnecessary complexity.
-
-Status:
-
-Accepted
-
----
-
-## Template
-
-## AD-XXX
-
-Decision:
-
-Reason:
-
-Status:
+**Status:** Accepted.

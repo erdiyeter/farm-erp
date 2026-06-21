@@ -1,3 +1,5 @@
+import { authenticatedFetch } from "./apiClient";
+
 const API_BASE_URL = "http://127.0.0.1:8000/api/v1/finance";
 
 async function getFinanceError(response, fallbackMessage) {
@@ -19,7 +21,7 @@ async function getFinanceError(response, fallbackMessage) {
 }
 
 export async function getFinanceRecords() {
-  const response = await fetch(API_BASE_URL);
+  const response = await authenticatedFetch(API_BASE_URL);
 
   if (!response.ok) {
     throw new Error(
@@ -31,7 +33,7 @@ export async function getFinanceRecords() {
 }
 
 export async function createFinanceRecord(financeData) {
-  const response = await fetch(API_BASE_URL, {
+  const response = await authenticatedFetch(API_BASE_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -49,7 +51,7 @@ export async function createFinanceRecord(financeData) {
 }
 
 export async function getFinanceRecord(id) {
-  const response = await fetch(`${API_BASE_URL}/${id}`);
+  const response = await authenticatedFetch(`${API_BASE_URL}/${id}`);
 
   if (!response.ok) {
     throw new Error(
@@ -61,7 +63,7 @@ export async function getFinanceRecord(id) {
 }
 
 export async function updateFinanceRecord(id, financeData) {
-  const response = await fetch(`${API_BASE_URL}/${id}`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/${id}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -79,7 +81,7 @@ export async function updateFinanceRecord(id, financeData) {
 }
 
 export async function deleteFinanceRecord(id) {
-  const response = await fetch(`${API_BASE_URL}/${id}`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/${id}`, {
     method: "DELETE",
   });
 

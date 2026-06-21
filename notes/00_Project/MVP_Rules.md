@@ -1,150 +1,20 @@
-# Farm ERP MVP Rules
+# Farm ERP MVP Rules - Historical Baseline
 
-## Purpose
+**Status:** MVP completed. This document is retained to explain the constraints used during MVP delivery.
 
-This document defines the boundaries of the Farm ERP MVP.
+Active engineering rules now live in `AGENTS.md` and `CODEX_RULES.md`. When this historical file conflicts with them, the active rules take precedence.
 
-All development decisions should respect these rules unless a deliberate architecture change is approved and documented.
+## Baseline Principles Still Preserved
 
----
+- Prefer the simplest working solution and follow YAGNI.
+- Keep React -> FastAPI -> PostgreSQL.
+- Keep the backend layered as model -> repository -> service -> router.
+- Keep PostgreSQL as the single source of truth.
+- Avoid microservices, event systems, queues, Redis, Celery, GraphQL, and unnecessary infrastructure.
+- Keep frontend state and styling simple and reuse existing patterns.
 
-## MVP First
+## Obsolete MVP Statements
 
-Rules:
+Earlier versions listed only Animals, Inventory, and Finance as active and described Health and Reporting as future work. Those statements are obsolete: all current modules are listed in `PROJECT_STATUS.md`.
 
-- Build the simplest working solution.
-- Avoid premature optimization.
-- Avoid enterprise-level complexity.
-- Deliver working features before advanced features.
-
----
-
-## Architecture
-
-Current architecture:
-
-Frontend
-→ React (Vite)
-
-Backend
-→ FastAPI
-
-Database
-→ PostgreSQL
-
-This architecture should remain stable during MVP development.
-
----
-
-## Forbidden During MVP
-
-Do not introduce:
-
-- Microservices
-- Event-driven architecture
-- Message queues
-- Redis
-- Celery
-- Kubernetes
-- GraphQL
-- Multiple databases
-
-Unless there is a documented architecture decision.
-
----
-
-## Database Rules
-
-Rules:
-
-- PostgreSQL is the single source of truth.
-- Use soft delete when appropriate.
-- Keep schemas simple.
-- Avoid unnecessary tables.
-- Avoid unnecessary relationships.
-
----
-
-## Backend Rules
-
-Rules:
-
-- Follow the existing layer structure.
-
-Model
-→ Repository
-→ Service
-→ Router
-
-- Business logic belongs in services.
-- Routers should remain thin.
-- Repositories should handle database access only.
-
----
-
-## Frontend Rules
-
-Rules:
-
-- Keep UI simple.
-- Prefer functional components.
-- Avoid unnecessary state management libraries.
-- Use API clients for backend communication.
-- Prioritize usability over visual complexity.
-
----
-
-## Development Rules
-
-Rules:
-
-- Finish one feature before starting another.
-- Validate functionality before moving forward.
-- Keep documentation synchronized when necessary.
-- Avoid large uncontrolled refactors.
-
----
-
-## AI Usage Rules
-
-AI tools may assist development.
-
-Examples:
-
-- ChatGPT
-- Codex
-
-AI-generated code must:
-
-- Respect project architecture.
-- Respect MVP scope.
-- Avoid introducing new technologies without approval.
-
----
-
-## Current MVP Modules
-
-Active:
-
-- Animals
-- Inventory
-- Finance
-
-Planned:
-
-- Breeding
-- Health
-
-Future:
-
-- Reporting
-- Analytics
-- Advanced dashboards
-
----
-
-## Decision Rule
-
-When unsure:
-
-Choose the simpler solution that fits the current MVP.
+The original "during MVP development" wording is also historical. The same simplicity constraints remain active in the post-MVP phase through `AGENTS.md`.

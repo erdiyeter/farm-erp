@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
 from app.repositories import user as user_repository
-from app.schemas.auth import LoginRequest, TokenResponse, UserResponse
+from app.schemas.auth import LoginRequest, TokenResponse, UserResponse, UserRole
 from app.services import auth as auth_service
 
 
@@ -39,6 +39,20 @@ def get_current_user(
     if user is None or user.id != user_id or user.is_active is not True:
         raise unauthorized
     return user
+
+
+def require_roles(*allowed_roles: UserRole):
+    def check_role(
+        current_user: User = Depends(get_current_user),
+    ) -> User:
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
+            )
+        return current_user
+
+    return check_role
 
 
 @router.post("/login", response_model=TokenResponse)

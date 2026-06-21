@@ -5,26 +5,12 @@ import ErrorMessage from "../components/ErrorMessage";
 import KpiCard from "../components/KpiCard";
 import {
   getDashboardStats,
+  downloadReportCsv,
   getReportDetails,
   getReportSummary,
 } from "../api/dashboardApi";
 import { getAlarms } from "../api/alarmApi";
-
-const REPORT_API_BASE_URL = "http://127.0.0.1:8000/api/v1/reports";
-
-function getDatedExportUrl(path, startDate, endDate) {
-  const query = new URLSearchParams();
-
-  if (startDate) {
-    query.set("start_date", startDate);
-  }
-  if (endDate) {
-    query.set("end_date", endDate);
-  }
-
-  const queryString = query.toString();
-  return `${REPORT_API_BASE_URL}/${path}${queryString ? `?${queryString}` : ""}`;
-}
+import { useAuth } from "../context/authContext";
 
 function getTodayText() {
   return new Date().toISOString().slice(0, 10);
@@ -54,6 +40,7 @@ function getPresetDates(days) {
 }
 
 function Dashboard() {
+  const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [alarms, setAlarms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -73,21 +60,32 @@ function Dashboard() {
     (alarm) => alarm.due_date >= today
   );
   const overdueAlarms = openAlarms.filter((alarm) => alarm.due_date < today);
+  const canViewVeterinaryData =
+    user?.role === "admin" || user?.role === "veterinarian";
 
   useEffect(() => {
     async function loadDashboardStats() {
       try {
-        const [dashboardData, alarmData, summaryData, detailData] =
-          await Promise.all([
-          getDashboardStats(),
-          getAlarms(),
-          getReportSummary(),
-          getReportDetails(),
-        ]);
-        setStats(dashboardData);
-        setAlarms(alarmData);
-        setReportSummary(summaryData);
-        setReportDetails(detailData);
+        if (user?.role === "worker") {
+          setStats(await getDashboardStats());
+        } else {
+          const requests = [
+            getAlarms(),
+            getReportSummary(),
+            getReportDetails(),
+          ];
+          if (user?.role === "admin") {
+            requests.unshift(getDashboardStats());
+          }
+          const results = await Promise.all(requests);
+          const offset = user?.role === "admin" ? 1 : 0;
+          if (user?.role === "admin") {
+            setStats(results[0]);
+          }
+          setAlarms(results[offset]);
+          setReportSummary(results[offset + 1]);
+          setReportDetails(results[offset + 2]);
+        }
       } catch {
         setError("Unable to load dashboard data.");
       } finally {
@@ -96,7 +94,7 @@ function Dashboard() {
     }
 
     loadDashboardStats();
-  }, []);
+  }, [user?.role]);
 
   async function loadReportData(startDate, endDate) {
     setReportLoading(true);
@@ -136,6 +134,20 @@ function Dashboard() {
     await loadReportData(startDate, endDate);
   }
 
+  async function handleExport(path, filename, useDateRange = true) {
+    setReportError("");
+    try {
+      await downloadReportCsv(
+        path,
+        filename,
+        useDateRange ? appliedStartDate : "",
+        useDateRange ? appliedEndDate : ""
+      );
+    } catch (err) {
+      setReportError(err.message);
+    }
+  }
+
   if (loading) {
     return <Loading text="Loading dashboard..." className="status-text" />;
   }
@@ -151,6 +163,8 @@ function Dashboard() {
         <p>Manage your farm modules from one central place.</p>
       </div>
 
+      {stats && (
+        <>
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
@@ -222,6 +236,13 @@ function Dashboard() {
         )}
       </section>
 
+        </>
+      )}
+
+      {stats && canViewVeterinaryData && (
+        <>
+      {stats && canViewVeterinaryData && (
+        <>
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
@@ -252,6 +273,8 @@ function Dashboard() {
           />
         </div>
       </section>
+        </>
+      )}
 
       <section className="dashboard-section">
         <div className="dashboard-section-header">
@@ -280,6 +303,11 @@ function Dashboard() {
         </div>
       </section>
 
+        </>
+      )}
+
+      {canViewVeterinaryData && (
+        <>
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
@@ -404,46 +432,51 @@ function Dashboard() {
               </div>
 
               <div className="dashboard-export-links">
-          <a
+          <button
+            type="button"
             className="dashboard-nav-link"
-            href={`${REPORT_API_BASE_URL}/animals/export.csv`}
-            download="animals_export.csv"
+            onClick={() =>
+              handleExport("animals/export.csv", "animals_export.csv", false)
+            }
           >
             Export Animals CSV
-          </a>
-          <a
+          </button>
+          <button
+            type="button"
             className="dashboard-nav-link"
-            href={getDatedExportUrl(
-              "health-records/export.csv",
-              appliedStartDate,
-              appliedEndDate
-            )}
-            download="health_records_export.csv"
+            onClick={() =>
+              handleExport(
+                "health-records/export.csv",
+                "health_records_export.csv"
+              )
+            }
           >
             Export Health Records CSV
-          </a>
-          <a
+          </button>
+          <button
+            type="button"
             className="dashboard-nav-link"
-            href={getDatedExportUrl(
-              "withdrawal-locks/export.csv",
-              appliedStartDate,
-              appliedEndDate
-            )}
-            download="withdrawal_locks_export.csv"
+            onClick={() =>
+              handleExport(
+                "withdrawal-locks/export.csv",
+                "withdrawal_locks_export.csv"
+              )
+            }
           >
             Export Withdrawal Locks CSV
-          </a>
-          <a
+          </button>
+          <button
+            type="button"
             className="dashboard-nav-link"
-            href={getDatedExportUrl(
-              "milk-records/export.csv",
-              appliedStartDate,
-              appliedEndDate
-            )}
-            download="milk_records_export.csv"
+            onClick={() =>
+              handleExport(
+                "milk-records/export.csv",
+                "milk_records_export.csv"
+              )
+            }
           >
             Export Milk Records CSV
-          </a>
+          </button>
               </div>
             </div>
 
@@ -499,6 +532,8 @@ function Dashboard() {
           </>
         ) : null}
       </section>
+        </>
+      )}
     </div>
   );
 }

@@ -74,16 +74,21 @@ The project is successful if:
 
 Current focus:
 
-- MVP Development
+- Post-MVP stabilization and separately approved future work.
 
-Current active modules:
+Implemented operational areas:
 
 - Animals
+- Milk production
 - Inventory
 - Finance
-
-Modules planned for later stages:
-
-- Breeding
-- Health
+- Health records
+- Withdrawal locks
+- Alarms
 - Reporting
+- Settings
+- Authentication and fixed user roles
+
+The MVP and post-MVP operational enhancement packages through Sprint 56 are complete. Future work is tracked only in `Roadmap.md`.
+
+Earlier versions of this section that listed only Animals, Inventory, and Finance as active are obsolete.
