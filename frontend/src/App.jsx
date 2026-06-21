@@ -23,6 +23,7 @@ import WithdrawalLockEdit from "./pages/WithdrawalLockEdit";
 import Alarms from "./pages/Alarms";
 import AlarmDetail from "./pages/AlarmDetail";
 import AlarmEdit from "./pages/AlarmEdit";
+import Settings from "./pages/Settings";
 import "./App.css";
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
             <Link to="/health-records">Health Records</Link>
             <Link to="/withdrawal-locks">Withdrawal Locks</Link>
             <Link to="/alarms">Alarms</Link>
+            <Link to="/settings">Settings</Link>
           </div>
         </nav>
 
@@ -97,6 +99,7 @@ function App() {
             <Route path="/alarms" element={<Alarms />} />
             <Route path="/alarms/:id" element={<AlarmDetail />} />
             <Route path="/alarms/:id/edit" element={<AlarmEdit />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>          
         </main>
       </div>

@@ -9,6 +9,7 @@ from app.routers.health_record import router as health_record_router
 from app.routers.inventory import router as inventory_router
 from app.routers.milk_record import router as milk_record_router
 from app.routers.report import router as report_router
+from app.routers.settings import router as settings_router
 from app.routers.vaccination import router as vaccination_router
 from app.routers.withdrawal_lock import router as withdrawal_lock_router
 
@@ -31,5 +32,6 @@ app.include_router(health_record_router, prefix="/api/v1")
 app.include_router(inventory_router, prefix="/api/v1")
 app.include_router(milk_record_router, prefix="/api/v1")
 app.include_router(report_router, prefix="/api/v1")
+app.include_router(settings_router, prefix="/api/v1")
 app.include_router(vaccination_router, prefix="/api/v1")
 app.include_router(withdrawal_lock_router, prefix="/api/v1")

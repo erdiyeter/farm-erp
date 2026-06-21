@@ -30,6 +30,29 @@ function getTodayText() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function formatDateInput(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getPresetDates(days) {
+  const endDate = new Date();
+  const startDate = new Date();
+
+  if (days === "month") {
+    startDate.setDate(1);
+  } else {
+    startDate.setDate(startDate.getDate() - (days - 1));
+  }
+
+  return {
+    startDate: formatDateInput(startDate),
+    endDate: formatDateInput(endDate),
+  };
+}
+
 function Dashboard() {
   const [stats, setStats] = useState(null);
   const [alarms, setAlarms] = useState([]);
@@ -75,20 +98,19 @@ function Dashboard() {
     loadDashboardStats();
   }, []);
 
-  async function handleApplyFilters(event) {
-    event.preventDefault();
+  async function loadReportData(startDate, endDate) {
     setReportLoading(true);
     setReportError("");
 
     try {
       const [summaryData, detailData] = await Promise.all([
-        getReportSummary(reportStartDate, reportEndDate),
-        getReportDetails(reportStartDate, reportEndDate),
+        getReportSummary(startDate, endDate),
+        getReportDetails(startDate, endDate),
       ]);
       setReportSummary(summaryData);
       setReportDetails(detailData);
-      setAppliedStartDate(reportStartDate);
-      setAppliedEndDate(reportEndDate);
+      setAppliedStartDate(startDate);
+      setAppliedEndDate(endDate);
     } catch (err) {
       setReportError(err.message);
     } finally {
@@ -96,26 +118,22 @@ function Dashboard() {
     }
   }
 
+  async function handleApplyFilters(event) {
+    event.preventDefault();
+    await loadReportData(reportStartDate, reportEndDate);
+  }
+
   async function handleClearFilters() {
     setReportStartDate("");
     setReportEndDate("");
-    setReportLoading(true);
-    setReportError("");
+    await loadReportData("", "");
+  }
 
-    try {
-      const [summaryData, detailData] = await Promise.all([
-        getReportSummary(),
-        getReportDetails(),
-      ]);
-      setReportSummary(summaryData);
-      setReportDetails(detailData);
-      setAppliedStartDate("");
-      setAppliedEndDate("");
-    } catch (err) {
-      setReportError(err.message);
-    } finally {
-      setReportLoading(false);
-    }
+  async function handlePreset(days) {
+    const { startDate, endDate } = getPresetDates(days);
+    setReportStartDate(startDate);
+    setReportEndDate(endDate);
+    await loadReportData(startDate, endDate);
   }
 
   if (loading) {
@@ -289,6 +307,36 @@ function Dashboard() {
         </div>
 
         <form className="dashboard-export-filters" onSubmit={handleApplyFilters}>
+          <div className="report-filter-presets">
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => handlePreset(1)}
+            >
+              Today
+            </button>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => handlePreset(7)}
+            >
+              Last 7 Days
+            </button>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => handlePreset(30)}
+            >
+              Last 30 Days
+            </button>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => handlePreset("month")}
+            >
+              This Month
+            </button>
+          </div>
           <label>
             Start Date
             <input
@@ -306,8 +354,14 @@ function Dashboard() {
             />
           </label>
           <div className="report-filter-actions">
-            <button className="primary-button" type="submit">Apply Filters</button>
-            <button className="secondary-button" type="button" onClick={handleClearFilters}>
+            <button className="primary-button" type="submit">
+              Apply Filters
+            </button>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={handleClearFilters}
+            >
               Clear Filters
             </button>
           </div>
