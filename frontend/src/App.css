@@ -180,6 +180,7 @@
 
 .dashboard-export-filters {
   display: flex;
+  align-items: end;
   flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 1rem;
@@ -195,6 +196,38 @@
   padding: 0.55rem;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
+}
+
+.report-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.report-filter-actions button {
+  border: 0;
+  font-family: inherit;
+}
+
+.report-kpi-grid {
+  margin-top: 20px;
+}
+
+.report-detail-section {
+  margin-top: 28px;
+}
+
+.report-section-header {
+  margin-bottom: 12px;
+}
+
+.report-section-header h3 {
+  margin: 0;
+}
+
+.report-section-header p {
+  margin: 6px 0 0;
+  color: #666;
 }
 
 .dashboard-records-table {

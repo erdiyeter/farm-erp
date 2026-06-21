@@ -283,14 +283,14 @@ function Dashboard() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h2>CSV Export</h2>
-            <p>Download simple report data from existing records</p>
+            <h2>Reports</h2>
+            <p>Review and export farm records by date range</p>
           </div>
         </div>
 
-        <div className="dashboard-export-filters">
+        <form className="dashboard-export-filters" onSubmit={handleApplyFilters}>
           <label>
-            Start date
+            Start Date
             <input
               type="date"
               value={reportStartDate}
@@ -298,16 +298,45 @@ function Dashboard() {
             />
           </label>
           <label>
-            End date
+            End Date
             <input
               type="date"
               value={reportEndDate}
               onChange={(event) => setReportEndDate(event.target.value)}
             />
           </label>
-        </div>
+          <div className="report-filter-actions">
+            <button className="primary-button" type="submit">Apply Filters</button>
+            <button className="secondary-button" type="button" onClick={handleClearFilters}>
+              Clear Filters
+            </button>
+          </div>
+        </form>
 
-        <div className="dashboard-export-links">
+        {reportError && <ErrorMessage message={reportError} className="error-text" />}
+
+        {reportLoading ? (
+          <Loading text="Loading reports..." className="status-text" />
+        ) : reportSummary && reportDetails ? (
+          <>
+            <div className="dashboard-kpi-grid report-kpi-grid">
+              <KpiCard title="Total Animals" value={reportSummary.total_animals} />
+              <KpiCard title="Total Milk Records" value={reportSummary.total_milk_records} />
+              <KpiCard title="Total Milk Liters" value={reportSummary.total_milk_liters} />
+              <KpiCard title="Total Health Records" value={reportSummary.total_health_records} />
+              <KpiCard title="Total Income" value={reportSummary.total_income} />
+              <KpiCard title="Total Expense" value={reportSummary.total_expense} />
+              <KpiCard title="Active Withdrawal Locks" value={reportSummary.active_withdrawal_locks} />
+              <KpiCard title="Open Alarms" value={reportSummary.open_alarms} />
+            </div>
+
+            <div className="report-detail-section">
+              <div className="report-section-header">
+                <h3>CSV Export</h3>
+                <p>Downloads use the applied date filters.</p>
+              </div>
+
+              <div className="dashboard-export-links">
           <a
             className="dashboard-nav-link"
             href={`${REPORT_API_BASE_URL}/animals/export.csv`}
@@ -319,8 +348,8 @@ function Dashboard() {
             className="dashboard-nav-link"
             href={getDatedExportUrl(
               "health-records/export.csv",
-              reportStartDate,
-              reportEndDate
+              appliedStartDate,
+              appliedEndDate
             )}
             download="health_records_export.csv"
           >
@@ -330,8 +359,8 @@ function Dashboard() {
             className="dashboard-nav-link"
             href={getDatedExportUrl(
               "withdrawal-locks/export.csv",
-              reportStartDate,
-              reportEndDate
+              appliedStartDate,
+              appliedEndDate
             )}
             download="withdrawal_locks_export.csv"
           >
@@ -341,14 +370,67 @@ function Dashboard() {
             className="dashboard-nav-link"
             href={getDatedExportUrl(
               "milk-records/export.csv",
-              reportStartDate,
-              reportEndDate
+              appliedStartDate,
+              appliedEndDate
             )}
             download="milk_records_export.csv"
           >
             Export Milk Records CSV
           </a>
-        </div>
+              </div>
+            </div>
+
+            <div className="report-detail-section">
+              <div className="report-section-header"><h3>Milk Report</h3><p>Milk production records in the selected date range.</p></div>
+              {reportDetails.milk_records.length === 0 ? <p className="empty-text">No milk records found.</p> : (
+                <div className="dashboard-records-table"><table className="data-table">
+                  <thead><tr><th>Animal ID</th><th>Date</th><th>Liters</th><th>Session</th></tr></thead>
+                  <tbody>{reportDetails.milk_records.map((record) => <tr key={record.id}><td>{record.animal_id}</td><td>{record.record_date}</td><td>{record.milk_liters}</td><td>{record.session || "-"}</td></tr>)}</tbody>
+                </table></div>
+              )}
+            </div>
+
+            <div className="report-detail-section">
+              <div className="report-section-header"><h3>Health Report</h3><p>Health activity in the selected date range.</p></div>
+              {reportDetails.health_records.length === 0 ? <p className="empty-text">No health records found.</p> : (
+                <div className="dashboard-records-table"><table className="data-table">
+                  <thead><tr><th>Animal ID</th><th>Record Type</th><th>Date</th><th>Diagnosis</th></tr></thead>
+                  <tbody>{reportDetails.health_records.map((record) => <tr key={record.id}><td>{record.animal_id}</td><td>{record.record_type}</td><td>{record.record_date}</td><td>{record.diagnosis || "-"}</td></tr>)}</tbody>
+                </table></div>
+              )}
+            </div>
+
+            <div className="report-detail-section">
+              <div className="report-section-header"><h3>Finance Report</h3><p>Active income and expense records.</p></div>
+              {reportDetails.financial_records.length === 0 ? <p className="empty-text">No finance records found.</p> : (
+                <div className="dashboard-records-table"><table className="data-table">
+                  <thead><tr><th>Type</th><th>Category</th><th>Amount</th><th>Date</th></tr></thead>
+                  <tbody>{reportDetails.financial_records.map((record) => <tr key={record.id}><td>{record.record_type}</td><td>{record.category}</td><td>{record.amount}</td><td>{record.record_date}</td></tr>)}</tbody>
+                </table></div>
+              )}
+            </div>
+
+            <div className="report-detail-section">
+              <div className="report-section-header"><h3>Withdrawal Lock Report</h3><p>Withdrawal periods by lock start date.</p></div>
+              {reportDetails.withdrawal_locks.length === 0 ? <p className="empty-text">No withdrawal locks found.</p> : (
+                <div className="dashboard-records-table"><table className="data-table">
+                  <thead><tr><th>Animal ID</th><th>Start Date</th><th>End Date</th><th>Status</th></tr></thead>
+                  <tbody>{reportDetails.withdrawal_locks.map((lock) => <tr key={lock.id}><td>{lock.animal_id}</td><td>{lock.start_date}</td><td>{lock.end_date}</td><td>{!lock.is_active ? "Released" : lock.end_date < today ? "Expired" : "Active"}</td></tr>)}</tbody>
+                </table></div>
+              )}
+            </div>
+
+            <div className="report-detail-section">
+              <div className="report-section-header"><h3>Alarm Report</h3><p>Alarms by due date.</p></div>
+              {reportDetails.alarms.length === 0 ? <p className="empty-text">No alarms found.</p> : (
+                <div className="dashboard-records-table"><table className="data-table">
+                  <thead><tr><th>Title</th><th>Priority</th><th>Due Date</th><th>Status</th></tr></thead>
+                  <tbody>{reportDetails.alarms.map((alarm) => <tr key={alarm.id}><td>{alarm.title}</td><td>{alarm.priority}</td><td>{alarm.due_date}</td><td>{alarm.is_completed ? "Completed" : "Open"}</td></tr>)}</tbody>
+                </table></div>
+              )}
+            </div>
+          </>
+        ) : null}
       </section>
     </div>
   );

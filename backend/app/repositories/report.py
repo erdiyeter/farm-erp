@@ -187,8 +187,10 @@ def count_active_withdrawal_locks(
     start_date: date | None = None,
     end_date: date | None = None,
 ) -> int:
+    today = date.today()
     statement = select(func.count()).where(
-        WithdrawalLock.is_active.is_(True)
+        WithdrawalLock.is_active.is_(True),
+        WithdrawalLock.end_date >= today,
     )
     if start_date:
         statement = statement.where(WithdrawalLock.start_date >= start_date)

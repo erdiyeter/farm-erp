@@ -117,6 +117,8 @@ def get_report_details(
             db, start_date, end_date
         ),
     )
+
+
 def get_animals_csv(db: Session) -> str:
     output = StringIO()
     writer = csv.writer(output)
