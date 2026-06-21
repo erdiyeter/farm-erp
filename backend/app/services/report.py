@@ -1,4 +1,5 @@
 import csv
+from datetime import date
 from io import StringIO
 
 from sqlalchemy.orm import Session
@@ -9,6 +10,8 @@ from app.schemas.report import (
     FinanceSummaryReport,
     HealthSummaryReport,
     MilkSummaryReport,
+    ReportDetails,
+    ReportSummary,
 )
 
 
@@ -55,6 +58,65 @@ def get_finance_summary(db: Session) -> FinanceSummaryReport:
     )
 
 
+def get_report_summary(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> ReportSummary:
+    return ReportSummary(
+        total_animals=report_repository.count_animals(db),
+        total_milk_records=report_repository.count_filtered_milk_records(
+            db, start_date, end_date
+        ),
+        total_milk_liters=float(
+            report_repository.get_filtered_milk_total(
+                db, start_date, end_date
+            )
+        ),
+        total_health_records=report_repository.count_filtered_health_records(
+            db, start_date, end_date
+        ),
+        total_income=float(
+            report_repository.get_financial_total(
+                db, "income", start_date, end_date
+            )
+        ),
+        total_expense=float(
+            report_repository.get_financial_total(
+                db, "expense", start_date, end_date
+            )
+        ),
+        active_withdrawal_locks=report_repository.count_active_withdrawal_locks(
+            db, start_date, end_date
+        ),
+        open_alarms=report_repository.count_open_alarms(
+            db, start_date, end_date
+        ),
+    )
+
+
+def get_report_details(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> ReportDetails:
+    return ReportDetails(
+        milk_records=report_repository.list_milk_records_for_export(
+            db, start_date, end_date
+        ),
+        health_records=report_repository.list_health_records_for_export(
+            db, start_date, end_date
+        ),
+        financial_records=report_repository.list_financial_records_for_report(
+            db, start_date, end_date
+        ),
+        withdrawal_locks=report_repository.list_withdrawal_locks_for_export(
+            db, start_date, end_date
+        ),
+        alarms=report_repository.list_alarms_for_report(
+            db, start_date, end_date
+        ),
+    )
 def get_animals_csv(db: Session) -> str:
     output = StringIO()
     writer = csv.writer(output)
@@ -88,7 +150,11 @@ def get_animals_csv(db: Session) -> str:
     return output.getvalue()
 
 
-def get_health_records_csv(db: Session) -> str:
+def get_health_records_csv(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> str:
     output = StringIO()
     writer = csv.writer(output)
     writer.writerow(
@@ -105,7 +171,9 @@ def get_health_records_csv(db: Session) -> str:
         ]
     )
 
-    for record in report_repository.list_health_records_for_export(db):
+    for record in report_repository.list_health_records_for_export(
+        db, start_date, end_date
+    ):
         writer.writerow(
             [
                 record.id,
@@ -123,7 +191,11 @@ def get_health_records_csv(db: Session) -> str:
     return output.getvalue()
 
 
-def get_withdrawal_locks_csv(db: Session) -> str:
+def get_withdrawal_locks_csv(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> str:
     output = StringIO()
     writer = csv.writer(output)
     writer.writerow(
@@ -139,7 +211,7 @@ def get_withdrawal_locks_csv(db: Session) -> str:
     )
 
     for withdrawal_lock in report_repository.list_withdrawal_locks_for_export(
-        db
+        db, start_date, end_date
     ):
         writer.writerow(
             [
@@ -156,7 +228,11 @@ def get_withdrawal_locks_csv(db: Session) -> str:
     return output.getvalue()
 
 
-def get_milk_records_csv(db: Session) -> str:
+def get_milk_records_csv(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> str:
     output = StringIO()
     writer = csv.writer(output)
     writer.writerow(
@@ -170,7 +246,9 @@ def get_milk_records_csv(db: Session) -> str:
         ]
     )
 
-    for record in report_repository.list_milk_records_for_export(db):
+    for record in report_repository.list_milk_records_for_export(
+        db, start_date, end_date
+    ):
         writer.writerow(
             [
                 record.id,

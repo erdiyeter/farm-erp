@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.animal import Animal
+from app.models.alarm import Alarm
 from app.models.finance import FinancialRecord
 from app.models.health_record import HealthRecord
 from app.models.milk_record import MilkRecord
@@ -84,16 +85,158 @@ def list_animals_for_export(db: Session) -> list[Animal]:
     return list(db.scalars(statement).all())
 
 
-def list_health_records_for_export(db: Session) -> list[HealthRecord]:
+def list_health_records_for_export(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> list[HealthRecord]:
     statement = select(HealthRecord).order_by(HealthRecord.id)
+    if start_date:
+        statement = statement.where(HealthRecord.record_date >= start_date)
+    if end_date:
+        statement = statement.where(HealthRecord.record_date <= end_date)
     return list(db.scalars(statement).all())
 
 
-def list_withdrawal_locks_for_export(db: Session) -> list[WithdrawalLock]:
+def list_withdrawal_locks_for_export(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> list[WithdrawalLock]:
     statement = select(WithdrawalLock).order_by(WithdrawalLock.id)
+    if start_date:
+        statement = statement.where(WithdrawalLock.start_date >= start_date)
+    if end_date:
+        statement = statement.where(WithdrawalLock.start_date <= end_date)
     return list(db.scalars(statement).all())
 
 
-def list_milk_records_for_export(db: Session) -> list[MilkRecord]:
+def list_milk_records_for_export(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> list[MilkRecord]:
     statement = select(MilkRecord).order_by(MilkRecord.id)
+    if start_date:
+        statement = statement.where(MilkRecord.record_date >= start_date)
+    if end_date:
+        statement = statement.where(MilkRecord.record_date <= end_date)
+    return list(db.scalars(statement).all())
+
+
+def count_filtered_milk_records(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> int:
+    statement = select(func.count()).select_from(MilkRecord)
+    if start_date:
+        statement = statement.where(MilkRecord.record_date >= start_date)
+    if end_date:
+        statement = statement.where(MilkRecord.record_date <= end_date)
+    return db.scalar(statement) or 0
+
+
+def get_filtered_milk_total(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> Decimal:
+    statement = select(func.coalesce(func.sum(MilkRecord.milk_liters), 0))
+    if start_date:
+        statement = statement.where(MilkRecord.record_date >= start_date)
+    if end_date:
+        statement = statement.where(MilkRecord.record_date <= end_date)
+    return db.scalar(statement) or Decimal("0")
+
+
+def count_filtered_health_records(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> int:
+    statement = select(func.count()).select_from(HealthRecord)
+    if start_date:
+        statement = statement.where(HealthRecord.record_date >= start_date)
+    if end_date:
+        statement = statement.where(HealthRecord.record_date <= end_date)
+    return db.scalar(statement) or 0
+
+
+def get_financial_total(
+    db: Session,
+    record_type: str,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> Decimal:
+    statement = select(
+        func.coalesce(func.sum(FinancialRecord.amount), 0)
+    ).where(
+        FinancialRecord.is_active.is_(True),
+        FinancialRecord.record_type == record_type,
+    )
+    if start_date:
+        statement = statement.where(FinancialRecord.record_date >= start_date)
+    if end_date:
+        statement = statement.where(FinancialRecord.record_date <= end_date)
+    return db.scalar(statement) or Decimal("0")
+
+
+def count_active_withdrawal_locks(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> int:
+    statement = select(func.count()).where(
+        WithdrawalLock.is_active.is_(True)
+    )
+    if start_date:
+        statement = statement.where(WithdrawalLock.start_date >= start_date)
+    if end_date:
+        statement = statement.where(WithdrawalLock.start_date <= end_date)
+    return db.scalar(statement) or 0
+
+
+def count_open_alarms(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> int:
+    statement = select(func.count()).where(Alarm.is_completed.is_(False))
+    if start_date:
+        statement = statement.where(Alarm.due_date >= start_date)
+    if end_date:
+        statement = statement.where(Alarm.due_date <= end_date)
+    return db.scalar(statement) or 0
+
+
+def list_financial_records_for_report(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> list[FinancialRecord]:
+    statement = select(FinancialRecord).where(
+        FinancialRecord.is_active.is_(True)
+    )
+    if start_date:
+        statement = statement.where(FinancialRecord.record_date >= start_date)
+    if end_date:
+        statement = statement.where(FinancialRecord.record_date <= end_date)
+    statement = statement.order_by(
+        FinancialRecord.record_date.desc(), FinancialRecord.id.desc()
+    )
+    return list(db.scalars(statement).all())
+
+
+def list_alarms_for_report(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> list[Alarm]:
+    statement = select(Alarm)
+    if start_date:
+        statement = statement.where(Alarm.due_date >= start_date)
+    if end_date:
+        statement = statement.where(Alarm.due_date <= end_date)
+    statement = statement.order_by(Alarm.due_date.desc(), Alarm.id.desc())
     return list(db.scalars(statement).all())

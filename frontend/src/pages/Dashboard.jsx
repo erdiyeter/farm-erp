@@ -3,10 +3,28 @@ import { Link } from "react-router-dom";
 import Loading from "../components/Loading";
 import ErrorMessage from "../components/ErrorMessage";
 import KpiCard from "../components/KpiCard";
-import { getDashboardStats } from "../api/dashboardApi";
+import {
+  getDashboardStats,
+  getReportDetails,
+  getReportSummary,
+} from "../api/dashboardApi";
 import { getAlarms } from "../api/alarmApi";
 
 const REPORT_API_BASE_URL = "http://127.0.0.1:8000/api/v1/reports";
+
+function getDatedExportUrl(path, startDate, endDate) {
+  const query = new URLSearchParams();
+
+  if (startDate) {
+    query.set("start_date", startDate);
+  }
+  if (endDate) {
+    query.set("end_date", endDate);
+  }
+
+  const queryString = query.toString();
+  return `${REPORT_API_BASE_URL}/${path}${queryString ? `?${queryString}` : ""}`;
+}
 
 function getTodayText() {
   return new Date().toISOString().slice(0, 10);
@@ -17,6 +35,14 @@ function Dashboard() {
   const [alarms, setAlarms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reportStartDate, setReportStartDate] = useState("");
+  const [reportEndDate, setReportEndDate] = useState("");
+  const [appliedStartDate, setAppliedStartDate] = useState("");
+  const [appliedEndDate, setAppliedEndDate] = useState("");
+  const [reportSummary, setReportSummary] = useState(null);
+  const [reportDetails, setReportDetails] = useState(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportError, setReportError] = useState("");
 
   const today = getTodayText();
   const openAlarms = alarms.filter((alarm) => !alarm.is_completed);
@@ -28,12 +54,17 @@ function Dashboard() {
   useEffect(() => {
     async function loadDashboardStats() {
       try {
-        const [dashboardData, alarmData] = await Promise.all([
+        const [dashboardData, alarmData, summaryData, detailData] =
+          await Promise.all([
           getDashboardStats(),
           getAlarms(),
+          getReportSummary(),
+          getReportDetails(),
         ]);
         setStats(dashboardData);
         setAlarms(alarmData);
+        setReportSummary(summaryData);
+        setReportDetails(detailData);
       } catch {
         setError("Unable to load dashboard data.");
       } finally {
@@ -43,6 +74,49 @@ function Dashboard() {
 
     loadDashboardStats();
   }, []);
+
+  async function handleApplyFilters(event) {
+    event.preventDefault();
+    setReportLoading(true);
+    setReportError("");
+
+    try {
+      const [summaryData, detailData] = await Promise.all([
+        getReportSummary(reportStartDate, reportEndDate),
+        getReportDetails(reportStartDate, reportEndDate),
+      ]);
+      setReportSummary(summaryData);
+      setReportDetails(detailData);
+      setAppliedStartDate(reportStartDate);
+      setAppliedEndDate(reportEndDate);
+    } catch (err) {
+      setReportError(err.message);
+    } finally {
+      setReportLoading(false);
+    }
+  }
+
+  async function handleClearFilters() {
+    setReportStartDate("");
+    setReportEndDate("");
+    setReportLoading(true);
+    setReportError("");
+
+    try {
+      const [summaryData, detailData] = await Promise.all([
+        getReportSummary(),
+        getReportDetails(),
+      ]);
+      setReportSummary(summaryData);
+      setReportDetails(detailData);
+      setAppliedStartDate("");
+      setAppliedEndDate("");
+    } catch (err) {
+      setReportError(err.message);
+    } finally {
+      setReportLoading(false);
+    }
+  }
 
   if (loading) {
     return <Loading text="Loading dashboard..." className="status-text" />;
@@ -214,6 +288,25 @@ function Dashboard() {
           </div>
         </div>
 
+        <div className="dashboard-export-filters">
+          <label>
+            Start date
+            <input
+              type="date"
+              value={reportStartDate}
+              onChange={(event) => setReportStartDate(event.target.value)}
+            />
+          </label>
+          <label>
+            End date
+            <input
+              type="date"
+              value={reportEndDate}
+              onChange={(event) => setReportEndDate(event.target.value)}
+            />
+          </label>
+        </div>
+
         <div className="dashboard-export-links">
           <a
             className="dashboard-nav-link"
@@ -224,21 +317,33 @@ function Dashboard() {
           </a>
           <a
             className="dashboard-nav-link"
-            href={`${REPORT_API_BASE_URL}/health-records/export.csv`}
+            href={getDatedExportUrl(
+              "health-records/export.csv",
+              reportStartDate,
+              reportEndDate
+            )}
             download="health_records_export.csv"
           >
             Export Health Records CSV
           </a>
           <a
             className="dashboard-nav-link"
-            href={`${REPORT_API_BASE_URL}/withdrawal-locks/export.csv`}
+            href={getDatedExportUrl(
+              "withdrawal-locks/export.csv",
+              reportStartDate,
+              reportEndDate
+            )}
             download="withdrawal_locks_export.csv"
           >
             Export Withdrawal Locks CSV
           </a>
           <a
             className="dashboard-nav-link"
-            href={`${REPORT_API_BASE_URL}/milk-records/export.csv`}
+            href={getDatedExportUrl(
+              "milk-records/export.csv",
+              reportStartDate,
+              reportEndDate
+            )}
             download="milk_records_export.csv"
           >
             Export Milk Records CSV
