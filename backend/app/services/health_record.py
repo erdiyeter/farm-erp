@@ -13,6 +13,7 @@ def list_health_records(db: Session) -> list[HealthRecord]:
 def list_health_records_by_animal(
     animal_id: int, db: Session
 ) -> list[HealthRecord]:
+    validate_active_animal(db, animal_id)
     return health_record_repository.get_health_records_by_animal_id(
         db, animal_id
     )

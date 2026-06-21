@@ -19,7 +19,7 @@ async function getWithdrawalLockError(response, fallbackMessage) {
 }
 
 export async function getWithdrawalLocks() {
-  const response = await fetch(`${API_BASE_URL}/active`);
+  const response = await fetch(API_BASE_URL);
 
   if (!response.ok) {
     throw new Error(

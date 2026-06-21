@@ -16,7 +16,6 @@ const initialFormData = {
   diagnosis: "",
   treatment: "",
   medication: "",
-  vet_name: "",
   notes: "",
 };
 
@@ -94,7 +93,6 @@ function HealthRecords() {
       diagnosis: formData.diagnosis || null,
       treatment: formData.treatment || null,
       medicine_name: formData.medication || null,
-      vet_name: formData.vet_name || null,
       notes: formData.notes || null,
     };
 
@@ -193,17 +191,6 @@ function HealthRecords() {
             <input
               name="medication"
               value={formData.medication}
-              onChange={handleChange}
-            />
-          </label>
-        </div>
-
-        <div>
-          <label>
-            Vet Name:
-            <input
-              name="vet_name"
-              value={formData.vet_name}
               onChange={handleChange}
             />
           </label>
