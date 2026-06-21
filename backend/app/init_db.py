@@ -1,7 +1,9 @@
 import app.models  # noqa: F401
 from sqlalchemy import text
 
-from app.database import Base, engine
+from app.database import Base, SessionLocal, engine
+from app.repositories import user as user_repository
+from app.services.auth import hash_password
 
 
 def ensure_finance_soft_delete_column() -> None:
@@ -18,6 +20,13 @@ def ensure_finance_soft_delete_column() -> None:
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     ensure_finance_soft_delete_column()
+    with SessionLocal() as db:
+        if user_repository.get_user_by_email(
+            db, user_repository.DEFAULT_ADMIN_EMAIL
+        ) is None:
+            user_repository.create_default_admin(
+                db, hash_password("admin123")
+            )
 
 
 if __name__ == "__main__":

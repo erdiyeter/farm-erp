@@ -46,19 +46,22 @@
   margin-left: 8px;
 }
 
-.settings-form {
+.settings-form,
+.auth-form {
   display: grid;
   max-width: 640px;
   gap: 16px;
 }
 
-.settings-form label {
+.settings-form label,
+.auth-form label {
   display: grid;
   gap: 6px;
 }
 
 .settings-form input,
-.settings-form textarea {
+.settings-form textarea,
+.auth-form input {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
@@ -70,8 +73,18 @@
   resize: vertical;
 }
 
-.settings-form button {
+.settings-form button,
+.auth-form button {
   justify-self: start;
+}
+
+.login-page {
+  max-width: 480px;
+  margin: 40px auto;
+}
+
+.login-page .page-subtitle {
+  margin-bottom: 24px;
 }
 
 .primary-button,
@@ -292,4 +305,14 @@
 
 .navbar a {
   text-decoration: none;
+}
+
+.nav-user {
+  color: #555;
+  font-weight: 600;
+}
+
+.nav-logout {
+  border: 0;
+  font-family: inherit;
 }

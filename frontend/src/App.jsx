@@ -1,4 +1,13 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import {
+  BrowserRouter,
+  Link,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import AnimalList from "./pages/AnimalList";
 import AnimalCreate from "./pages/AnimalCreate";
@@ -24,35 +33,76 @@ import Alarms from "./pages/Alarms";
 import AlarmDetail from "./pages/AlarmDetail";
 import AlarmEdit from "./pages/AlarmEdit";
 import Settings from "./pages/Settings";
+import Login from "./pages/Login";
+import AuthProvider from "./context/AuthProvider";
+import { useAuth } from "./context/authContext";
 import "./App.css";
 
-function App() {
+function ProtectedRoute() {
+  const { token, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return <p className="status-text">Restoring session...</p>;
+  }
+  if (!token) {
+    return (
+      <Navigate to="/login" replace state={{ from: location.pathname }} />
+    );
+  }
+  return <Outlet />;
+}
+
+function AppContent() {
+  const { token, user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    logout();
+    navigate("/login", { replace: true });
+  }
+
   return (
-    <BrowserRouter>
-      <div className="app">
-        <nav className="navbar">
-          <Link to="/" className="nav-logo">
-            Farm ERP
-          </Link>
+    <div className="app">
+      <nav className="navbar">
+        <Link to={token ? "/dashboard" : "/login"} className="nav-logo">
+          Farm ERP
+        </Link>
 
-          <div className="nav-links">
-            <Link to="/">Dashboard</Link>
-            <Link to="/animals">Animals</Link>
-            <Link to="/vaccinations">Vaccinations</Link>
-            <Link to="/milk-records">Milk Records</Link>
-            <Link to="/inventory">Inventory</Link>
-            <Link to="/inventory/items">Inventory Items</Link>
-            <Link to="/inventory/movements">Inventory Movements</Link>
-            <Link to="/finance">Finance</Link>
-            <Link to="/health-records">Health Records</Link>
-            <Link to="/withdrawal-locks">Withdrawal Locks</Link>
-            <Link to="/alarms">Alarms</Link>
-            <Link to="/settings">Settings</Link>
-          </div>
-        </nav>
+        <div className="nav-links">
+          {token ? (
+            <>
+              <Link to="/">Dashboard</Link>
+              <Link to="/animals">Animals</Link>
+              <Link to="/vaccinations">Vaccinations</Link>
+              <Link to="/milk-records">Milk Records</Link>
+              <Link to="/inventory">Inventory</Link>
+              <Link to="/inventory/items">Inventory Items</Link>
+              <Link to="/inventory/movements">Inventory Movements</Link>
+              <Link to="/finance">Finance</Link>
+              <Link to="/health-records">Health Records</Link>
+              <Link to="/withdrawal-locks">Withdrawal Locks</Link>
+              <Link to="/alarms">Alarms</Link>
+              <Link to="/settings">Settings</Link>
+              <span className="nav-user">{user?.full_name}</span>
+              <button
+                className="secondary-button nav-logout"
+                type="button"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link to="/login">Login</Link>
+          )}
+        </div>
+      </nav>
 
-        <main className="main-content">
-          <Routes>
+      <main className="main-content">
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/animals" element={<AnimalList />} />
@@ -100,9 +150,19 @@ function App() {
             <Route path="/alarms/:id" element={<AlarmDetail />} />
             <Route path="/alarms/:id/edit" element={<AlarmEdit />} />
             <Route path="/settings" element={<Settings />} />
-          </Routes>          
-        </main>
-      </div>
+          </Route>
+        </Routes>
+      </main>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </BrowserRouter>
   );
 }
