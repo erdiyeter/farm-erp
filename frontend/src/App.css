@@ -282,6 +282,123 @@
   overflow-x: auto;
 }
 
+.animal-identity-grid,
+.animal-profile-placeholder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.animal-profile-page {
+  gap: 28px;
+}
+
+.animal-profile-page .dashboard-section {
+  padding: 24px;
+}
+
+.animal-profile-page .dashboard-section-header {
+  margin-bottom: 20px;
+}
+
+.animal-profile-page .dashboard-section-header h1 {
+  margin: 0;
+}
+
+.animal-profile-actions button {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.animal-profile-metrics {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.animal-profile-metrics .dashboard-kpi-card {
+  min-height: 104px;
+  padding: 18px;
+  border-color: #d6dbe1;
+}
+
+.animal-identity-grid > div {
+  padding: 14px;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  background: #f8f9fa;
+}
+
+.animal-identity-grid dt {
+  color: #666;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.animal-identity-grid dd {
+  margin: 6px 0 0;
+  color: #222;
+  font-weight: 600;
+}
+
+.animal-identity-notes {
+  grid-column: 1 / -1;
+}
+
+.animal-profile-timeline th:first-child,
+.animal-profile-timeline td:first-child {
+  white-space: nowrap;
+}
+
+.animal-profile-timeline td:last-child {
+  min-width: 220px;
+  color: #555;
+}
+
+.animal-timeline-type,
+.animal-profile-placeholder-status {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef1f4;
+  color: #4d5661;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.animal-profile-future {
+  padding-top: 4px;
+}
+
+.animal-profile-placeholder h2 {
+  margin: 14px 0 0;
+}
+
+.animal-profile-placeholder p {
+  margin: 8px 0 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+.animal-profile-placeholder {
+  min-height: 150px;
+  border-style: dashed;
+  background: #fafafa;
+}
+
+@media (max-width: 700px) {
+  .animal-profile-page {
+    gap: 20px;
+  }
+
+  .animal-profile-page .dashboard-section {
+    padding: 16px;
+  }
+
+  .animal-profile-page .dashboard-section-header {
+    flex-direction: column;
+  }
+}
+
 .navbar {
   display: flex;
   align-items: center;

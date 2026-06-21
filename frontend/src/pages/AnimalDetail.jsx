@@ -8,18 +8,80 @@ import { getWithdrawalLocks } from "../api/withdrawalLockApi";
 import Loading from "../components/Loading";
 import ErrorMessage from "../components/ErrorMessage";
 import KpiCard from "../components/KpiCard";
+import { useAuth } from "../context/authContext";
 import useAnimalDetail from "../hooks/useAnimalDetail";
 
 const initialOperationalData = {
   milkRecords: [],
   healthRecords: [],
+  withdrawalLocks: [],
+  alarms: [],
   activeLocks: [],
   activeAlarms: [],
 };
 
+function getDateDaysAgo(days) {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() - (days - 1));
+  return date.toISOString().slice(0, 10);
+}
+
+function getLatestRecordDate(records) {
+  return records.reduce(
+    (latestDate, record) =>
+      record.record_date > latestDate ? record.record_date : latestDate,
+    ""
+  );
+}
+
+function buildTimeline(operationalData) {
+  const items = [
+    ...operationalData.milkRecords.map((record) => ({
+      key: `milk-${record.id}`,
+      date: record.record_date,
+      type: "Milk",
+      event: `${record.milk_liters} liters${
+        record.session ? ` (${record.session})` : ""
+      }`,
+      details: record.notes || "Milk production recorded",
+    })),
+    ...operationalData.healthRecords.map((record) => ({
+      key: `health-${record.id}`,
+      date: record.record_date,
+      type: "Health",
+      event: record.record_type,
+      details:
+        record.diagnosis || record.treatment || "Health activity recorded",
+    })),
+    ...operationalData.withdrawalLocks.map((lock) => ({
+      key: `lock-${lock.id}`,
+      date: lock.start_date,
+      type: "Withdrawal Lock",
+      event: lock.is_active ? "Lock activated" : "Released lock",
+      details: `${lock.reason || "No reason provided"}; ends ${lock.end_date}`,
+    })),
+    ...operationalData.alarms.map((alarm) => ({
+      key: `alarm-${alarm.id}`,
+      date: alarm.due_date,
+      type: "Alarm",
+      event: alarm.title,
+      details: `${alarm.priority} priority; ${
+        alarm.is_completed ? "completed" : "open"
+      }`,
+    })),
+  ];
+
+  return items.sort(
+    (first, second) =>
+      second.date.localeCompare(first.date) ||
+      second.key.localeCompare(first.key)
+  );
+}
+
 function AnimalDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const { animal, loading, error, setError } = useAnimalDetail(id);
   const [deleting, setDeleting] = useState(false);
@@ -28,24 +90,60 @@ function AnimalDetail() {
   );
   const [operationalLoading, setOperationalLoading] = useState(true);
   const [operationalError, setOperationalError] = useState("");
+  const canViewMilk = user?.role === "admin" || user?.role === "worker";
+  const canViewCare =
+    user?.role === "admin" || user?.role === "veterinarian";
+  const today = new Date().toISOString().slice(0, 10);
+  const last30DaysStart = getDateDaysAgo(30);
+  const last30DaysMilkLiters = operationalData.milkRecords
+    .filter(
+      (record) =>
+        record.record_date >= last30DaysStart && record.record_date <= today
+    )
+    .reduce((total, record) => total + Number(record.milk_liters), 0)
+    .toFixed(2);
+  const lastMilkRecordDate = getLatestRecordDate(
+    operationalData.milkRecords
+  );
+  const lastHealthRecordDate = getLatestRecordDate(
+    operationalData.healthRecords
+  );
+  const timelineItems = buildTimeline(operationalData);
 
   useEffect(() => {
     async function loadOperationalData() {
+      setOperationalLoading(true);
+      setOperationalError("");
       try {
         const [milkRecords, healthRecords, locks, alarms] =
           await Promise.all([
-            getMilkRecordsByAnimalId(id),
-            getHealthRecordsByAnimalId(id),
-            getWithdrawalLocks(),
-            getAlarms(),
+            canViewMilk
+              ? getMilkRecordsByAnimalId(id)
+              : Promise.resolve([]),
+            canViewCare
+              ? getHealthRecordsByAnimalId(id)
+              : Promise.resolve([]),
+            canViewCare ? getWithdrawalLocks() : Promise.resolve([]),
+            canViewCare ? getAlarms() : Promise.resolve([]),
           ]);
         const today = new Date().toISOString().slice(0, 10);
         const animalId = Number(id);
-        const activeLocks = locks.filter(
+        const withdrawalLocks = locks.filter(
+          (lock) => lock.animal_id === animalId
+        );
+        const activeLocks = withdrawalLocks.filter(
           (lock) =>
-            lock.animal_id === animalId &&
             lock.is_active === true &&
             lock.end_date >= today
+        );
+        const alarmTitles = new Set(
+          withdrawalLocks.map(
+            (lock) =>
+              `Withdrawal lock ${lock.id} for animal ${animalId}`
+          )
+        );
+        const associatedAlarms = alarms.filter((alarm) =>
+          alarmTitles.has(alarm.title)
         );
         const activeAlarmTitles = new Set(
           activeLocks.map(
@@ -53,7 +151,7 @@ function AnimalDetail() {
               `Withdrawal lock ${lock.id} for animal ${animalId}`
           )
         );
-        const activeAlarms = alarms.filter(
+        const activeAlarms = associatedAlarms.filter(
           (alarm) =>
             !alarm.is_completed && activeAlarmTitles.has(alarm.title)
         );
@@ -61,6 +159,8 @@ function AnimalDetail() {
         setOperationalData({
           milkRecords,
           healthRecords,
+          withdrawalLocks,
+          alarms: associatedAlarms,
           activeLocks,
           activeAlarms,
         });
@@ -72,7 +172,7 @@ function AnimalDetail() {
     }
 
     loadOperationalData();
-  }, [id]);
+  }, [canViewCare, canViewMilk, id]);
 
   async function handleDeactivate() {
     const confirmed = window.confirm(
@@ -117,59 +217,49 @@ function AnimalDetail() {
   }
 
   return (
-    <div className="dashboard-page">
+    <div className="dashboard-page animal-profile-page">
       <section className="dashboard-section">
-        <h1>Animal Detail</h1>
+        <div className="dashboard-section-header">
+          <div>
+            <h1>Animal Identity</h1>
+            <p>Core profile and current status for {animal.ear_tag}</p>
+          </div>
+          <div className="dashboard-export-links animal-profile-actions">
+            <Link className="dashboard-nav-link" to="/animals">
+              Back to Animals
+            </Link>
+            <Link
+              className="dashboard-nav-link"
+              to={`/animals/${animal.id}/edit`}
+            >
+              Edit
+            </Link>
+            {animal.is_active === true && (
+              <button
+                className="dashboard-nav-link"
+                type="button"
+                onClick={handleDeactivate}
+                disabled={deleting}
+              >
+                {deleting ? "Deactivating..." : "Deactivate"}
+              </button>
+            )}
+          </div>
+        </div>
 
-        <p>
-          <strong>ID:</strong> {animal.id}
-        </p>
-
-        <p>
-          <strong>Ear Tag:</strong> {animal.ear_tag}
-        </p>
-
-        <p>
-          <strong>Name:</strong> {animal.name || "-"}
-        </p>
-
-        <p>
-          <strong>Species:</strong> {animal.species || "-"}
-        </p>
-
-        <p>
-          <strong>Breed:</strong> {animal.breed || "-"}
-        </p>
-
-        <p>
-          <strong>Sex:</strong> {animal.sex || "-"}
-        </p>
-
-        <p>
-          <strong>Birth Date:</strong> {animal.birth_date || "-"}
-        </p>
-
-        <p>
-          <strong>Notes:</strong> {animal.notes || "-"}
-        </p>
-
-        <p>
-          <strong>Active:</strong> {animal.is_active ? "Yes" : "No"}
-        </p>
-
-        <Link to="/animals">
-          <button>Back to Animals</button>
-        </Link>
-
-        <Link to={`/animals/${animal.id}/edit`}>
-          <button>Edit</button>
-        </Link>
-
-        {animal.is_active === true && (
-          <button onClick={handleDeactivate} disabled={deleting}>
-            {deleting ? "Deactivating..." : "Deactivate"}
-          </button>
-        )}
+        <dl className="animal-identity-grid">
+          <div><dt>ID</dt><dd>{animal.id}</dd></div>
+          <div><dt>Ear Tag</dt><dd>{animal.ear_tag}</dd></div>
+          <div><dt>Name</dt><dd>{animal.name || "-"}</dd></div>
+          <div><dt>Species</dt><dd>{animal.species || "-"}</dd></div>
+          <div><dt>Breed</dt><dd>{animal.breed || "-"}</dd></div>
+          <div><dt>Sex</dt><dd>{animal.sex || "-"}</dd></div>
+          <div><dt>Birth Date</dt><dd>{animal.birth_date || "-"}</dd></div>
+          <div><dt>Status</dt><dd>{animal.is_active ? "Active" : "Inactive"}</dd></div>
+          <div className="animal-identity-notes">
+            <dt>Notes</dt><dd>{animal.notes || "-"}</dd>
+          </div>
+        </dl>
       </section>
 
       {operationalError && (
@@ -186,29 +276,81 @@ function AnimalDetail() {
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
-                <h2>Simple Operational Summary</h2>
+                <h2>Operational Summary</h2>
                 <p>Current activity linked to this animal</p>
               </div>
             </div>
 
-            <div className="dashboard-kpi-grid">
+            <div className="dashboard-kpi-grid animal-profile-metrics">
               <KpiCard
-                title="Milk Records"
-                value={operationalData.milkRecords.length}
+                title="Total Milk Records"
+                value={canViewMilk ? operationalData.milkRecords.length : "-"}
               />
               <KpiCard
-                title="Health Records"
-                value={operationalData.healthRecords.length}
+                title="Last 30 Days Milk Liters"
+                value={canViewMilk ? last30DaysMilkLiters : "-"}
+              />
+              <KpiCard
+                title="Last Milk Record Date"
+                value={canViewMilk ? lastMilkRecordDate || "-" : "-"}
+              />
+              <KpiCard
+                title="Total Health Records"
+                value={canViewCare ? operationalData.healthRecords.length : "-"}
+              />
+              <KpiCard
+                title="Last Health Record Date"
+                value={canViewCare ? lastHealthRecordDate || "-" : "-"}
               />
               <KpiCard
                 title="Active Withdrawal Locks"
-                value={operationalData.activeLocks.length}
+                value={canViewCare ? operationalData.activeLocks.length : "-"}
               />
               <KpiCard
-                title="Active Alarms"
-                value={operationalData.activeAlarms.length}
+                title="Open Alarms"
+                value={canViewCare ? operationalData.activeAlarms.length : "-"}
               />
             </div>
+          </section>
+
+          <section className="dashboard-section">
+            <div className="dashboard-section-header">
+              <div>
+                <h2>Operational Timeline</h2>
+                <p>Milk, health, withdrawal, and alarm activity</p>
+              </div>
+            </div>
+
+            {timelineItems.length === 0 ? (
+              <p className="empty-text">No timeline activity found.</p>
+            ) : (
+              <div className="dashboard-records-table">
+                <table className="data-table animal-profile-timeline">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Event</th>
+                      <th>Details</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {timelineItems.map((item) => (
+                      <tr key={item.key}>
+                        <td>{item.date}</td>
+                        <td>
+                          <span className="animal-timeline-type">
+                            {item.type}
+                          </span>
+                        </td>
+                        <td>{item.event}</td>
+                        <td>{item.details}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
 
           <section className="dashboard-section">
@@ -219,7 +361,11 @@ function AnimalDetail() {
               </div>
             </div>
 
-            {operationalData.milkRecords.length === 0 ? (
+            {!canViewMilk ? (
+              <p className="empty-text">
+                Milk records are not available for your role.
+              </p>
+            ) : operationalData.milkRecords.length === 0 ? (
               <p className="empty-text">No milk records found.</p>
             ) : (
               <div className="dashboard-records-table">
@@ -257,7 +403,11 @@ function AnimalDetail() {
               </div>
             </div>
 
-            {operationalData.healthRecords.length === 0 ? (
+            {!canViewCare ? (
+              <p className="empty-text">
+                Health records are not available for your role.
+              </p>
+            ) : operationalData.healthRecords.length === 0 ? (
               <p className="empty-text">No health records found.</p>
             ) : (
               <div className="dashboard-records-table">
@@ -295,7 +445,11 @@ function AnimalDetail() {
               </div>
             </div>
 
-            {operationalData.activeLocks.length === 0 ? (
+            {!canViewCare ? (
+              <p className="empty-text">
+                Withdrawal locks are not available for your role.
+              </p>
+            ) : operationalData.activeLocks.length === 0 ? (
               <p className="empty-text">No active withdrawal locks.</p>
             ) : (
               <div className="dashboard-records-table">
@@ -324,13 +478,17 @@ function AnimalDetail() {
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
-                <h2>Active Alarms</h2>
-                <p>Open withdrawal alarms linked to this animal</p>
+                <h2>Open Alarms</h2>
+                <p>Open withdrawal alarms reliably linked to this animal</p>
               </div>
             </div>
 
-            {operationalData.activeAlarms.length === 0 ? (
-              <p className="empty-text">No active alarms found.</p>
+            {!canViewCare ? (
+              <p className="empty-text">
+                Alarms are not available for your role.
+              </p>
+            ) : operationalData.activeAlarms.length === 0 ? (
+              <p className="empty-text">No open alarms found.</p>
             ) : (
               <div className="dashboard-records-table">
                 <table className="data-table">
@@ -356,6 +514,32 @@ function AnimalDetail() {
           </section>
         </>
       )}
+
+      <div className="animal-profile-future">
+        <div className="dashboard-section-header">
+          <div>
+            <h2>Future Profile Areas</h2>
+            <p>Reserved for later operational development</p>
+          </div>
+        </div>
+        <div className="animal-profile-placeholder-grid">
+          {[
+            ["Lactation", "Lactation tracking will be added in a future sprint."],
+            ["Reproduction", "Reproduction history will be added in a future sprint."],
+            ["Performance", "Performance indicators will be added in a future sprint."],
+            ["Genetics / Breeding", "Genetics and breeding data will be added in a future sprint."],
+          ].map(([title, message]) => (
+            <section
+              className="dashboard-section animal-profile-placeholder"
+              key={title}
+            >
+              <span className="animal-profile-placeholder-status">Planned</span>
+              <h2>{title}</h2>
+              <p>{message}</p>
+            </section>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
