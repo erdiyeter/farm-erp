@@ -4,6 +4,7 @@ import { getAlarms } from "../api/alarmApi";
 import { deleteAnimal } from "../api/animalApi";
 import { getHealthRecordsByAnimalId } from "../api/healthRecordApi";
 import { getMilkRecordsByAnimalId } from "../api/milkRecordApi";
+import { getWeightRecordsByAnimalId } from "../api/weightRecordApi";
 import { getWithdrawalLocks } from "../api/withdrawalLockApi";
 import Loading from "../components/Loading";
 import ErrorMessage from "../components/ErrorMessage";
@@ -14,6 +15,7 @@ import useAnimalDetail from "../hooks/useAnimalDetail";
 const initialOperationalData = {
   milkRecords: [],
   healthRecords: [],
+  weightRecords: [],
   withdrawalLocks: [],
   alarms: [],
   activeLocks: [],
@@ -90,6 +92,14 @@ function buildTimeline(operationalData) {
       details:
         record.diagnosis || record.treatment || "Health activity recorded",
       to: `/health-records/${record.id}`,
+    })),
+    ...operationalData.weightRecords.map((record) => ({
+      key: `weight-${record.id}`,
+      date: record.record_date,
+      type: "Weight",
+      event: `${record.weight_kg} kg`,
+      details: record.notes || "Weight recorded",
+      to: `/weight-records/${record.id}`,
     })),
     ...operationalData.withdrawalLocks.map((lock) => ({
       key: `lock-${lock.id}`,
@@ -189,6 +199,12 @@ function AnimalDetail() {
   const lastHealthRecordDate = getLatestRecordDate(
     operationalData.healthRecords
   );
+  const sortedWeightRecords = [...operationalData.weightRecords].sort(
+    (first, second) =>
+      second.record_date.localeCompare(first.record_date) ||
+      second.id - first.id
+  );
+  const latestWeightRecord = sortedWeightRecords[0];
   const daysSinceLastMilk = getDaysSince(lastMilkRecordDate, today);
   const daysSinceLastHealth = getDaysSince(lastHealthRecordDate, today);
   const timelineItems = buildTimeline(operationalData);
@@ -198,7 +214,7 @@ function AnimalDetail() {
       setOperationalLoading(true);
       setOperationalError("");
       try {
-        const [milkRecords, healthRecords, locks, alarms] =
+        const [milkRecords, healthRecords, weightRecords, locks, alarms] =
           await Promise.all([
             canViewMilk
               ? getMilkRecordsByAnimalId(id)
@@ -206,6 +222,7 @@ function AnimalDetail() {
             canViewCare
               ? getHealthRecordsByAnimalId(id)
               : Promise.resolve([]),
+            getWeightRecordsByAnimalId(id),
             canViewCare ? getWithdrawalLocks() : Promise.resolve([]),
             canViewCare ? getAlarms() : Promise.resolve([]),
           ]);
@@ -242,6 +259,7 @@ function AnimalDetail() {
         setOperationalData({
           milkRecords,
           healthRecords,
+          weightRecords,
           withdrawalLocks,
           alarms: associatedAlarms,
           activeLocks,
@@ -414,6 +432,10 @@ function AnimalDetail() {
                   value={canViewCare ? operationalData.healthRecords.length : "-"}
                 />
                 <KpiCard
+                  title="Total Weight Records"
+                  value={operationalData.weightRecords.length}
+                />
+                <KpiCard
                   title="Total Treatments"
                   value={canViewCare ? treatmentCount : "-"}
                 />
@@ -445,6 +467,18 @@ function AnimalDetail() {
                   value={canViewCare ? lastHealthRecordDate || "-" : "-"}
                 />
                 <KpiCard
+                  title="Latest Recorded Weight"
+                  value={
+                    latestWeightRecord
+                      ? `${latestWeightRecord.weight_kg} kg`
+                      : "-"
+                  }
+                />
+                <KpiCard
+                  title="Latest Weight Record Date"
+                  value={latestWeightRecord?.record_date || "-"}
+                />
+                <KpiCard
                   title="Days Since Last Health Event"
                   value={canViewCare ? daysSinceLastHealth : "-"}
                 />
@@ -464,7 +498,7 @@ function AnimalDetail() {
             <div className="dashboard-section-header">
               <div>
                 <h2>Operational Timeline</h2>
-                <p>Milk, health, withdrawal, and alarm activity</p>
+                <p>Milk, health, weight, withdrawal, and alarm activity</p>
               </div>
             </div>
 
@@ -498,6 +532,44 @@ function AnimalDetail() {
                           )}
                         </td>
                         <td>{item.details}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          <section className="dashboard-section">
+            <div className="dashboard-section-header">
+              <div>
+                <h2>Recent Weight Records</h2>
+                <p>Latest five weight records</p>
+              </div>
+            </div>
+
+            {sortedWeightRecords.length === 0 ? (
+              <p className="empty-text">No weight records found.</p>
+            ) : (
+              <div className="dashboard-records-table">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Weight</th>
+                      <th>Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedWeightRecords.slice(0, 5).map((record) => (
+                      <tr key={record.id}>
+                        <td>
+                          <Link to={`/weight-records/${record.id}`}>
+                            {record.record_date}
+                          </Link>
+                        </td>
+                        <td>{record.weight_kg} kg</td>
+                        <td>{record.notes || "-"}</td>
                       </tr>
                     ))}
                   </tbody>

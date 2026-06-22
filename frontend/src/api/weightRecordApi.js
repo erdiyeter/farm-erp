@@ -32,6 +32,23 @@ export async function getWeightRecords() {
   return response.json();
 }
 
+export async function getWeightRecordsByAnimalId(animalId) {
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/animals/${animalId}/weight-records`
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      await getWeightRecordError(
+        response,
+        "Failed to fetch animal weight records"
+      )
+    );
+  }
+
+  return response.json();
+}
+
 export async function createWeightRecord(data) {
   const response = await authenticatedFetch(`${API_BASE_URL}/weight-records`, {
     method: "POST",
