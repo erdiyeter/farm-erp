@@ -7,10 +7,12 @@ import {
 import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
+import useAnimals from "../hooks/useAnimals";
 
 function WithdrawalLockDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { getAnimalLabel } = useAnimals();
 
   const [lock, setLock] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -77,7 +79,10 @@ function WithdrawalLockDetail() {
       </p>
 
       <p>
-        <strong>Animal ID:</strong> {lock.animal_id}
+        <strong>Animal:</strong>{" "}
+        <ButtonLink to={`/animals/${lock.animal_id}`} variant="secondary">
+          {getAnimalLabel(lock.animal_id)}
+        </ButtonLink>
       </p>
 
       <p>

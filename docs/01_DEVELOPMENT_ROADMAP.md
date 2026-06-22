@@ -1,142 +1,459 @@
 # 01 · Development Roadmap
 
-## Genel Strateji
-Proje üç ana katmanda geliştirilecek. Her katman bitmeden sonraki katmana geçilmeyecek.
+## Current Status
 
-Amaç hızlı bitirmek değil; sistemi anlayarak, temiz ve sürdürülebilir şekilde geliştirmektir.
+Project Status: Post-MVP Operational Enhancement Phase
+
+Layer 1 (Core MVP) has been completed.
+
+Layer 2 (Operational System) is largely completed and currently focuses on operational improvements, documentation alignment, and selected business capabilities required for real-world usage.
 
 ---
 
-# Katman 1 — Gerçek MVP
+# Development Strategy
 
-## Hedef
-Basit ama çalışan bir çiftlik yönetim uygulaması oluşturmak.
+The project follows a layered development model.
 
-## Teknolojiler
-- Backend: FastAPI
-- Database: PostgreSQL
-- Frontend: React + Vite
-- API Test: Postman
-- Kod Editörü: VS Code
-- Versiyon Kontrol: Git
+Principles:
 
-## Özellikler
+- Build working software first.
+- Keep architecture simple.
+- Avoid unnecessary complexity.
+- Follow YAGNI.
+- Reuse existing code whenever possible.
+- Expand only when real operational needs appear.
+- Keep documentation synchronized with the implementation.
 
-### Hayvan Yönetimi
-- Hayvan ekleme
-- Hayvan listeleme
-- Hayvan detay görüntüleme
-- Hayvan bilgisi güncelleme
+---
 
-### Aşı Kayıtları
-- Hayvana aşı kaydı ekleme
-- Aşı geçmişini görüntüleme
+# Layer 1 — Core MVP
 
-### Sağım Kayıtları
-- Günlük sağım kaydı ekleme
-- Hayvan bazlı sağım geçmişi görüntüleme
+Status: Completed
+
+## Goal
+
+Build a working farm management application capable of handling basic farm records.
+
+## Completed Scope
+
+### Animal Management
+
+- Create animal
+- List animals
+- Animal detail page
+- Edit animal
+- Soft delete animal
+- Animal statistics
+
+### Vaccination Management
+
+- Vaccination records
+- Vaccination history
+
+### Milk Production
+
+- Milk records
+- Milk history
+- Dashboard integration
 
 ### Dashboard
-İlk sürümde 4 temel gösterge yeterlidir:
-- Toplam hayvan sayısı
-- Bugünkü sağım toplamı
-- Son 7 gün sağım toplamı
-- Son eklenen kayıtlar
 
-## Katman 1 Bitiş Kriteri
-Aşağıdaki akış hatasız çalışmalı:
+- Total animals
+- Daily milk production
+- Last 7-day milk production
+- Recent activity
 
-```text
-Hayvan ekle → hayvanı listede gör → detay sayfasına gir → aşı kaydı gir → sağım kaydı gir → dashboard'da veriyi gör
-```
+### Technical Foundation
 
----
+- FastAPI backend
+- PostgreSQL database
+- React frontend
+- REST API architecture
 
-# Katman 2 — Operasyonel Sistem
+## Layer 1 Outcome
 
-## Hedef
-Uygulamayı gerçek işletme kullanımına yaklaştırmak.
+Successfully completed.
 
-## Eklenecek Özellikler
-- Stok yönetimi
-- Aşı/ilaç kaydı sonrası stok düşümü
-- Finans kayıtları
-- İlaç arınma süresi kilidi
-- Alarm sistemi
-- Kullanıcı rolleri
-- Daha detaylı hayvan profili
-
-## Teknik Genişleme
-- Daha güçlü veri doğrulama
-- Daha düzenli hata yönetimi
-- Test altyapısı
-- Daha iyi frontend form yapısı
+The system became operational and capable of supporting basic farm record management.
 
 ---
 
-# Katman 3 — Akıllı Sistem
+# Layer 2 — Operational System
 
-## Hedef
-Yeterli veri toplandıktan sonra sistemi karar destek uygulamasına dönüştürmek.
+Status: Mostly Completed
 
-## Eklenecek Özellikler
-- AI analizleri
-- Mastitis risk skoru
-- Süt verimi tahmini
-- Golden List / Black List
-- RFID/NFC/QR entegrasyonu
-- Offline-first yapı
-- Mobil uygulama
+## Goal
 
-## Not
-AI bu projenin erken aşama özelliği değildir. AI için önce gerçek veri gerekir.
+Expand the MVP into a practical operational management platform.
 
 ---
 
-# Geliştirme Sırası
+## Completed Modules
 
-## Sprint 1
-- Proje klasör yapısı
-- Git kurulumu
-- Backend iskeleti
-- PostgreSQL bağlantısı
-- İlk tablo: animals
+### Authentication
 
-## Sprint 2
-- Animals API
-- React frontend başlangıcı
-- Hayvan listeleme ve ekleme ekranı
+Status: Completed
 
-## Sprint 3
-- Vaccinations tablosu
-- Vaccination API
-- Aşı kayıt ekranı
+Features:
 
-## Sprint 4
-- Milk records tablosu
-- Milk records API
-- Sağım kayıt ekranı
+- JWT authentication
+- Login endpoint
+- Protected frontend routes
+- Protected backend endpoints
 
-## Sprint 5
-- Dashboard API
-- Dashboard frontend
-- MVP temizliği
+---
 
-## Sprint 6
-- Hata düzeltme
-- Kod düzenleme
-- Basit testler
-- Katman 1 kapanışı
- 
+### Animal Management
 
-## Sprint 7
-- Inventory module backend and frontend
-- Inventory items CRUD
+Status: Completed
+
+Features:
+
+- CRUD operations
+- Detail view
+- Edit functionality
+- Soft delete
+- Statistics endpoint
+- Operational profile improvements
+
+---
+
+### Health Tracking
+
+Status: Completed
+
+Features:
+
+- Treatment records
+- Illness records
+- Checkups
+- Vaccination-type records
+- Health filters
+- Health dashboard metrics
+- Animal health history
+
+---
+
+### Milk Production
+
+Status: Completed
+
+Features:
+
+- Milk record management
+- Animal milk history
+- Dashboard integration
+- Animal profile integration
+
+---
+
+### Inventory Management
+
+Status: Completed
+
+Features:
+
+- Inventory items
 - Inventory movements
-- Inventory summary and low stock view
+- Stock adjustments
+- Low stock monitoring
+- Inventory dashboard
 
-## Sprint 8
-- Finance module backend and frontend
-- Finance records create/list/detail/edit/delete
-- Soft delete support
-- Finance module MVP closure
+---
+
+### Inventory ↔ Health Integration
+
+Status: Completed
+
+Features:
+
+- Medicine consumption tracking
+- Automatic inventory OUT movements
+- Stock validation
+- Linked treatment consumption history
+
+---
+
+### Finance Management
+
+Status: Completed
+
+Features:
+
+- Income records
+- Expense records
+- Financial record detail
+- Edit functionality
+- Soft delete behavior
+
+---
+
+### Withdrawal Lock Management
+
+Status: Completed
+
+Features:
+
+- Withdrawal lock records
+- Active lock monitoring
+- Released lock tracking
+- Expired lock tracking
+- Dashboard integration
+- Animal profile integration
+
+---
+
+### Alarm System
+
+Status: Completed
+
+Features:
+
+- Alarm CRUD
+- Alarm filters
+- Dashboard integration
+- Automatic withdrawal lock alarms
+
+---
+
+### Reporting
+
+Status: Completed
+
+Features:
+
+- Reporting API
+- Date range filtering
+- Dashboard reporting
+- CSV export
+- Reporting UI improvements
+
+---
+
+### Animal Profile Improvements
+
+Status: Completed
+
+Features:
+
+- Operational summary
+- Recent milk records
+- Recent health records
+- Withdrawal indicators
+- Alarm indicators
+- Lifetime metrics using existing data
+
+---
+
+### UI Standardization
+
+Status: Completed
+
+Features:
+
+- Dashboard cleanup
+- Navigation cleanup
+- Reporting UI standardization
+- Animal profile polish
+- Responsive layout improvements
+
+---
+
+### Quality Assurance
+
+Status: Completed
+
+Features:
+
+- Backend automated tests
+- API validation
+- Frontend build verification
+- PostgreSQL verification
+- MVP QA review
+
+---
+
+# Layer 2 Remaining Work
+
+Status: Active
+
+The following items are potential operational enhancements.
+
+---
+
+## High Priority
+
+### Documentation Refactor
+
+Goal:
+
+Bring documentation back in sync with the real system.
+
+Scope:
+
+- Vision update
+- Roadmap update
+- Architecture update
+- Database documentation update
+- API documentation update
+- Frontend guide update
+- Deployment guide update
+
+---
+
+### Weight Tracking
+
+Goal:
+
+Support growth monitoring and livestock operations beyond milk production.
+
+Potential Scope:
+
+- Weight records
+- Weight history
+- Current weight tracking
+- Growth monitoring
+
+---
+
+### Growth Metrics
+
+Goal:
+
+Provide operational animal performance indicators.
+
+Potential Metrics:
+
+- Weight gain
+- Average daily gain (ADG)
+- Growth trend indicators
+
+---
+
+### Advanced Animal Analytics
+
+Goal:
+
+Expand animal profile using existing and future operational data.
+
+Potential Metrics:
+
+- Production indicators
+- Health indicators
+- Growth indicators
+- Operational scoring
+
+---
+
+## Medium Priority
+
+### User Roles
+
+Examples:
+
+- Admin
+- Worker
+- Veterinarian
+
+Status:
+
+Deferred until a real multi-user requirement exists.
+
+---
+
+## Low Priority
+
+### Dashboard Resilience
+
+Examples:
+
+- Independent widget loading
+- Partial dashboard failure handling
+- Advanced frontend fault tolerance
+
+Status:
+
+Can be postponed.
+
+---
+
+# Layer 3 — Decision Support System
+
+Status: Planned
+
+## Goal
+
+Transform the platform into a decision-support system using accumulated farm data.
+
+---
+
+## Planned Features
+
+### Animal Performance Analysis
+
+- Production metrics
+- Growth metrics
+- Health metrics
+
+### Risk Detection
+
+- Mastitis risk analysis
+- Health trend monitoring
+- Productivity decline detection
+
+### Predictive Features
+
+- Milk production forecasting
+- Growth forecasting
+
+### Decision Support
+
+- Golden List
+- Black List
+- Priority monitoring
+
+### AI Assistant
+
+Example questions:
+
+- Which animals need attention?
+- Which animals show performance decline?
+- Which animals have recurring health issues?
+- Which animals should be prioritized?
+
+---
+
+## Future Expansion
+
+Potential future areas:
+
+- RFID integration
+- NFC integration
+- QR identification
+- Offline support
+- Mobile application
+
+These will only be implemented if a real operational need appears.
+
+---
+
+# Current Development Priority
+
+1. Documentation Refactor
+2. Weight Tracking
+3. Growth Metrics
+4. Advanced Animal Analytics
+5. User Roles
+6. Decision Support Features
+
+---
+
+# Long-Term Vision
+
+Farm ERP should evolve from a record-keeping application into a practical decision-support platform while maintaining:
+
+- Simplicity
+- Reliability
+- Maintainability
+- Accurate documentation
+- Sustainable growth

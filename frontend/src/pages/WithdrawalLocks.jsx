@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   createWithdrawalLock,
   getWithdrawalLocks,
@@ -7,6 +8,7 @@ import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
+import useAnimals from "../hooks/useAnimals";
 
 const initialFormData = {
   animal_id: "",
@@ -21,6 +23,12 @@ function getTodayText() {
 }
 
 function WithdrawalLocks() {
+  const {
+    animals,
+    loading: animalsLoading,
+    error: animalsError,
+    getAnimalLabel,
+  } = useAnimals();
   const [locks, setLocks] = useState([]);
   const [formData, setFormData] = useState(initialFormData);
   const [activeFilter, setActiveFilter] = useState("all");
@@ -106,19 +114,32 @@ function WithdrawalLocks() {
       />
 
       {error && <ErrorMessage message={error} className="error-text" />}
+      {animalsError && (
+        <ErrorMessage message={animalsError} className="error-text" />
+      )}
       {successMessage && <p className="status-text">{successMessage}</p>}
 
       <form onSubmit={handleSubmit}>
         <div>
           <label>
-            Animal ID:
-            <input
-              type="number"
+            Animal:
+            <select
+              className="animal-select"
               name="animal_id"
               value={formData.animal_id}
               onChange={handleChange}
+              disabled={animalsLoading}
               required
-            />
+            >
+              <option value="">
+                {animalsLoading ? "Loading animals..." : "Select animal"}
+              </option>
+              {animals.map((animal) => (
+                <option key={animal.id} value={animal.id}>
+                  {getAnimalLabel(animal.id)}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
 
@@ -171,7 +192,7 @@ function WithdrawalLocks() {
           </label>
         </div>
 
-        <button type="submit" disabled={saving}>
+        <button type="submit" disabled={saving || animalsLoading}>
           {saving ? "Saving..." : "Create Withdrawal Lock"}
         </button>
       </form>
@@ -206,7 +227,7 @@ function WithdrawalLocks() {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Animal ID</th>
+                <th>Animal</th>
                 <th>Health Record ID</th>
                 <th>Start Date</th>
                 <th>End Date</th>
@@ -222,7 +243,11 @@ function WithdrawalLocks() {
               {filteredLocks.map((lock) => (
                 <tr key={lock.id}>
                   <td>{lock.id}</td>
-                  <td>{lock.animal_id}</td>
+                  <td>
+                    <Link to={`/animals/${lock.animal_id}`}>
+                      {getAnimalLabel(lock.animal_id)}
+                    </Link>
+                  </td>
                   <td>{lock.health_record_id || "-"}</td>
                   <td>{lock.start_date}</td>
                   <td>{lock.end_date}</td>

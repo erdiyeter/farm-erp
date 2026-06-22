@@ -34,6 +34,26 @@ function getLatestRecordDate(records) {
   );
 }
 
+function formatMilkLiters(value) {
+  return `${Number(value).toFixed(2)} L`;
+}
+
+function getDailyMilkTotals(records) {
+  const totalsByDate = new Map();
+
+  records.forEach((record) => {
+    totalsByDate.set(
+      record.record_date,
+      (totalsByDate.get(record.record_date) || 0) +
+        Number(record.milk_liters)
+    );
+  });
+
+  return [...totalsByDate.entries()]
+    .map(([date, milkLiters]) => ({ date, milkLiters }))
+    .sort((first, second) => second.date.localeCompare(first.date));
+}
+
 function getDaysSince(dateText, today) {
   if (!dateText) {
     return "-";
@@ -69,6 +89,7 @@ function buildTimeline(operationalData) {
       event: record.record_type,
       details:
         record.diagnosis || record.treatment || "Health activity recorded",
+      to: `/health-records/${record.id}`,
     })),
     ...operationalData.withdrawalLocks.map((lock) => ({
       key: `lock-${lock.id}`,
@@ -76,6 +97,7 @@ function buildTimeline(operationalData) {
       type: "Withdrawal Lock",
       event: lock.is_active ? "Lock activated" : "Released lock",
       details: `${lock.reason || "No reason provided"}; ends ${lock.end_date}`,
+      to: `/withdrawal-locks/${lock.id}`,
     })),
     ...operationalData.alarms.map((alarm) => ({
       key: `alarm-${alarm.id}`,
@@ -85,6 +107,7 @@ function buildTimeline(operationalData) {
       details: `${alarm.priority} priority; ${
         alarm.is_completed ? "completed" : "open"
       }`,
+      to: `/alarms/${alarm.id}`,
     })),
   ];
 
@@ -112,16 +135,51 @@ function AnimalDetail() {
     user?.role === "admin" || user?.role === "veterinarian";
   const today = new Date().toISOString().slice(0, 10);
   const last30DaysStart = getDateDaysAgo(30);
-  const last30DaysMilkLiters = operationalData.milkRecords
-    .filter(
+  const sortedMilkRecords = [...operationalData.milkRecords].sort(
+    (first, second) =>
+      second.record_date.localeCompare(first.record_date) ||
+      second.id - first.id
+  );
+  const last30DaysMilkRecords = sortedMilkRecords.filter(
       (record) =>
         record.record_date >= last30DaysStart && record.record_date <= today
-    )
+    );
+  const last30DaysMilkLiters = last30DaysMilkRecords
     .reduce((total, record) => total + Number(record.milk_liters), 0)
     .toFixed(2);
   const lifetimeMilkLiters = operationalData.milkRecords
     .reduce((total, record) => total + Number(record.milk_liters), 0)
     .toFixed(2);
+  const averageMilkPerRecord = sortedMilkRecords.length
+    ? (
+        Number(lifetimeMilkLiters) / sortedMilkRecords.length
+      ).toFixed(2)
+    : null;
+  const last30DaysAverageMilk = last30DaysMilkRecords.length
+    ? (
+        Number(last30DaysMilkLiters) / last30DaysMilkRecords.length
+      ).toFixed(2)
+    : null;
+  const dailyMilkTotals = getDailyMilkTotals(sortedMilkRecords);
+  const latestProductionDay = dailyMilkTotals[0];
+  const previousProductionDay = dailyMilkTotals[1];
+  const milkDifference = latestProductionDay && previousProductionDay
+    ? latestProductionDay.milkLiters - previousProductionDay.milkLiters
+    : null;
+  const latestVersusPrevious = latestProductionDay
+    ? `${formatMilkLiters(latestProductionDay.milkLiters)} vs ${
+        previousProductionDay
+          ? formatMilkLiters(previousProductionDay.milkLiters)
+          : "-"
+      }`
+    : "-";
+  const productionTrend = milkDifference === null
+    ? "-"
+    : milkDifference > 0
+      ? `Up (+${milkDifference.toFixed(2)} L)`
+      : milkDifference < 0
+        ? `Down (${milkDifference.toFixed(2)} L)`
+        : "Unchanged (0.00 L)";
   const treatmentCount = operationalData.healthRecords.filter(
     (record) => record.record_type === "treatment"
   ).length;
@@ -307,6 +365,39 @@ function AnimalDetail() {
             </div>
 
             <div className="animal-profile-metric-group">
+              <h3>Production Context</h3>
+              <p>
+                Latest-day comparison combines all milk records from each date.
+              </p>
+              <div className="dashboard-kpi-grid animal-profile-metrics">
+                <KpiCard
+                  title="Latest vs Previous Production Day"
+                  value={canViewMilk ? latestVersusPrevious : "-"}
+                />
+                <KpiCard
+                  title="Production Trend"
+                  value={canViewMilk ? productionTrend : "-"}
+                />
+                <KpiCard
+                  title="Average Milk per Record"
+                  value={
+                    canViewMilk && averageMilkPerRecord
+                      ? formatMilkLiters(averageMilkPerRecord)
+                      : "-"
+                  }
+                />
+                <KpiCard
+                  title="Last 30 Days Average per Record"
+                  value={
+                    canViewMilk && last30DaysAverageMilk
+                      ? formatMilkLiters(last30DaysAverageMilk)
+                      : "-"
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="animal-profile-metric-group">
               <h3>Lifetime Summary</h3>
               <p>Totals calculated from this animal's available history.</p>
               <div className="dashboard-kpi-grid animal-profile-metrics">
@@ -399,7 +490,13 @@ function AnimalDetail() {
                             {item.type}
                           </span>
                         </td>
-                        <td>{item.event}</td>
+                        <td>
+                          {item.to ? (
+                            <Link to={item.to}>{item.event}</Link>
+                          ) : (
+                            item.event
+                          )}
+                        </td>
                         <td>{item.details}</td>
                       </tr>
                     ))}

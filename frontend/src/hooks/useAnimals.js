@@ -23,10 +23,21 @@ function useAnimals() {
     loadAnimals();
   }, []);
 
+  function getAnimalLabel(animalId) {
+    const animal = animals.find((item) => item.id === Number(animalId));
+
+    if (!animal) {
+      return `Animal ID ${animalId}`;
+    }
+
+    return `${animal.ear_tag}${animal.name ? ` - ${animal.name}` : ""} (ID: ${animal.id})`;
+  }
+
   return {
     animals,
     loading,
     error,
+    getAnimalLabel,
   };
 }
 

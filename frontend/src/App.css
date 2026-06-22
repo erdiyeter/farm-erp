@@ -46,6 +46,16 @@
   margin-left: 8px;
 }
 
+.animal-select {
+  min-width: 260px;
+  max-width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #c9cfd6;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+}
+
 .settings-form,
 .auth-form {
   display: grid;

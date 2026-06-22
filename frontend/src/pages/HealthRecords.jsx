@@ -11,6 +11,7 @@ import KpiCard from "../components/KpiCard";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/authContext";
+import useAnimals from "../hooks/useAnimals";
 
 const initialFormData = {
   animal_id: "",
@@ -33,6 +34,12 @@ function getWithdrawalStatus(record, today) {
 
 function HealthRecords() {
   const { user } = useAuth();
+  const {
+    animals,
+    loading: animalsLoading,
+    error: animalsError,
+    getAnimalLabel,
+  } = useAnimals();
   const [records, setRecords] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
   const [formData, setFormData] = useState(initialFormData);
@@ -160,19 +167,32 @@ function HealthRecords() {
       />
 
       {error && <ErrorMessage message={error} className="error-text" />}
+      {animalsError && (
+        <ErrorMessage message={animalsError} className="error-text" />
+      )}
       {successMessage && <p className="status-text">{successMessage}</p>}
 
       <form className="health-record-form" onSubmit={handleSubmit}>
         <div>
           <label>
-            Animal ID:
-            <input
-              type="number"
+            Animal:
+            <select
+              className="animal-select"
               name="animal_id"
               value={formData.animal_id}
               onChange={handleChange}
+              disabled={animalsLoading}
               required
-            />
+            >
+              <option value="">
+                {animalsLoading ? "Loading animals..." : "Select animal"}
+              </option>
+              {animals.map((animal) => (
+                <option key={animal.id} value={animal.id}>
+                  {getAnimalLabel(animal.id)}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
 
@@ -294,7 +314,7 @@ function HealthRecords() {
           </label>
         </div>
 
-        <button type="submit" disabled={saving}>
+        <button type="submit" disabled={saving || animalsLoading}>
           {saving ? "Saving..." : "Create Health Record"}
         </button>
       </form>
@@ -355,7 +375,7 @@ function HealthRecords() {
                   <td>{record.record_date}</td>
                   <td>
                     <Link to={`/animals/${record.animal_id}`}>
-                      {record.animal_id}
+                      {getAnimalLabel(record.animal_id)}
                     </Link>
                   </td>
                   <td>

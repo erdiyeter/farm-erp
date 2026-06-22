@@ -1,85 +1,288 @@
 # 00 · Project Vision
 
-## Proje Adı
-Karar Veren Çiftlik Sistemi
+## Project Name
 
-## Amaç
-Bu proje, küçük ve orta ölçekli hayvancılık işletmeleri için geliştirilecek bir çiftlik yönetim sistemidir. Amaç; hayvan kayıtlarını, sağlık işlemlerini, sağım verilerini ve temel işletme göstergelerini tek yerde takip edebilen, zamanla daha akıllı hale getirilebilecek bir uygulama oluşturmaktır.
+Farm ERP
 
-Bu proje sadece ürün geliştirme projesi değildir. Aynı zamanda full-stack geliştirme öğrenme projesidir.
+## Purpose
 
-## Temel Yaklaşım
-Önce çalışan basit sistem kurulacak. Sonra sistem katman katman büyütülecek.
+Farm ERP is a farm management system designed for small and medium-sized livestock operations.
 
-İlk hedef karmaşık mimari değil, gerçek çalışan üründür.
+The goal is to provide a practical and sustainable system that allows farm owners and operators to manage animal records, health events, milk production, inventory, finances, operational alerts, and reporting from a single platform.
 
-## Hedef Kullanıcı
-- Çiftlik sahibi
-- Saha çalışanı
-- Veteriner veya teknik sorumlu
-- Hayvan kayıtlarını düzenli tutmak isteyen küçük/orta işletmeler
+This project is both:
 
-## Katmanlı Geliştirme Modeli
+- A real farm management application intended for long-term use.
+- A full-stack software development learning project.
 
-### Katman 1 — Gerçek MVP
-Çalışan ilk ürün.
+---
 
-Kapsam:
-- Hayvan ekleme/listeleme/detay görme
-- Aşı kaydı girme
-- Sağım kaydı girme
-- Basit dashboard
-- PostgreSQL veritabanı
+## Vision
+
+Build a simple, reliable, and understandable farm management system first.
+
+Expand only when real operational needs appear.
+
+The project prioritizes:
+
+- Accuracy over speed
+- Simplicity over complexity
+- Sustainability over feature count
+- Learning over premature optimization
+
+The objective is not to build enterprise software immediately.
+
+The objective is to gradually evolve a working farm management system into a decision-support platform.
+
+---
+
+## Target Users
+
+### Farm Owner
+
+Uses the system to monitor animals, production, health events, inventory, finances, and operational risks.
+
+### Farm Worker
+
+Uses the system to enter and review daily operational records.
+
+### Veterinarian
+
+Uses the system to review animal history, treatments, and health-related information.
+
+### Small and Medium Livestock Operations
+
+Organizations that need structured record keeping without the complexity of enterprise farm software.
+
+---
+
+# Development Philosophy
+
+## Build in Layers
+
+The project grows through clearly defined layers.
+
+Each layer must be operational before expanding to the next.
+
+## Keep Architecture Simple
+
+Avoid unnecessary complexity.
+
+Do not introduce technologies or infrastructure that do not provide immediate operational value.
+
+## Documentation as Source of Truth
+
+Documentation must accurately reflect the current system.
+
+When the implementation changes, documentation must be updated accordingly.
+
+## YAGNI
+
+Only implement functionality that is currently needed.
+
+Future possibilities should not drive present complexity.
+
+---
+
+# Layer 1 — Core MVP
+
+Status: Completed
+
+## Objective
+
+Create a working farm management application with the minimum required feature set.
+
+## Completed Scope
+
+### Animal Management
+
+- Add animals
+- List animals
+- View animal details
+- Edit animals
+
+### Vaccination Tracking
+
+- Vaccination records
+- Vaccination history
+
+### Milk Production Tracking
+
+- Milk records
+- Animal milk history
+
+### Dashboard
+
+- Total animals
+- Daily milk production
+- Recent activity summary
+
+### Technical Foundation
+
 - FastAPI backend
+- PostgreSQL database
 - React frontend
+- REST API architecture
 
-Kapsam dışı:
-- AI
-- RFID/NFC
-- Offline sync
-- Redis
-- Celery
-- Gelişmiş trigger motoru
-- Mobil uygulama
+## Result
 
-### Katman 2 — Operasyonel Sistem
-MVP çalıştıktan sonra eklenecek işletme özellikleri.
+Layer 1 was successfully completed and validated.
 
-Kapsam:
-- Stok yönetimi
-- Finans kayıtları
-- Withdrawal lock / ilaç arınma süresi kilidi
-- Alarm sistemi
-- Kullanıcı rolleri
-- Daha gelişmiş dashboard
+The system became usable for basic farm record management.
 
-### Katman 3 — Akıllı Sistem
-Yeterli gerçek veri biriktikten sonra eklenecek ileri özellikler.
+---
 
-Kapsam:
-- AI destekli analizler
-- Mastitis riski
-- Süt tahmini
-- Golden List / Black List
-- RFID/NFC/QR entegrasyonu
-- Offline-first çalışma
-- Mobil uygulama
+# Layer 2 — Operational System
 
-## Ana Prensipler
-- Önce çalışan ürün, sonra gelişmiş mimari.
-- Önce veri topla, sonra tahmin yap.
-- Önce basit kod, sonra optimizasyon.
-- Önce öğrenme, sonra profesyonelleştirme.
-- Gereksiz teknolojiler erken eklenmeyecek.
+Status: Active
 
-## Başarı Tanımı
-Katman 1 sonunda kullanıcı şunları yapabiliyorsa MVP başarılıdır:
+## Objective
 
-1. Hayvan ekleyebiliyor.
-2. Hayvan listesini görebiliyor.
-3. Bir hayvanın detay sayfasına girebiliyor.
-4. Aşı kaydı girebiliyor.
-5. Sağım kaydı girebiliyor.
-6. Dashboard üzerinden temel sayıları görebiliyor.
+Transform the MVP into a practical day-to-day farm management system.
 
-Bu tamamlanmadan Katman 2'ye geçilmeyecek.
+## Completed Scope
+
+### Authentication
+
+- User authentication
+- JWT-based access control
+
+### Inventory Management
+
+- Inventory items
+- Inventory movements
+- Stock monitoring
+- Low stock visibility
+
+### Finance Management
+
+- Income tracking
+- Expense tracking
+- Financial records
+
+### Health Tracking
+
+- Treatments
+- Illness records
+- Checkups
+- Health history
+
+### Withdrawal Lock Management
+
+- Withdrawal periods
+- Active lock monitoring
+- Withdrawal history
+
+### Alarm System
+
+- Operational reminders
+- Withdrawal-related alarms
+- Open alarm tracking
+
+### Reporting
+
+- Reporting API
+- Date filtering
+- CSV export
+- Operational summaries
+
+### Animal Profile Expansion
+
+- Operational summaries
+- Recent activity
+- Health indicators
+- Production indicators
+
+### Quality Improvements
+
+- Automated testing
+- UI standardization
+- Dashboard improvements
+- Validation improvements
+
+## Current Focus
+
+The project is currently in the Post-MVP Operational Enhancement Phase.
+
+Priority areas:
+
+- Documentation alignment
+- Operational improvements
+- Weight tracking
+- Growth monitoring
+- Advanced animal analytics
+
+---
+
+# Layer 3 — Decision Support System
+
+Status: Planned
+
+## Objective
+
+Use accumulated farm data to support operational decisions.
+
+## Planned Scope
+
+### Animal Performance Analysis
+
+- Production indicators
+- Health indicators
+- Operational scoring
+
+### Risk Detection
+
+- Mastitis risk analysis
+- Health trend monitoring
+- Productivity decline detection
+
+### Predictive Features
+
+- Milk production forecasting
+- Growth forecasting
+- Operational recommendations
+
+### Decision Support
+
+- Golden List
+- Black List
+- Priority animal monitoring
+
+### AI Assistant
+
+Users may ask questions such as:
+
+- Which animals require attention?
+- Which animals show performance decline?
+- Which animals have recurring health issues?
+- Which animals should be prioritized?
+
+---
+
+# Future Expansion
+
+Potential future areas include:
+
+- RFID integration
+- NFC integration
+- QR identification
+- Offline support
+- Mobile application
+
+These are intentionally deferred until there is a clear operational need.
+
+---
+
+# Success Definition
+
+The project is successful when it remains:
+
+- Useful in daily farm operations
+- Easy to understand and maintain
+- Technically sustainable
+- Supported by accurate documentation
+- Capable of evolving without major rewrites
+
+The goal is not to build the largest farm management system.
+
+The goal is to build a farm management system that remains practical, reliable, and useful for years.

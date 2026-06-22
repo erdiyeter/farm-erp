@@ -10,6 +10,7 @@ import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import KpiCard from "../components/KpiCard";
 import Loading from "../components/Loading";
+import useAnimals from "../hooks/useAnimals";
 
 function buildHealthTimeline(record, locks, alarms) {
   const items = [
@@ -58,6 +59,7 @@ function buildHealthTimeline(record, locks, alarms) {
 function HealthRecordDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { getAnimalLabel } = useAnimals();
 
   const [record, setRecord] = useState(null);
   const [withdrawalLocks, setWithdrawalLocks] = useState([]);
@@ -153,7 +155,7 @@ function HealthRecordDetail() {
           <div>
             <h1>Health Record</h1>
             <p>
-              {record.record_date} - Animal {record.animal_id}
+              {record.record_date} - {getAnimalLabel(record.animal_id)}
             </p>
           </div>
           <div className="dashboard-export-links health-detail-actions">
@@ -205,7 +207,7 @@ function HealthRecordDetail() {
         </div>
         <dl className="health-detail-grid">
           <div><dt>Record ID</dt><dd>{record.id}</dd></div>
-          <div><dt>Animal ID</dt><dd>{record.animal_id}</dd></div>
+          <div><dt>Animal</dt><dd>{getAnimalLabel(record.animal_id)}</dd></div>
           <div><dt>Diagnosis</dt><dd>{record.diagnosis || "-"}</dd></div>
           <div><dt>Created At</dt><dd>{record.created_at || "-"}</dd></div>
           <div className="health-detail-wide">

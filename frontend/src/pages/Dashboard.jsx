@@ -9,8 +9,12 @@ import {
   getReportDetails,
   getReportSummary,
 } from "../api/dashboardApi";
-import { getAlarms } from "../api/alarmApi";
+import { getAlarms, updateAlarm } from "../api/alarmApi";
+import { getInventoryItems } from "../api/inventoryApi";
+import { getVaccinations } from "../api/vaccinationApi";
+import { updateWithdrawalLock } from "../api/withdrawalLockApi";
 import { useAuth } from "../context/authContext";
+import useAnimals from "../hooks/useAnimals";
 
 function getTodayText() {
   return new Date().toISOString().slice(0, 10);
@@ -30,13 +34,13 @@ function sortNewest(records, dateField) {
   );
 }
 
-function getAnimalsNeedingAttention(locks, today, upcomingEnd) {
-  const byAnimal = new Map();
-  const candidates = locks
+function getWithdrawalRisks(locks, today, upcomingEnd) {
+  return locks
     .filter(
       (lock) => lock.is_active && lock.end_date <= upcomingEnd
     )
     .map((lock) => ({
+      lockId: lock.id,
       animalId: lock.animal_id,
       dueDate: lock.end_date,
       reason: lock.reason || "Withdrawal lock",
@@ -47,15 +51,8 @@ function getAnimalsNeedingAttention(locks, today, upcomingEnd) {
       (first, second) =>
         first.rank - second.rank ||
         first.dueDate.localeCompare(second.dueDate)
-    );
-
-  candidates.forEach((item) => {
-    if (!byAnimal.has(item.animalId)) {
-      byAnimal.set(item.animalId, item);
-    }
-  });
-
-  return [...byAnimal.values()].slice(0, 5);
+    )
+    .slice(0, 5);
 }
 
 function getMilkTrend(records) {
@@ -81,6 +78,51 @@ function getMilkTrend(records) {
     value: `${difference > 0 ? "+" : ""}${difference.toFixed(2)} L`,
     detail: `${dates[0]} compared with ${dates[1]}`,
   };
+}
+
+function getPerAnimalBreakdown(milkRecords, healthRecords, withdrawalLocks) {
+  const breakdownByAnimal = new Map();
+
+  function getAnimalBreakdown(animalId) {
+    if (!breakdownByAnimal.has(animalId)) {
+      breakdownByAnimal.set(animalId, {
+        animalId,
+        milkLiters: 0,
+        milkRecords: 0,
+        productionDates: new Set(),
+        healthEvents: 0,
+        withdrawalLocks: 0,
+      });
+    }
+    return breakdownByAnimal.get(animalId);
+  }
+
+  milkRecords.forEach((record) => {
+    const breakdown = getAnimalBreakdown(record.animal_id);
+    breakdown.milkLiters += Number(record.milk_liters);
+    breakdown.milkRecords += 1;
+    breakdown.productionDates.add(record.record_date);
+  });
+  healthRecords.forEach((record) => {
+    getAnimalBreakdown(record.animal_id).healthEvents += 1;
+  });
+  withdrawalLocks.forEach((lock) => {
+    getAnimalBreakdown(lock.animal_id).withdrawalLocks += 1;
+  });
+
+  return [...breakdownByAnimal.values()].map((item) => ({
+    ...item,
+    averageMilkPerRecord: item.milkRecords
+      ? item.milkLiters / item.milkRecords
+      : 0,
+    productionDays: item.productionDates.size,
+  })).sort(
+    (first, second) =>
+      second.milkLiters - first.milkLiters ||
+      second.healthEvents - first.healthEvents ||
+      second.withdrawalLocks - first.withdrawalLocks ||
+      first.animalId - second.animalId
+  );
 }
 
 function formatReportValue(value) {
@@ -136,8 +178,11 @@ function getPresetDates(days) {
 
 function Dashboard() {
   const { user } = useAuth();
+  const { getAnimalLabel } = useAnimals();
   const [stats, setStats] = useState(null);
   const [alarms, setAlarms] = useState([]);
+  const [inventoryItems, setInventoryItems] = useState([]);
+  const [vaccinations, setVaccinations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reportStartDate, setReportStartDate] = useState("");
@@ -148,6 +193,9 @@ function Dashboard() {
   const [reportDetails, setReportDetails] = useState(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState("");
+  const [actionKey, setActionKey] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
 
   const today = getTodayText();
   const upcomingEnd = addDays(today, 6);
@@ -158,21 +206,56 @@ function Dashboard() {
   const overdueAlarms = openAlarms.filter((alarm) => alarm.due_date < today);
   const canViewVeterinaryData =
     user?.role === "admin" || user?.role === "veterinarian";
+  const canViewInventory =
+    user?.role === "admin" || user?.role === "worker";
+  const canViewVaccinations = user?.role === "admin";
+  const lowStockItems = inventoryItems
+    .filter(
+      (item) =>
+        item.is_active &&
+        Number(item.current_quantity) <= Number(item.minimum_quantity)
+    )
+    .sort((first, second) => {
+      const firstMinimum = Number(first.minimum_quantity);
+      const secondMinimum = Number(second.minimum_quantity);
+      const firstSeverity = firstMinimum > 0
+        ? (firstMinimum - Number(first.current_quantity)) / firstMinimum
+        : 0;
+      const secondSeverity = secondMinimum > 0
+        ? (secondMinimum - Number(second.current_quantity)) / secondMinimum
+        : 0;
+      return secondSeverity - firstSeverity || first.id - second.id;
+    })
+    .slice(0, 5);
+  const vaccinationRisks = vaccinations
+    .filter(
+      (vaccination) => vaccination.next_due_date
+    )
+    .map((vaccination) => ({
+      ...vaccination,
+      riskStatus: vaccination.next_due_date < today
+        ? "Overdue"
+        : vaccination.next_due_date === today
+          ? "Due today"
+          : "Upcoming",
+      riskRank: vaccination.next_due_date < today
+        ? 0
+        : vaccination.next_due_date === today
+          ? 1
+          : 2,
+    }))
+    .sort(
+      (first, second) =>
+        first.riskRank - second.riskRank ||
+        first.next_due_date.localeCompare(second.next_due_date)
+    )
+    .slice(0, 5);
   const withdrawalLocks = reportDetails?.withdrawal_locks || [];
-  const animalsNeedingAttention = getAnimalsNeedingAttention(
+  const withdrawalRisks = getWithdrawalRisks(
     withdrawalLocks,
     today,
     upcomingEnd
   );
-  const upcomingWithdrawals = withdrawalLocks
-    .filter(
-      (lock) =>
-        lock.is_active &&
-        lock.end_date >= today &&
-        lock.end_date <= upcomingEnd
-    )
-    .sort((first, second) => first.end_date.localeCompare(second.end_date))
-    .slice(0, 5);
   const prioritizedOverdueAlarms = [...overdueAlarms]
     .sort((first, second) => first.due_date.localeCompare(second.due_date))
     .slice(0, 5);
@@ -202,6 +285,11 @@ function Dashboard() {
     reportDetails?.alarms || [],
     "due_date"
   );
+  const perAnimalBreakdown = getPerAnimalBreakdown(
+    reportMilkRecords,
+    reportHealthRecords,
+    reportWithdrawalLocks
+  );
   const milkTrend = getMilkTrend(reportMilkRecords);
   const reportPeriod = appliedStartDate && appliedEndDate
     ? `${appliedStartDate} to ${appliedEndDate}`
@@ -217,24 +305,43 @@ function Dashboard() {
     async function loadDashboardStats() {
       try {
         if (user?.role === "worker") {
-          setStats(await getDashboardStats());
-        } else {
-          const requests = [
+          const [statsData, itemData] = await Promise.all([
+            getDashboardStats(),
+            getInventoryItems(),
+          ]);
+          setStats(statsData);
+          setInventoryItems(itemData);
+        } else if (user?.role === "admin") {
+          const [
+            statsData,
+            alarmData,
+            summaryData,
+            detailData,
+            itemData,
+            vaccinationData,
+          ] = await Promise.all([
+            getDashboardStats(),
             getAlarms(),
             getReportSummary(),
             getReportDetails(),
-          ];
-          if (user?.role === "admin") {
-            requests.unshift(getDashboardStats());
-          }
-          const results = await Promise.all(requests);
-          const offset = user?.role === "admin" ? 1 : 0;
-          if (user?.role === "admin") {
-            setStats(results[0]);
-          }
-          setAlarms(results[offset]);
-          setReportSummary(results[offset + 1]);
-          setReportDetails(results[offset + 2]);
+            getInventoryItems(),
+            getVaccinations(),
+          ]);
+          setStats(statsData);
+          setAlarms(alarmData);
+          setReportSummary(summaryData);
+          setReportDetails(detailData);
+          setInventoryItems(itemData);
+          setVaccinations(vaccinationData);
+        } else {
+          const [alarmData, summaryData, detailData] = await Promise.all([
+            getAlarms(),
+            getReportSummary(),
+            getReportDetails(),
+          ]);
+          setAlarms(alarmData);
+          setReportSummary(summaryData);
+          setReportDetails(detailData);
         }
       } catch {
         setError("Unable to load dashboard data.");
@@ -298,6 +405,65 @@ function Dashboard() {
     }
   }
 
+  async function refreshDashboardAfterAction() {
+    const requests = [
+      getAlarms(),
+      getReportSummary(appliedStartDate, appliedEndDate),
+      getReportDetails(appliedStartDate, appliedEndDate),
+    ];
+
+    if (user?.role === "admin") {
+      requests.push(getDashboardStats());
+    }
+
+    const [alarmData, summaryData, detailData, statsData] =
+      await Promise.all(requests);
+    setAlarms(alarmData);
+    setReportSummary(summaryData);
+    setReportDetails(detailData);
+    if (statsData) {
+      setStats(statsData);
+    }
+  }
+
+  async function handleCompleteAlarm(alarm) {
+    if (!window.confirm(`Complete alarm "${alarm.title}"?`)) {
+      return;
+    }
+
+    setActionKey(`alarm-${alarm.id}`);
+    setActionError("");
+    setActionMessage("");
+    try {
+      await updateAlarm(alarm.id, { is_completed: true });
+      await refreshDashboardAfterAction();
+      setActionMessage("Alarm completed successfully.");
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setActionKey("");
+    }
+  }
+
+  async function handleReleaseLock(lockId) {
+    if (!window.confirm("Release this withdrawal lock?")) {
+      return;
+    }
+
+    setActionKey(`lock-${lockId}`);
+    setActionError("");
+    setActionMessage("");
+    try {
+      await updateWithdrawalLock(lockId, { is_active: false });
+      await refreshDashboardAfterAction();
+      setActionMessage("Withdrawal lock released successfully.");
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setActionKey("");
+    }
+  }
+
   if (loading) {
     return <Loading text="Loading dashboard..." className="status-text" />;
   }
@@ -313,83 +479,61 @@ function Dashboard() {
         <p>Prioritized daily activity and records requiring attention.</p>
       </div>
 
+      {actionError && (
+        <ErrorMessage message={actionError} className="error-text" />
+      )}
+      {actionMessage && <p className="status-text">{actionMessage}</p>}
+
       <div className="dashboard-cockpit-grid">
         {canViewVeterinaryData && reportDetails && (
           <section className="dashboard-section dashboard-cockpit-wide">
             <div className="dashboard-section-header">
               <div>
-                <h2>Animals Needing Attention</h2>
-                <p>Overdue or soon-expiring withdrawal locks</p>
+                <h2>Withdrawal Lock Risks</h2>
+                <p>Overdue locks first, then locks ending within seven days</p>
               </div>
               <Link className="dashboard-nav-link" to="/animals">
                 View Animals
               </Link>
             </div>
 
-            {animalsNeedingAttention.length === 0 ? (
-              <p className="empty-text">No animals need immediate attention.</p>
+            {withdrawalRisks.length === 0 ? (
+              <p className="empty-text">No withdrawal lock risks.</p>
             ) : (
               <div className="dashboard-records-table">
                 <table className="data-table">
                   <thead>
                     <tr>
                       <th>Priority</th>
-                      <th>Animal ID</th>
+                      <th>Animal</th>
                       <th>Reason</th>
                       <th>Due Date</th>
                       <th>Profile</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {animalsNeedingAttention.map((item) => (
-                      <tr key={item.animalId}>
+                    {withdrawalRisks.map((item) => (
+                      <tr key={item.lockId}>
                         <td>{item.priority}</td>
-                        <td>{item.animalId}</td>
+                        <td>{getAnimalLabel(item.animalId)}</td>
                         <td>{item.reason}</td>
                         <td>{item.dueDate}</td>
                         <td>
                           <Link to={`/animals/${item.animalId}`}>View</Link>
                         </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-        )}
-
-        {canViewVeterinaryData && reportDetails && (
-          <section className="dashboard-section">
-            <div className="dashboard-section-header">
-              <div>
-                <h2>Upcoming Withdrawal Expirations</h2>
-                <p>Active locks ending within seven days</p>
-              </div>
-            </div>
-
-            {upcomingWithdrawals.length === 0 ? (
-              <p className="empty-text">No upcoming withdrawal expirations.</p>
-            ) : (
-              <div className="dashboard-records-table">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Animal</th>
-                      <th>End Date</th>
-                      <th>Reason</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {upcomingWithdrawals.map((lock) => (
-                      <tr key={lock.id}>
                         <td>
-                          <Link to={`/animals/${lock.animal_id}`}>
-                            {lock.animal_id}
-                          </Link>
+                          <button
+                            className="secondary-button"
+                            type="button"
+                            onClick={() => handleReleaseLock(item.lockId)}
+                            disabled={Boolean(actionKey)}
+                          >
+                            {actionKey === `lock-${item.lockId}`
+                              ? "Releasing..."
+                              : "Release"}
+                          </button>
                         </td>
-                        <td>{lock.end_date}</td>
-                        <td>{lock.reason || "-"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -421,6 +565,7 @@ function Dashboard() {
                       <th>Due Date</th>
                       <th>Priority</th>
                       <th>Alarm</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -429,6 +574,102 @@ function Dashboard() {
                         <td>{alarm.due_date}</td>
                         <td>{alarm.priority}</td>
                         <td>{alarm.title}</td>
+                        <td>
+                          <button
+                            className="secondary-button"
+                            type="button"
+                            onClick={() => handleCompleteAlarm(alarm)}
+                            disabled={Boolean(actionKey)}
+                          >
+                            {actionKey === `alarm-${alarm.id}`
+                              ? "Completing..."
+                              : "Complete"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
+
+        {canViewInventory && (
+          <section className="dashboard-section">
+            <div className="dashboard-section-header">
+              <div>
+                <h2>Low Stock</h2>
+                <p>Active items at or below minimum quantity</p>
+              </div>
+              <Link className="dashboard-nav-link" to="/inventory">
+                View Inventory
+              </Link>
+            </div>
+
+            {lowStockItems.length === 0 ? (
+              <p className="empty-text">No low stock items.</p>
+            ) : (
+              <div className="dashboard-records-table">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Current</th>
+                      <th>Minimum</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lowStockItems.map((item) => (
+                      <tr key={item.id}>
+                        <td>{item.name}</td>
+                        <td>{item.current_quantity} {item.unit}</td>
+                        <td>{item.minimum_quantity} {item.unit}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
+
+        {canViewVaccinations && (
+          <section className="dashboard-section">
+            <div className="dashboard-section-header">
+              <div>
+                <h2>Vaccination Risks</h2>
+                <p>Overdue vaccinations first, then upcoming due dates</p>
+              </div>
+              <Link className="dashboard-nav-link" to="/vaccinations">
+                View Vaccinations
+              </Link>
+            </div>
+
+            {vaccinationRisks.length === 0 ? (
+              <p className="empty-text">No vaccination risks.</p>
+            ) : (
+              <div className="dashboard-records-table">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Due Date</th>
+                      <th>Status</th>
+                      <th>Animal</th>
+                      <th>Vaccine</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vaccinationRisks.map((vaccination) => (
+                      <tr key={vaccination.id}>
+                        <td>{vaccination.next_due_date}</td>
+                        <td>{vaccination.riskStatus}</td>
+                        <td>
+                          <Link to={`/animals/${vaccination.animal_id}`}>
+                            {getAnimalLabel(vaccination.animal_id)}
+                          </Link>
+                        </td>
+                        <td>{vaccination.vaccine_name}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -465,7 +706,7 @@ function Dashboard() {
                         <td>{record.record_date}</td>
                         <td>
                           <Link to={`/animals/${record.animal_id}`}>
-                            {record.animal_id}
+                            {getAnimalLabel(record.animal_id)}
                           </Link>
                         </td>
                         <td>{record.record_type}</td>
@@ -505,7 +746,7 @@ function Dashboard() {
                         <td>{record.record_date}</td>
                         <td>
                           <Link to={`/animals/${record.animal_id}`}>
-                            {record.animal_id}
+                            {getAnimalLabel(record.animal_id)}
                           </Link>
                         </td>
                         <td>{record.milk_liters}</td>
@@ -581,7 +822,7 @@ function Dashboard() {
                     <td>{record.id}</td>
                     <td>
                       <Link to={`/animals/${record.animal_id}`}>
-                        {record.animal_id}
+                        {getAnimalLabel(record.animal_id)}
                       </Link>
                     </td>
                     <td>{record.record_date}</td>
@@ -742,6 +983,9 @@ function Dashboard() {
 
         <p className="report-period-banner">
           <strong>Applied period:</strong> {reportPeriod}
+          <br />
+          Milk, health, and finance use record dates; withdrawal locks use
+          start dates; alarms use due dates. Animal count is current.
         </p>
 
         {reportError && (
@@ -755,19 +999,19 @@ function Dashboard() {
             <div className="report-kpi-group">
               <div className="report-section-header">
                 <h3>Production</h3>
-                <p>Milk volume and daily direction for the applied period.</p>
+                <p>Milk record dates within the applied period.</p>
               </div>
               <div className="dashboard-kpi-grid report-kpi-grid">
                 <KpiCard
-                  title="Total Milk Liters"
+                  title="Milk Liters (Record Date)"
                   value={formatReportValue(reportSummary.total_milk_liters)}
                 />
                 <KpiCard
-                  title="Average Daily Milk"
+                  title="Average per Production Day"
                   value={formatReportValue(reportSummary.average_daily_milk)}
                 />
                 <KpiCard
-                  title="Milk Records"
+                  title="Milk Records (Record Date)"
                   value={reportSummary.total_milk_records}
                 />
                 <div className="dashboard-kpi-card report-trend-card">
@@ -781,23 +1025,23 @@ function Dashboard() {
             <div className="report-kpi-group">
               <div className="report-section-header">
                 <h3>Operations</h3>
-                <p>Herd activity requiring regular review.</p>
+                <p>Current herd count and date-based operational activity.</p>
               </div>
               <div className="dashboard-kpi-grid report-kpi-grid">
                 <KpiCard
-                  title="Total Animals"
+                  title="Total Animals (Current)"
                   value={reportSummary.total_animals}
                 />
                 <KpiCard
-                  title="Health Records"
+                  title="Health Records (Record Date)"
                   value={reportSummary.total_health_records}
                 />
                 <KpiCard
-                  title="Active Withdrawal Locks"
+                  title="Active Locks (Start Date)"
                   value={reportSummary.active_withdrawal_locks}
                 />
                 <KpiCard
-                  title="Open Alarms"
+                  title="Open Alarms (Due Date)"
                   value={reportSummary.open_alarms}
                 />
               </div>
@@ -806,25 +1050,65 @@ function Dashboard() {
             <div className="report-kpi-group">
               <div className="report-section-header">
                 <h3>Finance</h3>
-                <p>Income, expense, and net amount for the applied period.</p>
+                <p>Active finance records by record date in the applied period.</p>
               </div>
               <div className="dashboard-kpi-grid report-kpi-grid">
                 <KpiCard
-                  title="Total Income"
+                  title="Income (Record Date)"
                   value={formatReportValue(reportSummary.total_income)}
                 />
                 <KpiCard
-                  title="Total Expense"
+                  title="Expense (Record Date)"
                   value={formatReportValue(reportSummary.total_expense)}
                 />
                 <KpiCard
-                  title="Net Amount"
+                  title="Net Amount (Record Date)"
                   value={formatReportValue(
                     reportSummary.total_income - reportSummary.total_expense
                   )}
                 />
               </div>
             </div>
+
+            <ReportSection
+              title="Per-Animal Breakdown"
+              description="Production and operational workload for the applied period."
+              records={perAnimalBreakdown}
+              emptyMessage={emptyReportMessage("animal activity")}
+            >
+              <div className="dashboard-records-table">
+                <table className="data-table report-data-table">
+                  <thead>
+                    <tr>
+                      <th>Animal</th>
+                      <th>Milk Liters</th>
+                      <th>Milk Records</th>
+                      <th>Average / Record</th>
+                      <th>Production Days</th>
+                      <th>Health Events</th>
+                      <th>Withdrawal Locks</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {perAnimalBreakdown.map((item) => (
+                      <tr key={item.animalId}>
+                        <td>
+                          <Link to={`/animals/${item.animalId}`}>
+                            {getAnimalLabel(item.animalId)}
+                          </Link>
+                        </td>
+                        <td>{item.milkLiters.toFixed(2)}</td>
+                        <td>{item.milkRecords}</td>
+                        <td>{item.averageMilkPerRecord.toFixed(2)}</td>
+                        <td>{item.productionDays}</td>
+                        <td>{item.healthEvents}</td>
+                        <td>{item.withdrawalLocks}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </ReportSection>
 
             <div className="report-detail-section report-export-section">
               <div className="report-section-header">
@@ -893,7 +1177,7 @@ function Dashboard() {
               <div className="dashboard-records-table">
                 <table className="data-table report-data-table">
                   <thead><tr><th>Date</th><th>Animal</th><th>Liters</th><th>Session</th></tr></thead>
-                  <tbody>{reportMilkRecords.map((record) => <tr key={record.id}><td>{record.record_date}</td><td>{record.animal_id}</td><td>{record.milk_liters}</td><td>{record.session || "-"}</td></tr>)}</tbody>
+                  <tbody>{reportMilkRecords.map((record) => <tr key={record.id}><td>{record.record_date}</td><td><Link to={`/animals/${record.animal_id}`}>{getAnimalLabel(record.animal_id)}</Link></td><td>{record.milk_liters}</td><td>{record.session || "-"}</td></tr>)}</tbody>
                 </table>
               </div>
             </ReportSection>
@@ -907,7 +1191,7 @@ function Dashboard() {
               <div className="dashboard-records-table">
                 <table className="data-table report-data-table">
                   <thead><tr><th>Date</th><th>Animal</th><th>Type</th><th>Diagnosis</th></tr></thead>
-                  <tbody>{reportHealthRecords.map((record) => <tr key={record.id}><td>{record.record_date}</td><td>{record.animal_id}</td><td>{record.record_type}</td><td>{record.diagnosis || "-"}</td></tr>)}</tbody>
+                  <tbody>{reportHealthRecords.map((record) => <tr key={record.id}><td>{record.record_date}</td><td><Link to={`/animals/${record.animal_id}`}>{getAnimalLabel(record.animal_id)}</Link></td><td>{record.record_type}</td><td>{record.diagnosis || "-"}</td></tr>)}</tbody>
                 </table>
               </div>
             </ReportSection>
@@ -935,7 +1219,7 @@ function Dashboard() {
               <div className="dashboard-records-table">
                 <table className="data-table report-data-table">
                   <thead><tr><th>Start Date</th><th>Animal</th><th>End Date</th><th>Status</th></tr></thead>
-                  <tbody>{reportWithdrawalLocks.map((lock) => <tr key={lock.id}><td>{lock.start_date}</td><td>{lock.animal_id}</td><td>{lock.end_date}</td><td>{!lock.is_active ? "Released" : lock.end_date < today ? "Expired" : "Active"}</td></tr>)}</tbody>
+                  <tbody>{reportWithdrawalLocks.map((lock) => <tr key={lock.id}><td>{lock.start_date}</td><td><Link to={`/animals/${lock.animal_id}`}>{getAnimalLabel(lock.animal_id)}</Link></td><td>{lock.end_date}</td><td>{!lock.is_active ? "Released" : lock.end_date < today ? "Expired" : "Active"}</td></tr>)}</tbody>
                 </table>
               </div>
             </ReportSection>

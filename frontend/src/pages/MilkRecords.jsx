@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   createMilkRecord,
   getMilkRecords,
@@ -6,6 +7,7 @@ import {
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
+import useAnimals from "../hooks/useAnimals";
 
 const initialFormData = {
   animal_id: "",
@@ -16,6 +18,12 @@ const initialFormData = {
 };
 
 function MilkRecords() {
+  const {
+    animals,
+    loading: animalsLoading,
+    error: animalsError,
+    getAnimalLabel,
+  } = useAnimals();
   const [records, setRecords] = useState([]);
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(true);
@@ -82,19 +90,32 @@ function MilkRecords() {
       />
 
       {error && <ErrorMessage message={error} className="error-text" />}
+      {animalsError && (
+        <ErrorMessage message={animalsError} className="error-text" />
+      )}
       {successMessage && <p className="status-text">{successMessage}</p>}
 
       <form onSubmit={handleSubmit}>
         <div>
           <label>
-            Animal ID:
-            <input
-              type="number"
+            Animal:
+            <select
+              className="animal-select"
               name="animal_id"
               value={formData.animal_id}
               onChange={handleChange}
+              disabled={animalsLoading}
               required
-            />
+            >
+              <option value="">
+                {animalsLoading ? "Loading animals..." : "Select animal"}
+              </option>
+              {animals.map((animal) => (
+                <option key={animal.id} value={animal.id}>
+                  {getAnimalLabel(animal.id)}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
 
@@ -147,7 +168,7 @@ function MilkRecords() {
           </label>
         </div>
 
-        <button type="submit" disabled={saving}>
+        <button type="submit" disabled={saving || animalsLoading}>
           {saving ? "Saving..." : "Create Milk Record"}
         </button>
       </form>
@@ -161,7 +182,7 @@ function MilkRecords() {
           <thead>
             <tr>
               <th>ID</th>
-              <th>Animal ID</th>
+              <th>Animal</th>
               <th>Date</th>
               <th>Milk Liters</th>
               <th>Session</th>
@@ -173,7 +194,11 @@ function MilkRecords() {
             {records.map((record) => (
               <tr key={record.id}>
                 <td>{record.id}</td>
-                <td>{record.animal_id}</td>
+                <td>
+                  <Link to={`/animals/${record.animal_id}`}>
+                    {getAnimalLabel(record.animal_id)}
+                  </Link>
+                </td>
                 <td>{record.record_date}</td>
                 <td>{record.milk_liters}</td>
                 <td>{record.session || "-"}</td>

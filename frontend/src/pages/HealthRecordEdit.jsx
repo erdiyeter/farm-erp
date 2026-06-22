@@ -8,6 +8,7 @@ import { getInventoryItems } from "../api/inventoryApi";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import { useAuth } from "../context/authContext";
+import useAnimals from "../hooks/useAnimals";
 
 const initialFormData = {
   animal_id: "",
@@ -26,6 +27,12 @@ function HealthRecordEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const {
+    animals,
+    loading: animalsLoading,
+    error: animalsError,
+    getAnimalLabel,
+  } = useAnimals();
 
   const [formData, setFormData] = useState(initialFormData);
   const [inventoryItems, setInventoryItems] = useState([]);
@@ -125,18 +132,39 @@ function HealthRecordEdit() {
       <h1>Edit Health Record</h1>
 
       {error && <ErrorMessage message={error} className="error-text" />}
+      {animalsError && (
+        <ErrorMessage message={animalsError} className="error-text" />
+      )}
 
       <form className="health-record-form" onSubmit={handleSubmit}>
         <div>
           <label>
-            Animal ID:
-            <input
-              type="number"
+            Animal:
+            <select
+              className="animal-select"
               name="animal_id"
               value={formData.animal_id}
               onChange={handleChange}
+              disabled={animalsLoading}
               required
-            />
+            >
+              <option value="">
+                {animalsLoading ? "Loading animals..." : "Select animal"}
+              </option>
+              {formData.animal_id &&
+                !animals.some(
+                  (animal) => animal.id === Number(formData.animal_id)
+                ) && (
+                  <option value={formData.animal_id}>
+                    {getAnimalLabel(formData.animal_id)}
+                  </option>
+                )}
+              {animals.map((animal) => (
+                <option key={animal.id} value={animal.id}>
+                  {getAnimalLabel(animal.id)}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
 
@@ -273,7 +301,7 @@ function HealthRecordEdit() {
           </label>
         </div>
 
-        <button type="submit" disabled={saving}>
+        <button type="submit" disabled={saving || animalsLoading}>
           {saving ? "Saving..." : "Save"}
         </button>
 

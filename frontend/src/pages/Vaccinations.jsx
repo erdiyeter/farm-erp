@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   createVaccination,
   getVaccinations,
@@ -6,6 +7,7 @@ import {
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
+import useAnimals from "../hooks/useAnimals";
 
 const initialFormData = {
   animal_id: "",
@@ -17,6 +19,12 @@ const initialFormData = {
 };
 
 function Vaccinations() {
+  const {
+    animals,
+    loading: animalsLoading,
+    error: animalsError,
+    getAnimalLabel,
+  } = useAnimals();
   const [records, setRecords] = useState([]);
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(true);
@@ -84,19 +92,32 @@ function Vaccinations() {
       />
 
       {error && <ErrorMessage message={error} className="error-text" />}
+      {animalsError && (
+        <ErrorMessage message={animalsError} className="error-text" />
+      )}
       {successMessage && <p className="status-text">{successMessage}</p>}
 
       <form onSubmit={handleSubmit}>
         <div>
           <label>
-            Animal ID:
-            <input
-              type="number"
+            Animal:
+            <select
+              className="animal-select"
               name="animal_id"
               value={formData.animal_id}
               onChange={handleChange}
+              disabled={animalsLoading}
               required
-            />
+            >
+              <option value="">
+                {animalsLoading ? "Loading animals..." : "Select animal"}
+              </option>
+              {animals.map((animal) => (
+                <option key={animal.id} value={animal.id}>
+                  {getAnimalLabel(animal.id)}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
 
@@ -159,7 +180,7 @@ function Vaccinations() {
           </label>
         </div>
 
-        <button type="submit" disabled={saving}>
+        <button type="submit" disabled={saving || animalsLoading}>
           {saving ? "Saving..." : "Create Vaccination Record"}
         </button>
       </form>
@@ -176,7 +197,7 @@ function Vaccinations() {
           <thead>
             <tr>
               <th>ID</th>
-              <th>Animal ID</th>
+              <th>Animal</th>
               <th>Vaccine Name</th>
               <th>Dose</th>
               <th>Application Date</th>
@@ -189,7 +210,11 @@ function Vaccinations() {
             {records.map((record) => (
               <tr key={record.id}>
                 <td>{record.id}</td>
-                <td>{record.animal_id}</td>
+                <td>
+                  <Link to={`/animals/${record.animal_id}`}>
+                    {getAnimalLabel(record.animal_id)}
+                  </Link>
+                </td>
                 <td>{record.vaccine_name}</td>
                 <td>{record.dose || "-"}</td>
                 <td>{record.application_date}</td>
