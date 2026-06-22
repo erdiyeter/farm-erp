@@ -4,6 +4,7 @@ import { getAlarms } from "../api/alarmApi";
 import { deleteAnimal } from "../api/animalApi";
 import { getHealthRecordsByAnimalId } from "../api/healthRecordApi";
 import { getMilkRecordsByAnimalId } from "../api/milkRecordApi";
+import { getReproductionEventsByAnimalId } from "../api/reproductionEventApi";
 import { getWeightRecordsByAnimalId } from "../api/weightRecordApi";
 import { getWithdrawalLocks } from "../api/withdrawalLockApi";
 import Loading from "../components/Loading";
@@ -16,6 +17,7 @@ const initialOperationalData = {
   milkRecords: [],
   healthRecords: [],
   weightRecords: [],
+  reproductionEvents: [],
   withdrawalLocks: [],
   alarms: [],
   activeLocks: [],
@@ -101,6 +103,21 @@ function buildTimeline(operationalData) {
       details: record.notes || "Weight recorded",
       to: `/weight-records/${record.id}`,
     })),
+    ...operationalData.reproductionEvents.map((event) => ({
+      key: `reproduction-${event.id}`,
+      date: event.event_date,
+      type: "Reproduction",
+      event:
+        event.event_type === "pregnancy"
+          ? event.pregnancy_status
+            ? "Pregnancy confirmed"
+            : "Not pregnant"
+          : event.event_type === "birth"
+            ? `Birth (${event.offspring_count} offspring)`
+            : "Mating",
+      details: event.notes || "Reproduction event recorded",
+      to: `/reproduction-events/${event.id}`,
+    })),
     ...operationalData.withdrawalLocks.map((lock) => ({
       key: `lock-${lock.id}`,
       date: lock.start_date,
@@ -143,6 +160,8 @@ function AnimalDetail() {
   const canViewMilk = user?.role === "admin" || user?.role === "worker";
   const canViewCare =
     user?.role === "admin" || user?.role === "veterinarian";
+  const canViewReproduction =
+    user?.role === "admin" || user?.role === "worker";
   const today = new Date().toISOString().slice(0, 10);
   const last30DaysStart = getDateDaysAgo(30);
   const sortedMilkRecords = [...operationalData.milkRecords].sort(
@@ -220,6 +239,39 @@ function AnimalDetail() {
   const averageDailyGain = daysBetweenWeightMeasurements > 0
     ? weightChange / daysBetweenWeightMeasurements
     : null;
+  const sortedReproductionEvents = [...operationalData.reproductionEvents].sort(
+    (first, second) =>
+      second.event_date.localeCompare(first.event_date) ||
+      second.id - first.id
+  );
+  const matingCount = sortedReproductionEvents.filter(
+    (event) => event.event_type === "mating"
+  ).length;
+  const pregnancyCount = sortedReproductionEvents.filter(
+    (event) =>
+      event.event_type === "pregnancy" && event.pregnancy_status === true
+  ).length;
+  const birthEvents = sortedReproductionEvents.filter(
+    (event) => event.event_type === "birth"
+  );
+  const totalOffspring = birthEvents.reduce(
+    (total, event) => total + Number(event.offspring_count || 0),
+    0
+  );
+  const twinBirthCount = birthEvents.filter(
+    (event) => event.is_twin_birth
+  ).length;
+  const latestBirth = birthEvents[0];
+  const latestPregnancyOutcome = sortedReproductionEvents.find(
+    (event) =>
+      event.event_type === "pregnancy" || event.event_type === "birth"
+  );
+  const currentPregnancyStatus = latestPregnancyOutcome
+    ? latestPregnancyOutcome.event_type === "pregnancy" &&
+      latestPregnancyOutcome.pregnancy_status
+      ? "Pregnant"
+      : "Not pregnant"
+    : "-";
   const daysSinceLastMilk = getDaysSince(lastMilkRecordDate, today);
   const daysSinceLastHealth = getDaysSince(lastHealthRecordDate, today);
   const timelineItems = buildTimeline(operationalData);
@@ -229,7 +281,14 @@ function AnimalDetail() {
       setOperationalLoading(true);
       setOperationalError("");
       try {
-        const [milkRecords, healthRecords, weightRecords, locks, alarms] =
+        const [
+          milkRecords,
+          healthRecords,
+          weightRecords,
+          reproductionEvents,
+          locks,
+          alarms,
+        ] =
           await Promise.all([
             canViewMilk
               ? getMilkRecordsByAnimalId(id)
@@ -238,6 +297,9 @@ function AnimalDetail() {
               ? getHealthRecordsByAnimalId(id)
               : Promise.resolve([]),
             getWeightRecordsByAnimalId(id),
+            canViewReproduction
+              ? getReproductionEventsByAnimalId(id)
+              : Promise.resolve([]),
             canViewCare ? getWithdrawalLocks() : Promise.resolve([]),
             canViewCare ? getAlarms() : Promise.resolve([]),
           ]);
@@ -275,6 +337,7 @@ function AnimalDetail() {
           milkRecords,
           healthRecords,
           weightRecords,
+          reproductionEvents,
           withdrawalLocks,
           alarms: associatedAlarms,
           activeLocks,
@@ -288,7 +351,7 @@ function AnimalDetail() {
     }
 
     loadOperationalData();
-  }, [canViewCare, canViewMilk, id]);
+  }, [canViewCare, canViewMilk, canViewReproduction, id]);
 
   async function handleDeactivate() {
     const confirmed = window.confirm(
@@ -542,13 +605,27 @@ function AnimalDetail() {
                 </div>
               </div>
             )}
+
+            <div className="animal-profile-metric-group">
+              <h3>Reproduction Summary</h3>
+              <p>Totals calculated from this animal's reproduction history.</p>
+              <div className="dashboard-kpi-grid animal-profile-metrics">
+                <KpiCard title="Total Matings" value={canViewReproduction ? matingCount : "-"} />
+                <KpiCard title="Total Pregnancies" value={canViewReproduction ? pregnancyCount : "-"} />
+                <KpiCard title="Total Births" value={canViewReproduction ? birthEvents.length : "-"} />
+                <KpiCard title="Total Offspring" value={canViewReproduction ? totalOffspring : "-"} />
+                <KpiCard title="Twin Birth Count" value={canViewReproduction ? twinBirthCount : "-"} />
+                <KpiCard title="Last Birth Date" value={canViewReproduction ? latestBirth?.event_date || "-" : "-"} />
+                <KpiCard title="Current Pregnancy Status" value={canViewReproduction ? currentPregnancyStatus : "-"} />
+              </div>
+            </div>
           </section>
 
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
                 <h2>Operational Timeline</h2>
-                <p>Milk, health, weight, withdrawal, and alarm activity</p>
+                <p>Milk, health, weight, reproduction, withdrawal, and alarm activity</p>
               </div>
             </div>
 
@@ -582,6 +659,49 @@ function AnimalDetail() {
                           )}
                         </td>
                         <td>{item.details}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          <section className="dashboard-section">
+            <div className="dashboard-section-header">
+              <div>
+                <h2>Reproduction History</h2>
+                <p>Latest five reproduction events</p>
+              </div>
+            </div>
+
+            {!canViewReproduction ? (
+              <p className="empty-text">
+                Reproduction history is not available for your role.
+              </p>
+            ) : sortedReproductionEvents.length === 0 ? (
+              <p className="empty-text">No reproduction events found.</p>
+            ) : (
+              <div className="dashboard-records-table">
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Date</th><th>Type</th><th>Status / Offspring</th><th>Notes</th></tr>
+                  </thead>
+                  <tbody>
+                    {sortedReproductionEvents.slice(0, 5).map((event) => (
+                      <tr key={event.id}>
+                        <td><Link to={`/reproduction-events/${event.id}`}>{event.event_date}</Link></td>
+                        <td>{event.event_type}</td>
+                        <td>
+                          {event.event_type === "pregnancy"
+                            ? event.pregnancy_status
+                              ? "Pregnancy confirmed"
+                              : "Not pregnant"
+                            : event.event_type === "birth"
+                              ? `${event.offspring_count} offspring${event.is_twin_birth ? " (twins)" : ""}`
+                              : "-"}
+                        </td>
+                        <td>{event.notes || "-"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -800,7 +920,6 @@ function AnimalDetail() {
         <div className="animal-profile-placeholder-grid">
           {[
             ["Lactation", "Lactation tracking will be added in a future sprint."],
-            ["Reproduction", "Reproduction history will be added in a future sprint."],
             ["Performance", "Performance indicators will be added in a future sprint."],
             ["Genetics / Breeding", "Genetics and breeding data will be added in a future sprint."],
           ].map(([title, message]) => (

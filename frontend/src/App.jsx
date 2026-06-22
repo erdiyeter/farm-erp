@@ -30,6 +30,9 @@ import HealthRecordEdit from "./pages/HealthRecordEdit";
 import WeightRecords from "./pages/WeightRecords";
 import WeightRecordDetail from "./pages/WeightRecordDetail";
 import WeightRecordEdit from "./pages/WeightRecordEdit";
+import ReproductionEvents from "./pages/ReproductionEvents";
+import ReproductionEventDetail from "./pages/ReproductionEventDetail";
+import ReproductionEventEdit from "./pages/ReproductionEventEdit";
 import WithdrawalLocks from "./pages/WithdrawalLocks";
 import WithdrawalLockDetail from "./pages/WithdrawalLockDetail";
 import WithdrawalLockEdit from "./pages/WithdrawalLockEdit";
@@ -100,6 +103,9 @@ function AppContent() {
                 <>
                   <NavLink className={navClassName} to="/milk-records">
                     Milk Records
+                  </NavLink>
+                  <NavLink className={navClassName} to="/reproduction-events">
+                    Reproduction
                   </NavLink>
                   <NavLink className={navClassName} to="/inventory">
                     Inventory
@@ -194,6 +200,9 @@ function AppContent() {
               path="/weight-records/:id/edit"
               element={<WeightRecordEdit />}
             />
+            <Route path="/reproduction-events" element={<ReproductionEvents />} />
+            <Route path="/reproduction-events/:id" element={<ReproductionEventDetail />} />
+            <Route path="/reproduction-events/:id/edit" element={<ReproductionEventEdit />} />
             <Route path="/withdrawal-locks" element={<WithdrawalLocks />} />
             <Route
               path="/withdrawal-locks/:id"

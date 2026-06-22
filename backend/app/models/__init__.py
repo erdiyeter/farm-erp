@@ -4,6 +4,7 @@ from app.models.finance import FinancialRecord
 from app.models.health_record import HealthRecord
 from app.models.inventory import InventoryItem, InventoryMovement
 from app.models.milk_record import MilkRecord
+from app.models.reproduction_event import ReproductionEvent
 from app.models.settings import Settings
 from app.models.user import User
 from app.models.vaccination import Vaccination
@@ -19,6 +20,7 @@ __all__ = [
     "InventoryItem",
     "InventoryMovement",
     "MilkRecord",
+    "ReproductionEvent",
     "Settings",
     "User",
     "Vaccination",
