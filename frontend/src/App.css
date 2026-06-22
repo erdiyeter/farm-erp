@@ -239,6 +239,30 @@
   border-radius: 6px;
 }
 
+.dashboard-cockpit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+.dashboard-cockpit-wide {
+  grid-column: 1 / -1;
+}
+
+.dashboard-cockpit-grid .dashboard-section {
+  min-width: 0;
+}
+
+.dashboard-cockpit-grid .dashboard-records-table {
+  margin-top: 0;
+}
+
+@media (max-width: 700px) {
+  .dashboard-cockpit-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .report-filter-actions,
 .report-filter-presets {
   display: flex;
@@ -256,12 +280,54 @@
   flex-basis: 100%;
 }
 
+.reporting-workspace .dashboard-export-filters {
+  padding: 16px;
+  border: 1px solid #e0e4e8;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.report-period-banner {
+  margin: 0 0 24px;
+  padding: 12px 16px;
+  border-left: 4px solid #555;
+  background: #f3f3f3;
+  color: #444;
+}
+
+.report-kpi-group {
+  margin-top: 28px;
+}
+
+.report-kpi-group:first-of-type {
+  margin-top: 0;
+}
+
 .report-kpi-grid {
-  margin-top: 20px;
+  margin-top: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.report-kpi-grid .dashboard-kpi-card {
+  min-height: 104px;
+  padding: 18px;
+}
+
+.report-trend-card p {
+  font-size: 24px;
+}
+
+.report-trend-card small {
+  display: block;
+  margin-top: 10px;
+  color: #666;
+  line-height: 1.4;
 }
 
 .report-detail-section {
-  margin-top: 28px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e2e2;
 }
 
 .report-section-header {
@@ -277,9 +343,193 @@
   color: #666;
 }
 
+.report-section-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.report-record-count {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef1f4;
+  color: #4d5661;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.report-export-section .dashboard-nav-link {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.report-data-table th:first-child,
+.report-data-table td:first-child {
+  white-space: nowrap;
+}
+
+.report-data-table tbody tr:hover {
+  background: #fafafa;
+}
+
 .dashboard-records-table {
   margin-top: 16px;
   overflow-x: auto;
+}
+
+.health-record-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 20px;
+  border: 1px solid #e0e4e8;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.health-record-form > div label {
+  display: grid;
+  gap: 6px;
+  color: #444;
+  font-weight: 600;
+}
+
+.health-record-form input,
+.health-record-form select,
+.health-record-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 10px;
+  border: 1px solid #c9cfd6;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+}
+
+.health-record-form textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.health-record-form > button {
+  align-self: end;
+  justify-self: start;
+}
+
+.health-record-form small,
+.health-form-note {
+  color: #666;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.health-kpi-grid {
+  margin: 24px 0;
+}
+
+.health-type-label,
+.health-withdrawal-label {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef1f4;
+  color: #4d5661;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.health-medicine-cell strong,
+.health-medicine-cell small,
+.health-withdrawal-label + small {
+  display: block;
+}
+
+.health-medicine-cell small,
+.health-withdrawal-label + small {
+  margin-top: 5px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.health-detail-page {
+  gap: 24px;
+}
+
+.health-detail-page .dashboard-section {
+  padding: 24px;
+}
+
+.health-detail-page .dashboard-section-header h1 {
+  margin: 0;
+}
+
+.health-detail-actions button {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.health-detail-kpis {
+  margin-top: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.health-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin: 0;
+}
+
+.health-detail-grid > div {
+  padding: 14px;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  background: #f8f9fa;
+}
+
+.health-detail-grid dt {
+  color: #666;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.health-detail-grid dd {
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+.health-detail-wide {
+  grid-column: 1 / -1;
+}
+
+.health-withdrawal-summary {
+  padding: 12px 16px;
+  border-left: 4px solid #555;
+  background: #f3f3f3;
+}
+
+.health-linked-alarms {
+  margin-top: 24px;
+}
+
+.health-linked-alarms h3 {
+  margin-bottom: 0;
+}
+
+.health-timeline-table th:first-child,
+.health-timeline-table td:first-child {
+  white-space: nowrap;
+}
+
+.health-timeline-table td:last-child {
+  min-width: 220px;
+  color: #555;
 }
 
 .animal-identity-grid,
@@ -313,6 +563,21 @@
 
 .animal-profile-metrics {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.animal-profile-metric-group + .animal-profile-metric-group {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e2e2;
+}
+
+.animal-profile-metric-group h3 {
+  margin: 0;
+}
+
+.animal-profile-metric-group > p {
+  margin: 6px 0 14px;
+  color: #666;
 }
 
 .animal-profile-metrics .dashboard-kpi-card {
@@ -397,6 +662,18 @@
   .animal-profile-page .dashboard-section-header {
     flex-direction: column;
   }
+
+  .report-section-header-row {
+    flex-direction: column;
+  }
+
+  .health-detail-page .dashboard-section {
+    padding: 16px;
+  }
+
+  .health-detail-page .dashboard-section-header {
+    flex-direction: column;
+  }
 }
 
 .navbar {
@@ -424,9 +701,37 @@
   text-decoration: none;
 }
 
+.nav-link {
+  padding: 6px 0;
+  color: #333;
+}
+
+.nav-link-active {
+  color: #000;
+  font-weight: 700;
+  box-shadow: inset 0 -2px 0 #333;
+}
+
 .nav-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   color: #555;
   font-weight: 600;
+}
+
+.nav-role {
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #eef1f4;
+  color: #4d5661;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+.data-table a {
+  color: #333;
+  font-weight: 700;
 }
 
 .nav-logout {

@@ -34,6 +34,23 @@ function getLatestRecordDate(records) {
   );
 }
 
+function getDaysSince(dateText, today) {
+  if (!dateText) {
+    return "-";
+  }
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+  const difference =
+    (Date.parse(`${today}T00:00:00Z`) -
+      Date.parse(`${dateText}T00:00:00Z`)) /
+    millisecondsPerDay;
+
+  if (difference < 0) {
+    return "Future date";
+  }
+  const days = Math.floor(difference);
+  return `${days} ${days === 1 ? "day" : "days"}`;
+}
+
 function buildTimeline(operationalData) {
   const items = [
     ...operationalData.milkRecords.map((record) => ({
@@ -102,12 +119,20 @@ function AnimalDetail() {
     )
     .reduce((total, record) => total + Number(record.milk_liters), 0)
     .toFixed(2);
+  const lifetimeMilkLiters = operationalData.milkRecords
+    .reduce((total, record) => total + Number(record.milk_liters), 0)
+    .toFixed(2);
+  const treatmentCount = operationalData.healthRecords.filter(
+    (record) => record.record_type === "treatment"
+  ).length;
   const lastMilkRecordDate = getLatestRecordDate(
     operationalData.milkRecords
   );
   const lastHealthRecordDate = getLatestRecordDate(
     operationalData.healthRecords
   );
+  const daysSinceLastMilk = getDaysSince(lastMilkRecordDate, today);
+  const daysSinceLastHealth = getDaysSince(lastHealthRecordDate, today);
   const timelineItems = buildTimeline(operationalData);
 
   useEffect(() => {
@@ -281,35 +306,66 @@ function AnimalDetail() {
               </div>
             </div>
 
-            <div className="dashboard-kpi-grid animal-profile-metrics">
-              <KpiCard
-                title="Total Milk Records"
-                value={canViewMilk ? operationalData.milkRecords.length : "-"}
-              />
-              <KpiCard
-                title="Last 30 Days Milk Liters"
-                value={canViewMilk ? last30DaysMilkLiters : "-"}
-              />
-              <KpiCard
-                title="Last Milk Record Date"
-                value={canViewMilk ? lastMilkRecordDate || "-" : "-"}
-              />
-              <KpiCard
-                title="Total Health Records"
-                value={canViewCare ? operationalData.healthRecords.length : "-"}
-              />
-              <KpiCard
-                title="Last Health Record Date"
-                value={canViewCare ? lastHealthRecordDate || "-" : "-"}
-              />
-              <KpiCard
-                title="Active Withdrawal Locks"
-                value={canViewCare ? operationalData.activeLocks.length : "-"}
-              />
-              <KpiCard
-                title="Open Alarms"
-                value={canViewCare ? operationalData.activeAlarms.length : "-"}
-              />
+            <div className="animal-profile-metric-group">
+              <h3>Lifetime Summary</h3>
+              <p>Totals calculated from this animal's available history.</p>
+              <div className="dashboard-kpi-grid animal-profile-metrics">
+                <KpiCard
+                  title="Lifetime Milk Liters"
+                  value={canViewMilk ? lifetimeMilkLiters : "-"}
+                />
+                <KpiCard
+                  title="Total Milk Records"
+                  value={canViewMilk ? operationalData.milkRecords.length : "-"}
+                />
+                <KpiCard
+                  title="Total Health Events"
+                  value={canViewCare ? operationalData.healthRecords.length : "-"}
+                />
+                <KpiCard
+                  title="Total Treatments"
+                  value={canViewCare ? treatmentCount : "-"}
+                />
+                <KpiCard
+                  title="Withdrawal History"
+                  value={canViewCare ? operationalData.withdrawalLocks.length : "-"}
+                />
+              </div>
+            </div>
+
+            <div className="animal-profile-metric-group">
+              <h3>Current Operational Indicators</h3>
+              <p>Recent activity and current restrictions.</p>
+              <div className="dashboard-kpi-grid animal-profile-metrics">
+                <KpiCard
+                  title="Last 30 Days Milk Liters"
+                  value={canViewMilk ? last30DaysMilkLiters : "-"}
+                />
+                <KpiCard
+                  title="Last Milk Record Date"
+                  value={canViewMilk ? lastMilkRecordDate || "-" : "-"}
+                />
+                <KpiCard
+                  title="Days Since Last Milk"
+                  value={canViewMilk ? daysSinceLastMilk : "-"}
+                />
+                <KpiCard
+                  title="Last Health Record Date"
+                  value={canViewCare ? lastHealthRecordDate || "-" : "-"}
+                />
+                <KpiCard
+                  title="Days Since Last Health Event"
+                  value={canViewCare ? daysSinceLastHealth : "-"}
+                />
+                <KpiCard
+                  title="Active Withdrawal Locks"
+                  value={canViewCare ? operationalData.activeLocks.length : "-"}
+                />
+                <KpiCard
+                  title="Open Alarms"
+                  value={canViewCare ? operationalData.activeAlarms.length : "-"}
+                />
+              </div>
             </div>
           </section>
 

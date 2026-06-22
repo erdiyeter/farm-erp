@@ -1,6 +1,7 @@
 import {
   BrowserRouter,
   Link,
+  NavLink,
   Navigate,
   Outlet,
   Route,
@@ -56,6 +57,12 @@ function ProtectedRoute() {
 function AppContent() {
   const { token, user, logout } = useAuth();
   const navigate = useNavigate();
+  const role = user?.role;
+  const isAdmin = role === "admin";
+  const canUseOperations = isAdmin || role === "worker";
+  const canUseCare = isAdmin || role === "veterinarian";
+  const navClassName = ({ isActive }) =>
+    isActive ? "nav-link nav-link-active" : "nav-link";
 
   function handleLogout() {
     logout();
@@ -72,19 +79,54 @@ function AppContent() {
         <div className="nav-links">
           {token ? (
             <>
-              <Link to="/">Dashboard</Link>
-              <Link to="/animals">Animals</Link>
-              <Link to="/vaccinations">Vaccinations</Link>
-              <Link to="/milk-records">Milk Records</Link>
-              <Link to="/inventory">Inventory</Link>
-              <Link to="/inventory/items">Inventory Items</Link>
-              <Link to="/inventory/movements">Inventory Movements</Link>
-              <Link to="/finance">Finance</Link>
-              <Link to="/health-records">Health Records</Link>
-              <Link to="/withdrawal-locks">Withdrawal Locks</Link>
-              <Link to="/alarms">Alarms</Link>
-              <Link to="/settings">Settings</Link>
-              <span className="nav-user">{user?.full_name}</span>
+              <NavLink className={navClassName} to="/dashboard">
+                {role === "veterinarian" ? "Reports" : "Dashboard"}
+              </NavLink>
+              <NavLink className={navClassName} to="/animals">
+                Animals
+              </NavLink>
+              {isAdmin && (
+                <NavLink className={navClassName} to="/vaccinations">
+                  Vaccinations
+                </NavLink>
+              )}
+              {canUseOperations && (
+                <>
+                  <NavLink className={navClassName} to="/milk-records">
+                    Milk Records
+                  </NavLink>
+                  <NavLink className={navClassName} to="/inventory">
+                    Inventory
+                  </NavLink>
+                </>
+              )}
+              {isAdmin && (
+                <NavLink className={navClassName} to="/finance">
+                  Finance
+                </NavLink>
+              )}
+              {canUseCare && (
+                <>
+                  <NavLink className={navClassName} to="/health-records">
+                    Health Records
+                  </NavLink>
+                  <NavLink className={navClassName} to="/withdrawal-locks">
+                    Withdrawal Locks
+                  </NavLink>
+                  <NavLink className={navClassName} to="/alarms">
+                    Alarms
+                  </NavLink>
+                </>
+              )}
+              {isAdmin && (
+                <NavLink className={navClassName} to="/settings">
+                  Settings
+                </NavLink>
+              )}
+              <span className="nav-user">
+                {user?.full_name}
+                {role && <span className="nav-role">{role}</span>}
+              </span>
               <button
                 className="secondary-button nav-logout"
                 type="button"
@@ -103,7 +145,7 @@ function AppContent() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/animals" element={<AnimalList />} />
             <Route path="/animals/new" element={<AnimalCreate />} />

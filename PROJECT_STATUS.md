@@ -2,74 +2,108 @@
 
 ## Project State
 
-- **MVP:** Completed.
-- **Post-MVP operational enhancements:** Completed through Sprint 56.
-- **Current focus:** Stabilization and separately approved future work.
-- **Layer 3 decision-support features:** Planned, not started.
+- MVP completed.
+- Sprints 57-77 completed.
+- Sprint 78 operational review and gap analysis completed.
+- Current focus: stabilization and separately approved future work.
+- Layer 3 decision-support features are planned but not started.
 
-This file is the canonical live status. Technical details are maintained in `README.md`; future direction is maintained in `notes/00_Project/Roadmap.md`.
+This file is the canonical live project status.
 
-## Implemented System
+## Implemented Modules
 
-### Core Modules
+- Animals
+  - CRUD
+  - Soft delete
+  - Statistics
+  - Detail and edit pages
+  - Operational profile
 
-- Animals: CRUD, soft delete, statistics, detail/edit pages, and operational profile.
-- Milk Records: create/list flows, animal history, and dashboard totals.
-- Vaccinations: create/list flows and animal history.
-- Inventory: item CRUD, movement history, stock calculation, and low-stock visibility.
-- Finance: income/expense CRUD and soft deletion.
-- Health Records: CRUD for treatment, illness, checkup, and vaccination records.
-- Withdrawal Locks: CRUD, active tracking, dashboard data, and soft deletion.
-- Alarms: CRUD, filters, dashboard data, and automatic withdrawal-lock alarms.
-- Settings: singleton farm/application settings.
+- Milk Records
+  - Create and list workflows
+  - Animal history
+  - Dashboard integration
 
-### Operational Integrations
+- Vaccinations
+  - Create and list workflows
+  - Animal history
 
-- Animal Detail composes recent milk and health records, active withdrawal locks, associated alarms, and summary values.
-- Treatment health records can optionally consume an inventory item through an atomic Inventory OUT movement with stock validation.
+- Inventory
+  - Item CRUD
+  - Stock movements
+  - Stock calculations
+  - Low-stock tracking
 
-### Dashboard and Reporting
+- Finance
+  - Income and expense management
+  - Soft delete
 
-- Operational KPI cards and recent records.
+- Health Records
+  - Treatment
+  - Illness
+  - Checkup
+  - Vaccination records
+
+- Withdrawal Locks
+  - CRUD
+  - Active tracking
+  - Dashboard integration
+  - Soft delete
+
+- Alarms
+  - CRUD
+  - Filters
+  - Dashboard integration
+  - Automatic withdrawal-lock alarms
+
+- Settings
+  - Farm and application settings
+
+## Operational Integrations
+
+- Animal Detail combines milk history, health history, withdrawal locks, alarms, and operational summaries.
+- Treatment health records can optionally create linked inventory consumption movements with stock validation.
+
+## Dashboard and Reporting
+
+- Operational KPI cards.
+- Recent activity visibility.
 - Reporting summaries and detail tables.
-- Date filters and Today, Last 7 Days, Last 30 Days, and This Month presets.
-- Authenticated CSV exports for Animals, Milk, Health, and Withdrawal Locks.
+- Date-range filtering.
+- Reporting presets:
+  - Today
+  - Last 7 Days
+  - Last 30 Days
+  - This Month
+- CSV exports:
+  - Animals
+  - Milk
+  - Health
+  - Withdrawal Locks
 
-### Authentication and Authorization
+## Authentication
 
-- JWT login, logout, local token persistence, and current-user response.
-- Default development administrator created by database initialization.
-- Fixed roles: `admin`, `worker`, and `veterinarian`.
-- Backend role dependencies return HTTP 403 for unauthorized authenticated access.
-- Admin has full access; veterinarian and worker access follows the documented module assignments in `README.md`.
-- No user-management or role-management UI exists.
-
-### Quality
-
-- Pytest foundation uses PostgreSQL rollback-only transaction isolation.
-- Sixty-five backend tests cover critical happy and failure paths across Animals, Authentication, Authorization, Health, Inventory, Withdrawal Locks, Alarms, and Reporting.
-- Backend compilation and frontend lint/build commands are documented in `README.md`.
+- JWT authentication implemented.
+- Fixed role-based authorization implemented.
 
 ## Architecture
 
-- React with Vite.
-- FastAPI layered monolith.
-- PostgreSQL through SQLAlchemy.
-- REST API under `/api/v1`.
-- No Redis, Celery, message broker, background worker, microservice, or cache layer.
+- React (Vite)
+- FastAPI
+- PostgreSQL
+- Layered monolith
+- REST API under `/api/v1`
 
-## Documentation Status
+## Documentation
 
-Sprint 56 aligned the roadmap, architecture decisions, database design, API specification, frontend guide, local deployment guide, technical debt, and project status.
+- README.md: technical reference
+- PROJECT_STATUS.md: current status
+- notes/00_Project/Roadmap.md: planned work
+- Sprint notes: historical records
 
-- `README.md`: canonical technical reference.
-- `PROJECT_STATUS.md`: canonical live status.
-- `notes/00_Project/Roadmap.md`: planned work only.
-- Sprint/module notes: historical records.
-- `notes/00_Project/Project_Status_2026_06_21.md`: dated historical snapshot.
+## Technical Debt
 
-## Open Technical Debt
+- Low-priority CSS cleanup remains documented in:
+  - notes/04_Technical_Debt/Technical_Debt.md
 
-- Low-priority legacy CSS cleanup remains documented in `notes/04_Technical_Debt/Technical_Debt.md`.
-
-No blocking issue is currently recorded.
+No blocking issues are currently recorded.

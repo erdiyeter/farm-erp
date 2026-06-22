@@ -7,6 +7,7 @@ import {
 import { getInventoryItems } from "../api/inventoryApi";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
+import { useAuth } from "../context/authContext";
 
 const initialFormData = {
   animal_id: "",
@@ -24,6 +25,7 @@ const initialFormData = {
 function HealthRecordEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState(initialFormData);
   const [inventoryItems, setInventoryItems] = useState([]);
@@ -32,13 +34,14 @@ function HealthRecordEdit() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const canUseInventory = user?.role === "admin";
 
   useEffect(() => {
     async function loadHealthRecord() {
       try {
         const [record, items] = await Promise.all([
           getHealthRecordById(id),
-          getInventoryItems(),
+          canUseInventory ? getInventoryItems() : Promise.resolve([]),
         ]);
 
         setFormData({
@@ -64,7 +67,7 @@ function HealthRecordEdit() {
     }
 
     loadHealthRecord();
-  }, [id]);
+  }, [canUseInventory, id]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -123,7 +126,7 @@ function HealthRecordEdit() {
 
       {error && <ErrorMessage message={error} className="error-text" />}
 
-      <form onSubmit={handleSubmit}>
+      <form className="health-record-form" onSubmit={handleSubmit}>
         <div>
           <label>
             Animal ID:
@@ -218,27 +221,32 @@ function HealthRecordEdit() {
               </label>
             </div>
 
-            <div>
-              <label>
-                Inventory Item:
-                <select
-                  name="inventory_item_id"
-                  value={formData.inventory_item_id}
-                  onChange={handleChange}
-                  disabled={hasInventoryConsumption}
-                >
-                  <option value="">No inventory consumption</option>
-                  {inventoryItems.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name} ({item.current_quantity} {item.unit})
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {hasInventoryConsumption && (
-                <p>Inventory consumption has already been recorded.</p>
-              )}
-            </div>
+            {canUseInventory && (
+              <div>
+                <label>
+                  Inventory Item:
+                  <select
+                    name="inventory_item_id"
+                    value={formData.inventory_item_id}
+                    onChange={handleChange}
+                    disabled={hasInventoryConsumption}
+                  >
+                    <option value="">No inventory consumption</option>
+                    {inventoryItems.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} ({item.current_quantity} {item.unit})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {hasInventoryConsumption && (
+                  <small className="health-form-note">
+                    Inventory consumption has already been recorded and cannot
+                    be changed here.
+                  </small>
+                )}
+              </div>
+            )}
           </>
         )}
 

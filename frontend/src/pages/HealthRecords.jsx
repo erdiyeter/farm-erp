@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   createHealthRecord,
   getHealthRecords,
@@ -9,6 +10,7 @@ import ErrorMessage from "../components/ErrorMessage";
 import KpiCard from "../components/KpiCard";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
+import { useAuth } from "../context/authContext";
 
 const initialFormData = {
   animal_id: "",
@@ -22,7 +24,15 @@ const initialFormData = {
   notes: "",
 };
 
+function getWithdrawalStatus(record, today) {
+  if (!record.withdrawal_end_date) {
+    return "None";
+  }
+  return record.withdrawal_end_date >= today ? "Active" : "Ended";
+}
+
 function HealthRecords() {
+  const { user } = useAuth();
   const [records, setRecords] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
   const [formData, setFormData] = useState(initialFormData);
@@ -31,6 +41,7 @@ function HealthRecords() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const canUseInventory = user?.role === "admin";
   const filteredRecords = records.filter((record) => {
     if (activeFilter === "checkup") {
       return record.record_type === "checkup";
@@ -38,6 +49,10 @@ function HealthRecords() {
 
     if (activeFilter === "treatment") {
       return record.record_type === "treatment";
+    }
+
+    if (activeFilter === "illness") {
+      return record.record_type === "illness";
     }
 
     if (activeFilter === "vaccination") {
@@ -59,13 +74,18 @@ function HealthRecords() {
   const checkupCount = records.filter(
     (record) => record.record_type === "checkup"
   ).length;
+  const today = new Date().toISOString().slice(0, 10);
+  const activeWithdrawalCount = records.filter(
+    (record) =>
+      record.withdrawal_end_date && record.withdrawal_end_date >= today
+  ).length;
 
   useEffect(() => {
     async function loadHealthRecords() {
       try {
         const [recordData, itemData] = await Promise.all([
           getHealthRecords(),
-          getInventoryItems(),
+          canUseInventory ? getInventoryItems() : Promise.resolve([]),
         ]);
         setRecords(recordData);
         setInventoryItems(itemData);
@@ -77,7 +97,7 @@ function HealthRecords() {
     }
 
     loadHealthRecords();
-  }, []);
+  }, [canUseInventory]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -119,7 +139,7 @@ function HealthRecords() {
       await createHealthRecord(payload);
       const [recordData, itemData] = await Promise.all([
         getHealthRecords(),
-        getInventoryItems(),
+        canUseInventory ? getInventoryItems() : Promise.resolve([]),
       ]);
       setRecords(recordData);
       setInventoryItems(itemData);
@@ -142,7 +162,7 @@ function HealthRecords() {
       {error && <ErrorMessage message={error} className="error-text" />}
       {successMessage && <p className="status-text">{successMessage}</p>}
 
-      <form onSubmit={handleSubmit}>
+      <form className="health-record-form" onSubmit={handleSubmit}>
         <div>
           <label>
             Animal ID:
@@ -188,23 +208,32 @@ function HealthRecords() {
               </label>
             </div>
 
-            <div>
-              <label>
-                Inventory Item:
-                <select
-                  name="inventory_item_id"
-                  value={formData.inventory_item_id}
-                  onChange={handleChange}
-                >
-                  <option value="">No inventory consumption</option>
-                  {inventoryItems.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name} ({item.current_quantity} {item.unit})
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
+            {canUseInventory ? (
+              <div>
+                <label>
+                  Inventory Item:
+                  <select
+                    name="inventory_item_id"
+                    value={formData.inventory_item_id}
+                    onChange={handleChange}
+                  >
+                    <option value="">No inventory consumption</option>
+                    {inventoryItems.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} ({item.current_quantity} {item.unit})
+                      </option>
+                    ))}
+                  </select>
+                  <small>
+                    Selecting an item records the numeric dosage as inventory use.
+                  </small>
+                </label>
+              </div>
+            ) : (
+              <p className="health-form-note">
+                Inventory consumption selection is available to administrators.
+              </p>
+            )}
           </>
         )}
 
@@ -270,12 +299,16 @@ function HealthRecords() {
         </button>
       </form>
 
-      <div className="dashboard-kpi-grid">
+      <div className="dashboard-kpi-grid health-kpi-grid">
         <KpiCard title="Total Records" value={records.length} />
         <KpiCard title="Treatments" value={treatmentCount} />
         <KpiCard title="Illnesses" value={illnessCount} />
         <KpiCard title="Vaccinations" value={vaccinationCount} />
         <KpiCard title="Checkups" value={checkupCount} />
+        <KpiCard
+          title="Active Withdrawals"
+          value={activeWithdrawalCount}
+        />
       </div>
 
       <div className="filter-bar">
@@ -288,6 +321,7 @@ function HealthRecords() {
             <option value="all">All Records</option>
             <option value="checkup">Checkups</option>
             <option value="treatment">Treatments</option>
+            <option value="illness">Illnesses</option>
             <option value="vaccination">Vaccinations</option>
           </select>
         </label>
@@ -304,15 +338,13 @@ function HealthRecords() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Animal ID</th>
-                <th>Type</th>
                 <th>Date</th>
+                <th>Animal</th>
+                <th>Type</th>
                 <th>Diagnosis</th>
                 <th>Treatment</th>
-                <th>Medication</th>
-                <th>Notes</th>
-                <th>Created At</th>
+                <th>Medicine Usage</th>
+                <th>Withdrawal</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -320,15 +352,31 @@ function HealthRecords() {
             <tbody>
               {filteredRecords.map((record) => (
                 <tr key={record.id}>
-                  <td>{record.id}</td>
-                  <td>{record.animal_id}</td>
-                  <td>{record.record_type}</td>
                   <td>{record.record_date}</td>
+                  <td>
+                    <Link to={`/animals/${record.animal_id}`}>
+                      {record.animal_id}
+                    </Link>
+                  </td>
+                  <td>
+                    <span className="health-type-label">
+                      {record.record_type}
+                    </span>
+                  </td>
                   <td>{record.diagnosis || "-"}</td>
                   <td>{record.treatment || "-"}</td>
-                  <td>{record.medicine_name || "-"}</td>
-                  <td>{record.notes || "-"}</td>
-                  <td>{record.created_at || "-"}</td>
+                  <td className="health-medicine-cell">
+                    <strong>{record.medicine_name || "-"}</strong>
+                    {record.dosage && <small>Dosage: {record.dosage}</small>}
+                  </td>
+                  <td>
+                    <span className="health-withdrawal-label">
+                      {getWithdrawalStatus(record, today)}
+                    </span>
+                    {record.withdrawal_end_date && (
+                      <small>Until {record.withdrawal_end_date}</small>
+                    )}
+                  </td>
                   <td>
                     <ButtonLink
                       to={`/health-records/${record.id}`}
