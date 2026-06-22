@@ -205,6 +205,21 @@ function AnimalDetail() {
       second.id - first.id
   );
   const latestWeightRecord = sortedWeightRecords[0];
+  const previousWeightRecord = sortedWeightRecords[1];
+  const weightChange = previousWeightRecord
+    ? Number(latestWeightRecord.weight_kg) -
+      Number(previousWeightRecord.weight_kg)
+    : null;
+  const daysBetweenWeightMeasurements = previousWeightRecord
+    ? Math.round(
+        (Date.parse(`${latestWeightRecord.record_date}T00:00:00Z`) -
+          Date.parse(`${previousWeightRecord.record_date}T00:00:00Z`)) /
+          (24 * 60 * 60 * 1000)
+      )
+    : null;
+  const averageDailyGain = daysBetweenWeightMeasurements > 0
+    ? weightChange / daysBetweenWeightMeasurements
+    : null;
   const daysSinceLastMilk = getDaysSince(lastMilkRecordDate, today);
   const daysSinceLastHealth = getDaysSince(lastHealthRecordDate, today);
   const timelineItems = buildTimeline(operationalData);
@@ -492,6 +507,41 @@ function AnimalDetail() {
                 />
               </div>
             </div>
+
+            {previousWeightRecord && (
+              <div className="animal-profile-metric-group">
+                <h3>Weight Growth</h3>
+                <p>
+                  Calculated from the latest two weight measurements.
+                </p>
+                <div className="dashboard-kpi-grid animal-profile-metrics">
+                  <KpiCard
+                    title="Latest Weight"
+                    value={`${latestWeightRecord.weight_kg} kg`}
+                  />
+                  <KpiCard
+                    title="Previous Weight"
+                    value={`${previousWeightRecord.weight_kg} kg`}
+                  />
+                  <KpiCard
+                    title="Weight Change"
+                    value={`${weightChange >= 0 ? "+" : ""}${weightChange.toFixed(2)} kg`}
+                  />
+                  <KpiCard
+                    title="Days Between Measurements"
+                    value={daysBetweenWeightMeasurements}
+                  />
+                  <KpiCard
+                    title="Average Daily Gain"
+                    value={
+                      averageDailyGain === null
+                        ? "-"
+                        : `${averageDailyGain.toFixed(3)} kg/day`
+                    }
+                  />
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="dashboard-section">
