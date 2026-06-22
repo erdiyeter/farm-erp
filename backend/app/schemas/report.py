@@ -5,6 +5,7 @@ from app.schemas.finance import FinancialRecordResponse
 from app.schemas.health_record import HealthRecordResponse
 from app.schemas.milk_record import MilkRecordListResponse
 from app.schemas.withdrawal_lock import WithdrawalLockResponse
+from app.schemas.weight_record import WeightRecordResponse
 
 
 class AnimalSummaryReport(BaseModel):
@@ -37,6 +38,7 @@ class ReportSummary(BaseModel):
     total_milk_liters: float
     average_daily_milk: float
     total_health_records: int
+    total_weight_records: int
     total_income: float
     total_expense: float
     active_withdrawal_locks: int
@@ -46,6 +48,7 @@ class ReportSummary(BaseModel):
 class ReportDetails(BaseModel):
     milk_records: list[MilkRecordListResponse]
     health_records: list[HealthRecordResponse]
+    weight_records: list[WeightRecordResponse]
     financial_records: list[FinancialRecordResponse]
     withdrawal_locks: list[WithdrawalLockResponse]
     alarms: list[AlarmResponse]

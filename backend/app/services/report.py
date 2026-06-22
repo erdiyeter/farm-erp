@@ -80,6 +80,9 @@ def get_report_summary(
         total_health_records=report_repository.count_filtered_health_records(
             db, start_date, end_date
         ),
+        total_weight_records=report_repository.count_filtered_weight_records(
+            db, start_date, end_date
+        ),
         total_income=float(
             report_repository.get_financial_total(
                 db, "income", start_date, end_date
@@ -109,6 +112,9 @@ def get_report_details(
             db, start_date, end_date
         ),
         health_records=report_repository.list_health_records_for_export(
+            db, start_date, end_date
+        ),
+        weight_records=report_repository.list_weight_records_for_export(
             db, start_date, end_date
         ),
         financial_records=report_repository.list_financial_records_for_report(
@@ -262,6 +268,39 @@ def get_milk_records_csv(
                 record.record_date,
                 record.milk_liters,
                 record.session,
+                record.notes,
+            ]
+        )
+
+    return output.getvalue()
+
+
+def get_weight_records_csv(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> str:
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(
+        [
+            "id",
+            "animal_id",
+            "record_date",
+            "weight_kg",
+            "notes",
+        ]
+    )
+
+    for record in report_repository.list_weight_records_for_export(
+        db, start_date, end_date
+    ):
+        writer.writerow(
+            [
+                record.id,
+                record.animal_id,
+                record.record_date,
+                record.weight_kg,
                 record.notes,
             ]
         )

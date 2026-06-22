@@ -273,6 +273,10 @@ function Dashboard() {
     reportDetails?.health_records || [],
     "record_date"
   );
+  const reportWeightRecords = sortNewest(
+    reportDetails?.weight_records || [],
+    "record_date"
+  );
   const reportFinancialRecords = sortNewest(
     reportDetails?.financial_records || [],
     "record_date"
@@ -1037,6 +1041,10 @@ function Dashboard() {
                   value={reportSummary.total_health_records}
                 />
                 <KpiCard
+                  title="Weight Records (Record Date)"
+                  value={reportSummary.total_weight_records}
+                />
+                <KpiCard
                   title="Active Locks (Start Date)"
                   value={reportSummary.active_withdrawal_locks}
                 />
@@ -1165,6 +1173,18 @@ function Dashboard() {
                 >
                   Export Milk Records CSV
                 </button>
+                <button
+                  type="button"
+                  className="dashboard-nav-link"
+                  onClick={() =>
+                    handleExport(
+                      "weight-records/export.csv",
+                      "weight_records_export.csv"
+                    )
+                  }
+                >
+                  Export Weight Records CSV
+                </button>
               </div>
             </div>
 
@@ -1178,6 +1198,20 @@ function Dashboard() {
                 <table className="data-table report-data-table">
                   <thead><tr><th>Date</th><th>Animal</th><th>Liters</th><th>Session</th></tr></thead>
                   <tbody>{reportMilkRecords.map((record) => <tr key={record.id}><td>{record.record_date}</td><td><Link to={`/animals/${record.animal_id}`}>{getAnimalLabel(record.animal_id)}</Link></td><td>{record.milk_liters}</td><td>{record.session || "-"}</td></tr>)}</tbody>
+                </table>
+              </div>
+            </ReportSection>
+
+            <ReportSection
+              title="Weight Report"
+              description="Weight records, newest first."
+              records={reportWeightRecords}
+              emptyMessage={emptyReportMessage("weight records")}
+            >
+              <div className="dashboard-records-table">
+                <table className="data-table report-data-table">
+                  <thead><tr><th>Date</th><th>Animal</th><th>Weight</th><th>Notes</th></tr></thead>
+                  <tbody>{reportWeightRecords.map((record) => <tr key={record.id}><td><Link to={`/weight-records/${record.id}`}>{record.record_date}</Link></td><td><Link to={`/animals/${record.animal_id}`}>{getAnimalLabel(record.animal_id)}</Link></td><td>{record.weight_kg} kg</td><td>{record.notes || "-"}</td></tr>)}</tbody>
                 </table>
               </div>
             </ReportSection>

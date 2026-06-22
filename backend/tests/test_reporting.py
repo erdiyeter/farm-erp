@@ -7,6 +7,7 @@ from fastapi import HTTPException
 
 from app.models.health_record import HealthRecord
 from app.models.milk_record import MilkRecord
+from app.models.weight_record import WeightRecord
 from app.routers.report import validate_date_range
 from app.schemas.animal import AnimalCreate
 from app.services import animal as animal_service
@@ -38,7 +39,26 @@ def test_reporting_summary_filters_and_csv_export(db) -> None:
         diagnosis="Reporting test",
         record_date=end_date,
     )
-    db.add_all([milk_in_range, milk_outside_range, health_record])
+    weight_in_range = WeightRecord(
+        animal_id=animal.id,
+        record_date=end_date,
+        weight_kg=Decimal("425.50"),
+        notes="Reporting test",
+    )
+    weight_outside_range = WeightRecord(
+        animal_id=animal.id,
+        record_date=date(2098, 2, 12),
+        weight_kg=Decimal("430.00"),
+    )
+    db.add_all(
+        [
+            milk_in_range,
+            milk_outside_range,
+            health_record,
+            weight_in_range,
+            weight_outside_range,
+        ]
+    )
     db.commit()
 
     summary = report_service.get_report_summary(db, start_date, end_date)
@@ -46,11 +66,15 @@ def test_reporting_summary_filters_and_csv_export(db) -> None:
     health_csv = report_service.get_health_records_csv(
         db, start_date, end_date
     )
+    weight_csv = report_service.get_weight_records_csv(
+        db, start_date, end_date
+    )
 
     assert summary.total_milk_records == initial.total_milk_records + 1
     assert summary.total_milk_liters == initial.total_milk_liters + 12.5
     assert summary.average_daily_milk == 12.5
     assert summary.total_health_records == initial.total_health_records + 1
+    assert summary.total_weight_records == initial.total_weight_records + 1
     assert any(
         row.startswith(f"{milk_in_range.id},")
         for row in milk_csv.splitlines()
@@ -62,6 +86,14 @@ def test_reporting_summary_filters_and_csv_export(db) -> None:
     assert any(
         row.startswith(f"{health_record.id},")
         for row in health_csv.splitlines()
+    )
+    assert any(
+        row.startswith(f"{weight_in_range.id},")
+        for row in weight_csv.splitlines()
+    )
+    assert not any(
+        row.startswith(f"{weight_outside_range.id},")
+        for row in weight_csv.splitlines()
     )
 
 
@@ -82,8 +114,10 @@ def test_reporting_empty_filtered_period_returns_zero_values(db) -> None:
     assert summary.total_milk_liters == 0
     assert summary.average_daily_milk == 0
     assert summary.total_health_records == 0
+    assert summary.total_weight_records == 0
     assert summary.total_income == 0
     assert summary.total_expense == 0
     assert details.milk_records == []
     assert details.health_records == []
+    assert details.weight_records == []
     assert details.financial_records == []

@@ -131,3 +131,16 @@ def export_milk_records_csv(
         report_service.get_milk_records_csv(db, start_date, end_date),
         "milk_records_export.csv",
     )
+
+
+@router.get("/weight-records/export.csv")
+def export_weight_records_csv(
+    start_date: date | None = None,
+    end_date: date | None = None,
+    db: Session = Depends(get_db),
+) -> Response:
+    validate_date_range(start_date, end_date)
+    return csv_response(
+        report_service.get_weight_records_csv(db, start_date, end_date),
+        "weight_records_export.csv",
+    )

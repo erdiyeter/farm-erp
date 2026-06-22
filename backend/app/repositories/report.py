@@ -9,6 +9,7 @@ from app.models.alarm import Alarm
 from app.models.finance import FinancialRecord
 from app.models.health_record import HealthRecord
 from app.models.milk_record import MilkRecord
+from app.models.weight_record import WeightRecord
 from app.models.withdrawal_lock import WithdrawalLock
 
 
@@ -122,6 +123,32 @@ def list_milk_records_for_export(
     if end_date:
         statement = statement.where(MilkRecord.record_date <= end_date)
     return list(db.scalars(statement).all())
+
+
+def list_weight_records_for_export(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> list[WeightRecord]:
+    statement = select(WeightRecord).order_by(WeightRecord.id)
+    if start_date:
+        statement = statement.where(WeightRecord.record_date >= start_date)
+    if end_date:
+        statement = statement.where(WeightRecord.record_date <= end_date)
+    return list(db.scalars(statement).all())
+
+
+def count_filtered_weight_records(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> int:
+    statement = select(func.count()).select_from(WeightRecord)
+    if start_date:
+        statement = statement.where(WeightRecord.record_date >= start_date)
+    if end_date:
+        statement = statement.where(WeightRecord.record_date <= end_date)
+    return db.scalar(statement) or 0
 
 
 def count_filtered_milk_records(
