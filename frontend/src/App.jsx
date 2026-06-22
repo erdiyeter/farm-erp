@@ -27,6 +27,9 @@ import FinanceEdit from "./pages/FinanceEdit";
 import HealthRecords from "./pages/HealthRecords";
 import HealthRecordDetail from "./pages/HealthRecordDetail";
 import HealthRecordEdit from "./pages/HealthRecordEdit";
+import WeightRecords from "./pages/WeightRecords";
+import WeightRecordDetail from "./pages/WeightRecordDetail";
+import WeightRecordEdit from "./pages/WeightRecordEdit";
 import WithdrawalLocks from "./pages/WithdrawalLocks";
 import WithdrawalLockDetail from "./pages/WithdrawalLockDetail";
 import WithdrawalLockEdit from "./pages/WithdrawalLockEdit";
@@ -84,6 +87,9 @@ function AppContent() {
               </NavLink>
               <NavLink className={navClassName} to="/animals">
                 Animals
+              </NavLink>
+              <NavLink className={navClassName} to="/weight-records">
+                Weight Records
               </NavLink>
               {isAdmin && (
                 <NavLink className={navClassName} to="/vaccinations">
@@ -178,6 +184,15 @@ function AppContent() {
             <Route
               path="/health-records/:id/edit"
               element={<HealthRecordEdit />}
+            />
+            <Route path="/weight-records" element={<WeightRecords />} />
+            <Route
+              path="/weight-records/:id"
+              element={<WeightRecordDetail />}
+            />
+            <Route
+              path="/weight-records/:id/edit"
+              element={<WeightRecordEdit />}
             />
             <Route path="/withdrawal-locks" element={<WithdrawalLocks />} />
             <Route
