@@ -13,6 +13,7 @@ from app.routers.milk_record import router as milk_record_router
 from app.routers.report import router as report_router
 from app.routers.settings import router as settings_router
 from app.routers.vaccination import router as vaccination_router
+from app.routers.weight_record import router as weight_record_router
 from app.routers.withdrawal_lock import router as withdrawal_lock_router
 
 
@@ -83,4 +84,9 @@ app.include_router(
     withdrawal_lock_router,
     prefix="/api/v1",
     dependencies=[Depends(require_roles("admin", "veterinarian"))],
+)
+app.include_router(
+    weight_record_router,
+    prefix="/api/v1",
+    dependencies=[Depends(require_roles("admin", "worker"))],
 )

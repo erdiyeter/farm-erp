@@ -7,6 +7,7 @@ from app.models.milk_record import MilkRecord
 from app.models.settings import Settings
 from app.models.user import User
 from app.models.vaccination import Vaccination
+from app.models.weight_record import WeightRecord
 from app.models.withdrawal_lock import WithdrawalLock
 
 
@@ -21,5 +22,6 @@ __all__ = [
     "Settings",
     "User",
     "Vaccination",
+    "WeightRecord",
     "WithdrawalLock",
 ]
