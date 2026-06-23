@@ -101,6 +101,10 @@ function InventoryItemDetail() {
       </p>
 
       <p>
+        <strong>Unit Cost:</strong> {item.unit_cost ?? "-"}
+      </p>
+
+      <p>
         <strong>Notes:</strong> {item.notes || "-"}
       </p>
 

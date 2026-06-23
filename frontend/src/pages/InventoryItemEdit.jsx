@@ -13,6 +13,7 @@ const initialFormData = {
   unit: "",
   current_quantity: "",
   minimum_quantity: "",
+  unit_cost: "",
   notes: "",
 };
 
@@ -36,6 +37,7 @@ function InventoryItemEdit() {
           unit: item.unit || "",
           current_quantity: item.current_quantity ?? "",
           minimum_quantity: item.minimum_quantity ?? "",
+          unit_cost: item.unit_cost ?? "",
           notes: item.notes || "",
         });
       } catch {
@@ -69,6 +71,7 @@ function InventoryItemEdit() {
       unit: formData.unit,
       current_quantity: Number(formData.current_quantity),
       minimum_quantity: Number(formData.minimum_quantity),
+      unit_cost: formData.unit_cost ? Number(formData.unit_cost) : null,
       notes: formData.notes || null,
     };
 
@@ -162,6 +165,20 @@ function InventoryItemEdit() {
               value={formData.minimum_quantity}
               onChange={handleChange}
               required
+            />
+          </label>
+        </div>
+
+        <div>
+          <label>
+            Unit Cost:
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              name="unit_cost"
+              value={formData.unit_cost}
+              onChange={handleChange}
             />
           </label>
         </div>

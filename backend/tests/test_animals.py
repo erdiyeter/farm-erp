@@ -1,11 +1,20 @@
 from datetime import date
+from decimal import Decimal
 from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
 
+from app.models.health_record import HealthRecord
+from app.models.milk_record import MilkRecord
 from app.schemas.animal import AnimalCreate, AnimalUpdate
+from app.schemas.health_record import HealthRecordCreate
+from app.schemas.inventory import InventoryItemCreate
+from app.schemas.settings import SettingsUpdate
 from app.services import animal as animal_service
+from app.services import health_record as health_record_service
+from app.services import inventory as inventory_service
+from app.services import settings as settings_service
 
 
 def test_animal_crud_stats_validation_and_soft_delete(db) -> None:
@@ -163,3 +172,195 @@ def test_animal_lactation_rejects_end_without_start() -> None:
             ear_tag=f"LACT-END-{uuid4().hex[:12]}",
             lactation_end_date=date(2026, 6, 1),
         )
+
+
+def test_animal_economic_fields_optional(db) -> None:
+    animal = animal_service.create_animal(
+        db, AnimalCreate(ear_tag=f"ECON-EMPTY-{uuid4().hex[:12]}")
+    )
+
+    assert animal.purchase_date is None
+    assert animal.purchase_price is None
+    assert animal.sale_price is None
+
+
+def test_animal_create_and_update_purchase_fields(db) -> None:
+    purchase_date = date(2026, 1, 15)
+    animal = animal_service.create_animal(
+        db,
+        AnimalCreate(
+            ear_tag=f"ECON-PURCHASE-{uuid4().hex[:12]}",
+            purchase_date=purchase_date,
+            purchase_price=Decimal("1250.50"),
+        ),
+    )
+
+    assert animal.purchase_date == purchase_date
+    assert animal.purchase_price == Decimal("1250.50")
+
+    updated = animal_service.update_animal(
+        db,
+        animal.id,
+        AnimalUpdate(
+            purchase_date=date(2026, 2, 1),
+            purchase_price=Decimal("1300.00"),
+        ),
+    )
+    assert updated.purchase_date == date(2026, 2, 1)
+    assert updated.purchase_price == Decimal("1300.00")
+
+
+def test_animal_sold_lifecycle_allows_sale_price(db) -> None:
+    animal = animal_service.create_animal(
+        db, AnimalCreate(ear_tag=f"ECON-SOLD-{uuid4().hex[:12]}")
+    )
+
+    updated = animal_service.update_animal(
+        db,
+        animal.id,
+        AnimalUpdate(
+            exit_date=date.today(),
+            exit_reason="sold",
+            sale_price=Decimal("2100.00"),
+        ),
+    )
+
+    assert updated.exit_reason == "sold"
+    assert updated.is_active is False
+    assert updated.sale_price == Decimal("2100.00")
+
+
+def test_animal_sale_price_allowed_for_non_sold_exit(db) -> None:
+    animal = animal_service.create_animal(
+        db,
+        AnimalCreate(
+            ear_tag=f"ECON-NONSOLD-{uuid4().hex[:12]}",
+            exit_date=date.today(),
+            exit_reason="died",
+            sale_price=Decimal("0.00"),
+        ),
+    )
+
+    assert animal.exit_reason == "died"
+    assert animal.sale_price == Decimal("0.00")
+
+
+def test_animal_economic_prices_reject_negative_values() -> None:
+    with pytest.raises(ValidationError):
+        AnimalCreate(
+            ear_tag=f"ECON-BAD-PURCHASE-{uuid4().hex[:12]}",
+            purchase_price=Decimal("-1.00"),
+        )
+
+    with pytest.raises(ValidationError):
+        AnimalCreate(
+            ear_tag=f"ECON-BAD-SALE-{uuid4().hex[:12]}",
+            sale_price=Decimal("-1.00"),
+        )
+
+
+def test_animal_economic_summary_uses_actual_records(db) -> None:
+    settings_service.update_settings(
+        db, SettingsUpdate(milk_price=Decimal("2.50"))
+    )
+    animal = animal_service.create_animal(
+        db,
+        AnimalCreate(
+            ear_tag=f"ECON-CALC-{uuid4().hex[:12]}",
+            purchase_price=Decimal("1000.00"),
+            sale_price=Decimal("1400.00"),
+        ),
+    )
+    other_animal = animal_service.create_animal(
+        db, AnimalCreate(ear_tag=f"ECON-OTHER-{uuid4().hex[:12]}")
+    )
+    db.add_all(
+        [
+            MilkRecord(
+                animal_id=animal.id,
+                record_date=date.today(),
+                milk_liters=Decimal("12.50"),
+                session="morning",
+            ),
+            MilkRecord(
+                animal_id=animal.id,
+                record_date=date.today(),
+                milk_liters=Decimal("7.25"),
+                session="evening",
+            ),
+            MilkRecord(
+                animal_id=other_animal.id,
+                record_date=date.today(),
+                milk_liters=Decimal("99.00"),
+            ),
+            HealthRecord(
+                animal_id=animal.id,
+                record_type="checkup",
+                record_date=date.today(),
+            ),
+            HealthRecord(
+                animal_id=other_animal.id,
+                record_type="treatment",
+                record_date=date.today(),
+            ),
+        ]
+    )
+    db.commit()
+    inventory_item = inventory_service.create_inventory_item(
+        db,
+        InventoryItemCreate(
+            name=f"Econ Treatment {uuid4().hex[:8]}",
+            unit="dose",
+            current_quantity=Decimal("10"),
+            unit_cost=Decimal("4.00"),
+        ),
+    )
+    health_record_service.create_health_record(
+        db,
+        HealthRecordCreate(
+            animal_id=animal.id,
+            record_type="treatment",
+            record_date=date.today(),
+            dosage="2",
+            inventory_item_id=inventory_item.id,
+        ),
+    )
+
+    detail = animal_service.get_animal_detail(db, animal.id)
+    expected_milk_revenue = Decimal("19.75") * Decimal("2.50")
+    expected_health_cost = Decimal("2.00") * Decimal("4.00")
+
+    assert detail.economic_summary is not None
+    assert detail.economic_summary.purchase_value == Decimal("1000.00")
+    assert detail.economic_summary.sale_value == Decimal("1400.00")
+    assert detail.economic_summary.profit_loss == Decimal("400.00")
+    assert detail.economic_summary.lifetime_milk_production == Decimal("19.75")
+    assert detail.economic_summary.lifetime_milk_revenue == expected_milk_revenue
+    assert detail.economic_summary.health_event_count == 2
+    assert detail.economic_summary.treatment_count == 1
+    assert detail.economic_summary.health_cost == expected_health_cost
+    assert detail.economic_summary.net_economic_value == (
+        expected_milk_revenue
+        + Decimal("1400.00")
+        - Decimal("1000.00")
+        - expected_health_cost
+    )
+
+
+def test_animal_economic_summary_handles_missing_prices(db) -> None:
+    animal = animal_service.create_animal(
+        db, AnimalCreate(ear_tag=f"ECON-MISSING-{uuid4().hex[:12]}")
+    )
+
+    detail = animal_service.get_animal_detail(db, animal.id)
+
+    assert detail.economic_summary is not None
+    assert detail.economic_summary.purchase_value is None
+    assert detail.economic_summary.sale_value is None
+    assert detail.economic_summary.profit_loss is None
+    assert detail.economic_summary.lifetime_milk_revenue is None
+    assert detail.economic_summary.health_cost is None
+    assert detail.economic_summary.net_economic_value is None
+    assert detail.economic_summary.lifetime_milk_production == Decimal("0")
+    assert detail.economic_summary.health_event_count == 0
+    assert detail.economic_summary.treatment_count == 0

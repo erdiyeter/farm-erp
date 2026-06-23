@@ -70,6 +70,48 @@ def ensure_animal_lactation_columns() -> None:
         )
 
 
+def ensure_animal_economic_columns() -> None:
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE animals ADD COLUMN IF NOT EXISTS "
+                "purchase_date DATE"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE animals ADD COLUMN IF NOT EXISTS "
+                "purchase_price NUMERIC(10, 2)"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE animals ADD COLUMN IF NOT EXISTS "
+                "sale_price NUMERIC(10, 2)"
+            )
+        )
+
+
+def ensure_settings_milk_price_column() -> None:
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE settings ADD COLUMN IF NOT EXISTS "
+                "milk_price NUMERIC(10, 2)"
+            )
+        )
+
+
+def ensure_inventory_unit_cost_column() -> None:
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS "
+                "unit_cost NUMERIC(10, 2)"
+            )
+        )
+
+
 def ensure_reproduction_outcome_column() -> None:
     with engine.begin() as connection:
         connection.execute(
@@ -84,6 +126,9 @@ def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     ensure_animal_lifecycle_columns()
     ensure_animal_lactation_columns()
+    ensure_animal_economic_columns()
+    ensure_settings_milk_price_column()
+    ensure_inventory_unit_cost_column()
     ensure_reproduction_outcome_column()
     ensure_finance_soft_delete_column()
     ensure_user_role_column()

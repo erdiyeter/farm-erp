@@ -1,6 +1,7 @@
 from datetime import date, datetime
+from decimal import Decimal
 
-from sqlalchemy import Boolean, Date, DateTime, Integer, String, Text, func, text
+from sqlalchemy import Boolean, Date, DateTime, Integer, Numeric, String, Text, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -18,6 +19,9 @@ class Animal(Base):
     breed: Mapped[str | None] = mapped_column(String(100))
     sex: Mapped[str | None] = mapped_column(String(10))
     birth_date: Mapped[date | None] = mapped_column(Date)
+    purchase_date: Mapped[date | None] = mapped_column(Date)
+    purchase_price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
+    sale_price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
     lactation_number: Mapped[int | None] = mapped_column(Integer)
     lactation_start_date: Mapped[date | None] = mapped_column(Date)
     lactation_end_date: Mapped[date | None] = mapped_column(Date)

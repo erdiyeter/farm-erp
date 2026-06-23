@@ -34,7 +34,8 @@ def create_animal(
     animal_data: AnimalCreate, db: Session = Depends(get_db)
 ) -> AnimalDetailResponse:
     try:
-        return animal_service.create_animal(db, animal_data)
+        animal = animal_service.create_animal(db, animal_data)
+        return animal_service.build_animal_detail_response(db, animal)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
@@ -46,7 +47,7 @@ def get_animal(
     animal_id: int, db: Session = Depends(get_db)
 ) -> AnimalDetailResponse:
     try:
-        return animal_service.get_animal(db, animal_id)
+        return animal_service.get_animal_detail(db, animal_id)
     except LookupError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
@@ -60,7 +61,8 @@ def update_animal(
     db: Session = Depends(get_db),
 ) -> AnimalDetailResponse:
     try:
-        return animal_service.update_animal(db, animal_id, animal_data)
+        animal = animal_service.update_animal(db, animal_id, animal_data)
+        return animal_service.build_animal_detail_response(db, animal)
     except LookupError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
@@ -76,7 +78,8 @@ def delete_animal(
     animal_id: int, db: Session = Depends(get_db)
 ) -> AnimalDetailResponse:
     try:
-        return animal_service.soft_delete_animal(db, animal_id)
+        animal = animal_service.soft_delete_animal(db, animal_id)
+        return animal_service.build_animal_detail_response(db, animal)
     except LookupError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)

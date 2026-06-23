@@ -6,17 +6,22 @@ import pytest
 from sqlalchemy import func, select
 
 from app.models.inventory import InventoryMovement
-from app.schemas.inventory import InventoryItemCreate, InventoryMovementCreate
+from app.schemas.inventory import (
+    InventoryItemCreate,
+    InventoryItemUpdate,
+    InventoryMovementCreate,
+)
 from app.services import inventory as inventory_service
 
 
-def create_item(db, quantity: str = "10"):
+def create_item(db, quantity: str = "10", unit_cost: str | None = None):
     return inventory_service.create_inventory_item(
         db,
         InventoryItemCreate(
             name=f"Test Item {uuid4().hex[:8]}",
             unit="units",
             current_quantity=Decimal(quantity),
+            unit_cost=Decimal(unit_cost) if unit_cost is not None else None,
         ),
     )
 
@@ -51,6 +56,20 @@ def test_inventory_movements_update_stock_for_all_movement_types(db) -> None:
         movement.id for movement in inventory_service.list_inventory_movements(db)
     }
     assert {incoming.id, outgoing.id, adjustment.id} <= movement_ids
+
+
+def test_inventory_item_unit_cost_create_and_update(db) -> None:
+    item = create_item(db, unit_cost="4.25")
+
+    assert item.unit_cost == Decimal("4.25")
+
+    updated = inventory_service.update_inventory_item(
+        db,
+        item.id,
+        InventoryItemUpdate(unit_cost=Decimal("5.50")),
+    )
+
+    assert updated.unit_cost == Decimal("5.50")
 
 
 def test_inventory_out_rejects_insufficient_stock_without_movement(db) -> None:

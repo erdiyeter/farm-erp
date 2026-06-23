@@ -14,6 +14,7 @@ const initialFormData = {
   unit: "",
   current_quantity: "",
   minimum_quantity: "",
+  unit_cost: "",
   notes: "",
 };
 
@@ -61,6 +62,7 @@ function InventoryItems() {
       unit: formData.unit,
       current_quantity: Number(formData.current_quantity),
       minimum_quantity: Number(formData.minimum_quantity),
+      unit_cost: formData.unit_cost ? Number(formData.unit_cost) : null,
       notes: formData.notes || null,
     };
 
@@ -153,6 +155,20 @@ function InventoryItems() {
 
         <div>
           <label>
+            Unit Cost:
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              name="unit_cost"
+              value={formData.unit_cost}
+              onChange={handleChange}
+            />
+          </label>
+        </div>
+
+        <div>
+          <label>
             Notes:
             <textarea
               name="notes"
@@ -184,6 +200,7 @@ function InventoryItems() {
               <th>Unit</th>
               <th>Current Quantity</th>
               <th>Minimum Quantity</th>
+              <th>Unit Cost</th>
               <th>Stock Status</th>
               <th>Notes</th>
               <th>Actions</th>
@@ -199,6 +216,7 @@ function InventoryItems() {
                 <td>{item.unit}</td>
                 <td>{item.current_quantity}</td>
                 <td>{item.minimum_quantity}</td>
+                <td>{item.unit_cost ?? "-"}</td>
                 <td>
                   {Number(item.current_quantity) <=
                   Number(item.minimum_quantity)

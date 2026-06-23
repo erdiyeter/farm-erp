@@ -8,6 +8,7 @@ const initialFormData = {
   farm_name: "",
   owner_name: "",
   contact_phone: "",
+  milk_price: "",
   address: "",
   notes: "",
 };
@@ -17,6 +18,7 @@ function toFormData(settings) {
     farm_name: settings.farm_name || "",
     owner_name: settings.owner_name || "",
     contact_phone: settings.contact_phone || "",
+    milk_price: settings.milk_price ?? "",
     address: settings.address || "",
     notes: settings.notes || "",
   };
@@ -55,9 +57,12 @@ function Settings() {
     setError("");
     setSuccessMessage("");
 
-    const payload = Object.fromEntries(
-      Object.entries(formData).map(([key, value]) => [key, value || null])
-    );
+    const payload = {
+      ...Object.fromEntries(
+        Object.entries(formData).map(([key, value]) => [key, value || null])
+      ),
+      milk_price: formData.milk_price ? Number(formData.milk_price) : null,
+    };
 
     try {
       const settings = await updateSettings(payload);
@@ -108,6 +113,18 @@ function Settings() {
           <input
             name="contact_phone"
             value={formData.contact_phone}
+            onChange={handleChange}
+          />
+        </label>
+
+        <label>
+          Milk Price
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            name="milk_price"
+            value={formData.milk_price}
             onChange={handleChange}
           />
         </label>

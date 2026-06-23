@@ -33,6 +33,7 @@ class InventoryItem(Base):
     minimum_quantity: Mapped[Decimal | None] = mapped_column(
         Numeric(10, 2), server_default=text("0")
     )
+    unit_cost: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
     notes: Mapped[str | None] = mapped_column(Text)
     is_active: Mapped[bool | None] = mapped_column(
         Boolean, server_default=text("true")

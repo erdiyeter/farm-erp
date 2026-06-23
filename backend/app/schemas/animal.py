@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from decimal import Decimal
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -41,6 +42,9 @@ class AnimalCreate(BaseModel):
     breed: str | None = Field(default=None, max_length=100)
     sex: str | None = Field(default=None, max_length=10)
     birth_date: date | None = None
+    purchase_date: date | None = None
+    purchase_price: Decimal | None = Field(default=None, ge=0)
+    sale_price: Decimal | None = Field(default=None, ge=0)
     lactation_number: int | None = Field(default=None, ge=1)
     lactation_start_date: date | None = None
     lactation_end_date: date | None = None
@@ -65,6 +69,9 @@ class AnimalUpdate(BaseModel):
     breed: str | None = Field(default=None, max_length=100)
     sex: str | None = Field(default=None, max_length=10)
     birth_date: date | None = None
+    purchase_date: date | None = None
+    purchase_price: Decimal | None = Field(default=None, ge=0)
+    sale_price: Decimal | None = Field(default=None, ge=0)
     lactation_number: int | None = Field(default=None, ge=1)
     lactation_start_date: date | None = None
     lactation_end_date: date | None = None
@@ -82,6 +89,21 @@ class AnimalListResponse(BaseModel):
     name: str | None
     breed: str | None
     sex: str | None
+    purchase_date: date | None
+    purchase_price: Decimal | None
+    sale_price: Decimal | None
+
+
+class AnimalEconomicSummary(BaseModel):
+    purchase_value: Decimal | None
+    sale_value: Decimal | None
+    profit_loss: Decimal | None
+    lifetime_milk_production: Decimal
+    lifetime_milk_revenue: Decimal | None
+    health_event_count: int
+    treatment_count: int
+    health_cost: Decimal | None
+    net_economic_value: Decimal | None
 
 
 class AnimalDetailResponse(BaseModel):
@@ -94,6 +116,9 @@ class AnimalDetailResponse(BaseModel):
     breed: str | None
     sex: str | None
     birth_date: date | None
+    purchase_date: date | None
+    purchase_price: Decimal | None
+    sale_price: Decimal | None
     lactation_number: int | None
     lactation_start_date: date | None
     lactation_end_date: date | None
@@ -106,6 +131,7 @@ class AnimalDetailResponse(BaseModel):
     is_active: bool | None
     created_at: datetime | None
     updated_at: datetime | None
+    economic_summary: AnimalEconomicSummary | None = None
 
 class AnimalStatsResponse(BaseModel):
     total_active: int

@@ -11,6 +11,7 @@ class InventoryItemCreate(BaseModel):
     unit: str = Field(max_length=50)
     current_quantity: Decimal = Field(default=Decimal("0"), ge=0)
     minimum_quantity: Decimal | None = Field(default=Decimal("0"), ge=0)
+    unit_cost: Decimal | None = Field(default=None, ge=0)
     notes: str | None = None
 
 
@@ -20,6 +21,7 @@ class InventoryItemUpdate(BaseModel):
     unit: str | None = Field(default=None, max_length=50)
     current_quantity: Decimal | None = Field(default=None, ge=0)
     minimum_quantity: Decimal | None = Field(default=None, ge=0)
+    unit_cost: Decimal | None = Field(default=None, ge=0)
     notes: str | None = None
     is_active: bool | None = None
 
@@ -33,6 +35,7 @@ class InventoryItemResponse(BaseModel):
     unit: str
     current_quantity: Decimal
     minimum_quantity: Decimal | None
+    unit_cost: Decimal | None
     notes: str | None
     is_active: bool | None
     created_at: datetime | None

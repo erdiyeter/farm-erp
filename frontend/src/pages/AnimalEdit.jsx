@@ -15,6 +15,9 @@ function AnimalEdit() {
     breed: "",
     sex: "",
     birth_date: "",
+    purchase_date: "",
+    purchase_price: "",
+    sale_price: "",
     lactation_number: "",
     lactation_start_date: "",
     lactation_end_date: "",
@@ -38,6 +41,9 @@ function AnimalEdit() {
           breed: animal.breed || "",
           sex: animal.sex || "",
           birth_date: animal.birth_date || "",
+          purchase_date: animal.purchase_date || "",
+          purchase_price: animal.purchase_price ?? "",
+          sale_price: animal.sale_price ?? "",
           lactation_number: animal.lactation_number || "",
           lactation_start_date: animal.lactation_start_date || "",
           lactation_end_date: animal.lactation_end_date || "",
@@ -76,6 +82,11 @@ function AnimalEdit() {
       breed: formData.breed || null,
       sex: formData.sex || null,
       birth_date: formData.birth_date || null,
+      purchase_date: formData.purchase_date || null,
+      purchase_price: formData.purchase_price
+        ? Number(formData.purchase_price)
+        : null,
+      sale_price: formData.sale_price ? Number(formData.sale_price) : null,
       lactation_number: formData.lactation_number
         ? Number(formData.lactation_number)
         : null,
@@ -173,6 +184,46 @@ function AnimalEdit() {
               name="birth_date"
               value={formData.birth_date}
               onChange={handleChange}
+            />
+          </label>
+        </div>
+
+        <div>
+          <label>
+            Purchase Date:
+            <input
+              type="date"
+              name="purchase_date"
+              value={formData.purchase_date}
+              onChange={handleChange}
+            />
+          </label>
+        </div>
+
+        <div>
+          <label>
+            Purchase Price:
+            <input
+              type="number"
+              name="purchase_price"
+              value={formData.purchase_price}
+              onChange={handleChange}
+              min="0"
+              step="0.01"
+            />
+          </label>
+        </div>
+
+        <div>
+          <label>
+            Sale Price:
+            <input
+              type="number"
+              name="sale_price"
+              value={formData.sale_price}
+              onChange={handleChange}
+              min="0"
+              step="0.01"
             />
           </label>
         </div>

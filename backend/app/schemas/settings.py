@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
@@ -5,6 +7,7 @@ class SettingsUpdate(BaseModel):
     farm_name: str | None = Field(default=None, max_length=150)
     owner_name: str | None = Field(default=None, max_length=150)
     contact_phone: str | None = Field(default=None, max_length=50)
+    milk_price: Decimal | None = Field(default=None, ge=0)
     address: str | None = None
     notes: str | None = None
 
@@ -23,5 +26,6 @@ class SettingsResponse(BaseModel):
     farm_name: str | None
     owner_name: str | None
     contact_phone: str | None
+    milk_price: Decimal | None
     address: str | None
     notes: str | None

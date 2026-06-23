@@ -42,6 +42,10 @@ function formatMilkLiters(value) {
   return `${Number(value).toFixed(2)} L`;
 }
 
+function formatEconomicValue(value) {
+  return value === null || value === undefined ? "-" : value;
+}
+
 function formatPregnancyOutcome(outcome) {
   const labels = {
     pregnant: "Pregnant",
@@ -537,6 +541,85 @@ function AnimalDetail() {
             value={animal.active_lactation ? "Yes" : "No"}
           />
         </div>
+      </section>
+
+      <section className="dashboard-section">
+        <div className="dashboard-section-header">
+          <div>
+            <h2>Economic Data</h2>
+            <p>Captured purchase and sale values for future economic analysis</p>
+          </div>
+        </div>
+        <dl className="animal-identity-grid">
+          <div>
+            <dt>Purchase Date</dt>
+            <dd>{animal.purchase_date || "-"}</dd>
+          </div>
+          <div>
+            <dt>Purchase Value</dt>
+            <dd>{formatEconomicValue(animal.economic_summary?.purchase_value)}</dd>
+          </div>
+          <div>
+            <dt>Sale Value</dt>
+            <dd>{formatEconomicValue(animal.economic_summary?.sale_value)}</dd>
+          </div>
+          <div>
+            <dt>Profit / Loss</dt>
+            <dd>{formatEconomicValue(animal.economic_summary?.profit_loss)}</dd>
+          </div>
+          <div>
+            <dt>Sale Status / Exit Reason</dt>
+            <dd>
+              {animal.exit_reason === "sold"
+                ? "Sold"
+                : animal.exit_reason || "-"}
+            </dd>
+          </div>
+          <div>
+            <dt>Lifetime Milk Production</dt>
+            <dd>
+              {animal.economic_summary
+                ? `${animal.economic_summary.lifetime_milk_production} L`
+                : "-"}
+            </dd>
+          </div>
+          <div>
+            <dt>Lifetime Milk Revenue</dt>
+            <dd>
+              {formatEconomicValue(
+                animal.economic_summary?.lifetime_milk_revenue
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt>Health Event Count</dt>
+            <dd>
+              {formatEconomicValue(
+                animal.economic_summary?.health_event_count
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt>Treatment Count</dt>
+            <dd>
+              {formatEconomicValue(animal.economic_summary?.treatment_count)}
+            </dd>
+          </div>
+          <div>
+            <dt>Health Cost</dt>
+            <dd>
+              {formatEconomicValue(animal.economic_summary?.health_cost)}
+            </dd>
+          </div>
+          <div>
+            <dt>Net Economic Value</dt>
+            <dd>
+              {formatEconomicValue(
+                animal.economic_summary?.net_economic_value
+              )}
+            </dd>
+          </div>
+        </dl>
       </section>
 
       {operationalError && (
