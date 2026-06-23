@@ -9,6 +9,7 @@ from app.schemas.dashboard import (
     DashboardDecisionSupportRankingAnimal,
     DashboardDecisionSupportSummary,
     DashboardGoldenListAnimal,
+    DashboardPriorityReviewAnimal,
     DashboardResponse,
 )
 
@@ -66,6 +67,31 @@ def build_golden_list_animal(
             economic_summary.lifetime_milk_production
         ),
         treatment_count=economic_summary.treatment_count,
+    )
+
+
+def build_priority_review_animal(
+    animal,
+    economic_summary,
+    attention_reasons: list[str],
+    has_active_withdrawal_lock: bool,
+    urgency_rank: int,
+) -> DashboardPriorityReviewAnimal:
+    net_economic_value = economic_summary.net_economic_value
+    return DashboardPriorityReviewAnimal(
+        animal_id=animal.id,
+        ear_tag=animal.ear_tag,
+        name=animal.name,
+        attention_reasons=attention_reasons,
+        net_economic_value=(
+            float(net_economic_value)
+            if net_economic_value is not None
+            else None
+        ),
+        treatment_count=economic_summary.treatment_count,
+        health_event_count=economic_summary.health_event_count,
+        has_active_withdrawal_lock=has_active_withdrawal_lock,
+        urgency_rank=urgency_rank,
     )
 
 
@@ -133,12 +159,14 @@ def get_dashboard_decision_support(
     milk_rankings = []
     treatment_rankings = []
     golden_list_animals = []
+    economic_summaries = {}
 
     for animal in animals:
         indicators = []
         economic_summary = animal_service.get_animal_economic_summary(
             db, animal
         )
+        economic_summaries[animal.id] = economic_summary
         net_economic_value = economic_summary.net_economic_value
         if net_economic_value is not None:
             economic_rankings.append(
@@ -265,6 +293,32 @@ def get_dashboard_decision_support(
         weight_gain_rankings,
         key=lambda item: (item.metric_value, item.ear_tag),
     )
+    highest_milk_value = (
+        max(item.metric_value for item in milk_rankings)
+        if milk_rankings
+        else None
+    )
+    highest_weight_gain_value = (
+        max(item.metric_value for item in weight_gain_rankings)
+        if weight_gain_rankings
+        else None
+    )
+    low_milk_ids = {
+        item.animal_id
+        for item in low_milk_producers[:5]
+        if (
+            highest_milk_value is not None
+            and item.metric_value < highest_milk_value
+        )
+    }
+    low_weight_gain_ids = {
+        item.animal_id
+        for item in lowest_weight_gain_animals[:5]
+        if (
+            highest_weight_gain_value is not None
+            and item.metric_value < highest_weight_gain_value
+        )
+    }
     golden_list_animals.sort(
         key=lambda item: (
             item.net_economic_value,
@@ -272,6 +326,59 @@ def get_dashboard_decision_support(
             -item.treatment_count,
         ),
         reverse=True,
+    )
+    priority_review_animals = []
+    for animal in animals:
+        economic_summary = economic_summaries[animal.id]
+        net_economic_value = economic_summary.net_economic_value
+        has_active_withdrawal_lock = animal.id in active_lock_animal_ids
+        reasons = []
+        urgency_ranks = []
+
+        if has_active_withdrawal_lock:
+            reasons.append("Withdrawal Lock")
+            urgency_ranks.append(1)
+
+        if net_economic_value is not None and net_economic_value < 0:
+            reasons.append("Economic Attention")
+            urgency_ranks.append(2)
+
+        if economic_summary.treatment_count >= 3:
+            reasons.append("Health Attention: Repeated Treatments")
+            urgency_ranks.append(3)
+
+        if economic_summary.health_event_count >= 5:
+            reasons.append("Health Attention: High Health Activity")
+            urgency_ranks.append(4)
+
+        if animal.id in low_weight_gain_ids:
+            reasons.append("Growth Attention")
+            urgency_ranks.append(5)
+
+        if animal.id in low_milk_ids:
+            reasons.append("Production Attention")
+            urgency_ranks.append(6)
+
+        if (
+            animal.exit_date is not None
+            and recent_exit_start <= animal.exit_date <= today
+        ):
+            reasons.append("Recently Exited")
+            urgency_ranks.append(7)
+
+        if reasons:
+            priority_review_animals.append(
+                build_priority_review_animal(
+                    animal,
+                    economic_summary,
+                    reasons,
+                    has_active_withdrawal_lock,
+                    min(urgency_ranks),
+                )
+            )
+
+    priority_review_animals.sort(
+        key=lambda item: (item.urgency_rank, item.ear_tag, item.animal_id)
     )
 
     return DashboardDecisionSupportSummary(
@@ -293,6 +400,7 @@ def get_dashboard_decision_support(
         highest_weight_gain_animals=weight_gain_rankings[:5],
         lowest_weight_gain_animals=lowest_weight_gain_animals[:5],
         golden_list_animals=golden_list_animals[:5],
+        priority_review_animals=priority_review_animals[:10],
     )
 
 

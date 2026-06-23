@@ -879,6 +879,56 @@ function Dashboard() {
         <section className="dashboard-section">
           <div className="dashboard-section-header">
             <div>
+              <h2>Priority Review</h2>
+              <p>Neutral review aid showing animals with rule-based attention reasons</p>
+            </div>
+          </div>
+
+          {decisionSupport.priority_review_animals.length === 0 ? (
+            <p className="empty-text">No animals currently require priority review.</p>
+          ) : (
+            <div className="dashboard-records-table">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Animal</th>
+                    <th>Attention Reasons</th>
+                    <th>Net Economic Value</th>
+                    <th>Treatments</th>
+                    <th>Health Events</th>
+                    <th>Withdrawal Lock</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {decisionSupport.priority_review_animals.map((animal) => (
+                    <tr key={animal.animal_id}>
+                      <td>
+                        <Link to={`/animals/${animal.animal_id}`}>
+                          {formatDecisionSupportAnimal(animal)}
+                        </Link>
+                      </td>
+                      <td>{animal.attention_reasons.join(", ")}</td>
+                      <td>
+                        {animal.net_economic_value === null
+                          ? "-"
+                          : animal.net_economic_value.toFixed(2)}
+                      </td>
+                      <td>{animal.treatment_count}</td>
+                      <td>{animal.health_event_count}</td>
+                      <td>{animal.has_active_withdrawal_lock ? "Active" : "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      {decisionSupport && (
+        <section className="dashboard-section">
+          <div className="dashboard-section-header">
+            <div>
               <h2>Decision Support Rankings</h2>
               <p>Compact rankings from existing economic, production, health, and weight data</p>
             </div>

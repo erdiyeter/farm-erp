@@ -41,6 +41,18 @@ class DashboardGoldenListAnimal(BaseModel):
     treatment_count: int
 
 
+class DashboardPriorityReviewAnimal(BaseModel):
+    animal_id: int
+    ear_tag: str
+    name: str | None
+    attention_reasons: list[str]
+    net_economic_value: float | None
+    treatment_count: int
+    health_event_count: int
+    has_active_withdrawal_lock: bool
+    urgency_rank: int
+
+
 class DashboardDecisionSupportSummary(BaseModel):
     animals_requiring_attention: int
     animals_with_negative_economic_value: int
@@ -58,6 +70,7 @@ class DashboardDecisionSupportSummary(BaseModel):
     highest_weight_gain_animals: list[DashboardDecisionSupportRankingAnimal]
     lowest_weight_gain_animals: list[DashboardDecisionSupportRankingAnimal]
     golden_list_animals: list[DashboardGoldenListAnimal]
+    priority_review_animals: list[DashboardPriorityReviewAnimal]
 
 
 class DashboardResponse(BaseModel):

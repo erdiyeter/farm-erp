@@ -397,3 +397,174 @@ def test_dashboard_golden_list_membership_and_order(db):
     assert top_entry.net_economic_value > 0
     assert top_entry.lifetime_milk_production == 10
     assert top_entry.treatment_count == 1
+
+
+def test_dashboard_priority_review_membership_reasons_and_order(db):
+    settings_service.update_settings(
+        db, SettingsUpdate(milk_price=Decimal("1.00"))
+    )
+
+    withdrawal_animal = create_dashboard_test_animal(
+        db, "000-PRIORITY-01-LOCK"
+    )
+    withdrawal_lock_service.create_withdrawal_lock(
+        db,
+        WithdrawalLockCreate(
+            animal_id=withdrawal_animal.id,
+            start_date=date.today(),
+            end_date=date.today(),
+            reason="Priority Review test",
+        ),
+    )
+
+    negative_animal = create_dashboard_test_animal(
+        db,
+        "000-PRIORITY-02-ECON",
+        purchase_price=Decimal("1000.00"),
+        sale_price=Decimal("1.00"),
+    )
+    seed_costed_treatment(db, negative_animal.id)
+
+    repeated_treatments = create_dashboard_test_animal(
+        db,
+        "000-PRIORITY-03-TREAT",
+    )
+    for _ in range(3):
+        db.add(
+            HealthRecord(
+                animal_id=repeated_treatments.id,
+                record_type="treatment",
+                record_date=date.today(),
+            )
+        )
+
+    high_health = create_dashboard_test_animal(
+        db, "000-PRIORITY-04-HEALTH"
+    )
+    db.add_all(
+        [
+            HealthRecord(
+                animal_id=high_health.id,
+                record_type="checkup",
+                record_date=date.today(),
+            )
+            for _ in range(5)
+        ]
+    )
+
+    low_weight = create_dashboard_test_animal(
+        db, "000-PRIORITY-05-WEIGHT"
+    )
+    high_weight = create_dashboard_test_animal(
+        db, "000-PRIORITY-05-WEIGHT-HIGH"
+    )
+    db.add_all(
+        [
+            WeightRecord(
+                animal_id=low_weight.id,
+                record_date=date(2026, 1, 1),
+                weight_kg=Decimal("500.00"),
+            ),
+            WeightRecord(
+                animal_id=low_weight.id,
+                record_date=date(2026, 2, 1),
+                weight_kg=Decimal("100.00"),
+            ),
+            WeightRecord(
+                animal_id=high_weight.id,
+                record_date=date(2026, 1, 1),
+                weight_kg=Decimal("100.00"),
+            ),
+            WeightRecord(
+                animal_id=high_weight.id,
+                record_date=date(2026, 2, 1),
+                weight_kg=Decimal("500.00"),
+            ),
+        ]
+    )
+
+    low_milk = create_dashboard_test_animal(db, "000-PRIORITY-06-MILK")
+    high_milk = create_dashboard_test_animal(
+        db, "000-PRIORITY-06-MILK-HIGH"
+    )
+    db.add_all(
+        [
+            MilkRecord(
+                animal_id=low_milk.id,
+                record_date=date.today(),
+                milk_liters=Decimal("1.00"),
+            ),
+            MilkRecord(
+                animal_id=high_milk.id,
+                record_date=date.today(),
+                milk_liters=Decimal("500.00"),
+            ),
+        ]
+    )
+    db.commit()
+
+    exited_animal = create_dashboard_test_animal(
+        db,
+        "000-PRIORITY-07-EXIT",
+        exit_date=date.today(),
+        exit_reason="sold",
+    )
+    clean_animal = create_dashboard_test_animal(
+        db, "000-PRIORITY-08-CLEAN"
+    )
+
+    priority_review = (
+        dashboard_service.get_dashboard_summary(db)
+        .decision_support
+        .priority_review_animals
+    )
+    priority_ids = [animal.animal_id for animal in priority_review]
+    reasons_by_id = {
+        animal.animal_id: animal.attention_reasons
+        for animal in priority_review
+    }
+
+    seeded_order = [
+        animal_id
+        for animal_id in priority_ids
+        if animal_id
+        in {
+            withdrawal_animal.id,
+            negative_animal.id,
+            repeated_treatments.id,
+            high_health.id,
+            low_weight.id,
+            low_milk.id,
+            exited_animal.id,
+        }
+    ]
+
+    assert seeded_order == [
+        withdrawal_animal.id,
+        negative_animal.id,
+        repeated_treatments.id,
+        high_health.id,
+        low_weight.id,
+        low_milk.id,
+        exited_animal.id,
+    ]
+    assert reasons_by_id[withdrawal_animal.id] == ["Withdrawal Lock"]
+    assert reasons_by_id[negative_animal.id] == ["Economic Attention"]
+    assert reasons_by_id[repeated_treatments.id] == [
+        "Health Attention: Repeated Treatments"
+    ]
+    assert reasons_by_id[high_health.id] == [
+        "Health Attention: High Health Activity"
+    ]
+    assert reasons_by_id[low_weight.id] == ["Growth Attention"]
+    assert reasons_by_id[low_milk.id] == ["Production Attention"]
+    assert reasons_by_id[exited_animal.id] == ["Recently Exited"]
+    assert clean_animal.id not in priority_ids
+    assert high_weight.id not in priority_ids
+    assert high_milk.id not in priority_ids
+
+    withdrawal_entry = priority_review[0]
+    assert withdrawal_entry.has_active_withdrawal_lock is True
+    assert withdrawal_entry.net_economic_value is None
+    assert withdrawal_entry.treatment_count == 0
+    assert withdrawal_entry.health_event_count == 0
