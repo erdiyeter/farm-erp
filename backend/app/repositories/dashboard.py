@@ -7,12 +7,59 @@ from sqlalchemy.orm import Session
 from app.models.animal import Animal
 from app.models.health_record import HealthRecord
 from app.models.milk_record import MilkRecord
+from app.models.weight_record import WeightRecord
 from app.models.withdrawal_lock import WithdrawalLock
 
 
 def count_active_animals(db: Session) -> int:
     statement = select(func.count()).where(Animal.is_active.is_(True))
     return db.scalar(statement) or 0
+
+
+def list_animals(db: Session) -> list[Animal]:
+    statement = select(Animal).order_by(Animal.id)
+    return list(db.scalars(statement).all())
+
+
+def list_active_withdrawal_locks(db: Session) -> list[WithdrawalLock]:
+    today = date.today()
+    statement = select(WithdrawalLock).where(
+        WithdrawalLock.is_active.is_(True),
+        WithdrawalLock.end_date >= today,
+    )
+    return list(db.scalars(statement).all())
+
+
+def get_treatment_counts_by_animal(db: Session) -> dict[int, int]:
+    statement = (
+        select(HealthRecord.animal_id, func.count())
+        .where(HealthRecord.record_type == "treatment")
+        .group_by(HealthRecord.animal_id)
+    )
+    return {
+        animal_id: count
+        for animal_id, count in db.execute(statement).all()
+    }
+
+
+def get_milk_record_counts_by_animal(db: Session) -> dict[int, int]:
+    statement = (
+        select(MilkRecord.animal_id, func.count())
+        .group_by(MilkRecord.animal_id)
+    )
+    return {
+        animal_id: count
+        for animal_id, count in db.execute(statement).all()
+    }
+
+
+def list_weight_records(db: Session) -> list[WeightRecord]:
+    statement = select(WeightRecord).order_by(
+        WeightRecord.animal_id,
+        WeightRecord.record_date.desc(),
+        WeightRecord.id.desc(),
+    )
+    return list(db.scalars(statement).all())
 
 
 def get_today_milk_total(db: Session) -> Decimal:

@@ -134,6 +134,10 @@ function formatReportValue(value) {
   });
 }
 
+function formatDecisionSupportAnimal(animal) {
+  return `${animal.ear_tag}${animal.name ? ` - ${animal.name}` : ""} (ID: ${animal.animal_id})`;
+}
+
 function formatPregnancyOutcome(outcome) {
   const labels = {
     pregnant: "Pregnant",
@@ -161,6 +165,39 @@ function ReportSection({ title, description, records, emptyMessage, children }) 
         <p className="empty-text">{emptyMessage}</p>
       ) : (
         children
+      )}
+    </div>
+  );
+}
+
+function RankingTable({ title, records, emptyMessage }) {
+  return (
+    <div>
+      <div className="report-section-header">
+        <h3>{title}</h3>
+      </div>
+      {records.length === 0 ? (
+        <p className="empty-text">{emptyMessage}</p>
+      ) : (
+        <div className="dashboard-records-table">
+          <table className="data-table">
+            <thead>
+              <tr><th>Animal</th><th>Metric</th></tr>
+            </thead>
+            <tbody>
+              {records.map((animal) => (
+                <tr key={animal.animal_id}>
+                  <td>
+                    <Link to={`/animals/${animal.animal_id}`}>
+                      {formatDecisionSupportAnimal(animal)}
+                    </Link>
+                  </td>
+                  <td>{animal.metric_label}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
@@ -423,6 +460,7 @@ function Dashboard() {
       : appliedEndDate
         ? `through ${appliedEndDate}`
         : "all available dates";
+  const decisionSupport = stats?.decision_support;
   const emptyReportMessage = (recordType) =>
     `No ${recordType} found for ${reportPeriod}. Adjust or clear the filters.`;
 
@@ -664,6 +702,183 @@ function Dashboard() {
           />
         </div>
       </section>
+
+      {decisionSupport && (
+        <section className="dashboard-section">
+          <div className="dashboard-section-header">
+            <div>
+              <h2>Decision Support</h2>
+              <p>Rule-based attention indicators from current animal data</p>
+            </div>
+          </div>
+
+          <div className="dashboard-kpi-grid">
+            <KpiCard
+              title="Animals Requiring Attention"
+              value={decisionSupport.animals_requiring_attention}
+            />
+            <KpiCard
+              title="Negative Economic Value"
+              value={decisionSupport.animals_with_negative_economic_value}
+            />
+            <KpiCard
+              title="Active Withdrawal Locks"
+              value={decisionSupport.animals_with_active_withdrawal_locks}
+            />
+            <KpiCard
+              title="Repeated Treatments"
+              value={decisionSupport.animals_with_repeated_treatments}
+            />
+            <KpiCard
+              title="Recently Exited Animals"
+              value={decisionSupport.recently_exited_animals}
+            />
+          </div>
+
+          <div className="dashboard-cockpit-grid">
+            <div>
+              <div className="report-section-header">
+                <h3>Attention Required Animals</h3>
+              </div>
+              {decisionSupport.attention_required_animals.length === 0 ? (
+                <p className="empty-text">No animals currently require attention.</p>
+              ) : (
+                <div className="dashboard-records-table">
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Animal</th><th>Triggered Indicators</th></tr>
+                    </thead>
+                    <tbody>
+                      {decisionSupport.attention_required_animals.map((animal) => (
+                        <tr key={animal.animal_id}>
+                          <td>
+                            <Link to={`/animals/${animal.animal_id}`}>
+                              {formatDecisionSupportAnimal(animal)}
+                            </Link>
+                          </td>
+                          <td>{animal.indicators.join(", ")}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="report-section-header">
+                <h3>Negative Economic Value Animals</h3>
+              </div>
+              {decisionSupport.negative_economic_value_animals.length === 0 ? (
+                <p className="empty-text">No negative economic values found.</p>
+              ) : (
+                <div className="dashboard-records-table">
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Animal</th><th>Net Economic Value</th></tr>
+                    </thead>
+                    <tbody>
+                      {decisionSupport.negative_economic_value_animals.map((animal) => (
+                        <tr key={animal.animal_id}>
+                          <td>
+                            <Link to={`/animals/${animal.animal_id}`}>
+                              {formatDecisionSupportAnimal(animal)}
+                            </Link>
+                          </td>
+                          <td>
+                            {animal.net_economic_value === null
+                              ? "-"
+                              : animal.net_economic_value.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="report-section-header">
+                <h3>Recently Exited Animals</h3>
+              </div>
+              {decisionSupport.recently_exited_animal_list.length === 0 ? (
+                <p className="empty-text">No animals exited in the last 30 days.</p>
+              ) : (
+                <div className="dashboard-records-table">
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Animal</th><th>Exit Date</th><th>Indicator</th></tr>
+                    </thead>
+                    <tbody>
+                      {decisionSupport.recently_exited_animal_list.map((animal) => (
+                        <tr key={animal.animal_id}>
+                          <td>
+                            <Link to={`/animals/${animal.animal_id}`}>
+                              {formatDecisionSupportAnimal(animal)}
+                            </Link>
+                          </td>
+                          <td>{animal.exit_date || "-"}</td>
+                          <td>{animal.indicators.join(", ")}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {decisionSupport && (
+        <section className="dashboard-section">
+          <div className="dashboard-section-header">
+            <div>
+              <h2>Decision Support Rankings</h2>
+              <p>Compact rankings from existing economic, production, health, and weight data</p>
+            </div>
+          </div>
+
+          <div className="dashboard-cockpit-grid">
+            <RankingTable
+              title="Top Economic Animals"
+              records={decisionSupport.top_economic_animals}
+              emptyMessage="No calculable economic values found."
+            />
+            <RankingTable
+              title="Bottom Economic Animals"
+              records={decisionSupport.bottom_economic_animals}
+              emptyMessage="No calculable economic values found."
+            />
+            <RankingTable
+              title="Top Milk Producers"
+              records={decisionSupport.top_milk_producers}
+              emptyMessage="No milk production records found."
+            />
+            <RankingTable
+              title="Low Milk Producers"
+              records={decisionSupport.low_milk_producers}
+              emptyMessage="No milk production records found."
+            />
+            <RankingTable
+              title="Most Treated Animals"
+              records={decisionSupport.most_treated_animals}
+              emptyMessage="No treatment records found."
+            />
+            <RankingTable
+              title="Highest Weight Gain Animals"
+              records={decisionSupport.highest_weight_gain_animals}
+              emptyMessage="No animals have enough weight history."
+            />
+            <RankingTable
+              title="Lowest Weight Gain Animals"
+              records={decisionSupport.lowest_weight_gain_animals}
+              emptyMessage="No animals have enough weight history."
+            />
+          </div>
+        </section>
+      )}
 
       {canViewOperations && (
         <section className="dashboard-section">

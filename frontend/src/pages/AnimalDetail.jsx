@@ -46,6 +46,17 @@ function formatEconomicValue(value) {
   return value === null || value === undefined ? "-" : value;
 }
 
+function getDecisionSupportStatus(isActive, unavailable = false) {
+  if (unavailable) {
+    return "Unavailable";
+  }
+  return isActive ? "Active" : "Clear";
+}
+
+function isDateWithinRange(dateText, startDate, endDate) {
+  return Boolean(dateText) && dateText >= startDate && dateText <= endDate;
+}
+
 function formatPregnancyOutcome(outcome) {
   const labels = {
     pregnant: "Pregnant",
@@ -320,6 +331,67 @@ function AnimalDetail() {
   const daysSinceLastMilk = getDaysSince(lastMilkRecordDate, today);
   const daysSinceLastHealth = getDaysSince(lastHealthRecordDate, today);
   const timelineItems = buildTimeline(operationalData);
+  const economicSummary = animal?.economic_summary;
+  const netEconomicValue = Number(economicSummary?.net_economic_value);
+  const hasNetEconomicValue =
+    economicSummary?.net_economic_value !== null &&
+    economicSummary?.net_economic_value !== undefined &&
+    !Number.isNaN(netEconomicValue);
+  const decisionSupportIndicators = [
+    {
+      title: "Positive Economic Value",
+      status: getDecisionSupportStatus(
+        hasNetEconomicValue && netEconomicValue > 0,
+        !hasNetEconomicValue
+      ),
+      detail: hasNetEconomicValue
+        ? formatEconomicValue(economicSummary.net_economic_value)
+        : "Net economic value unavailable",
+    },
+    {
+      title: "Negative Economic Value",
+      status: getDecisionSupportStatus(
+        hasNetEconomicValue && netEconomicValue < 0,
+        !hasNetEconomicValue
+      ),
+      detail: hasNetEconomicValue
+        ? formatEconomicValue(economicSummary.net_economic_value)
+        : "Net economic value unavailable",
+    },
+    {
+      title: "Repeated Treatments",
+      status: getDecisionSupportStatus(
+        Number(economicSummary?.treatment_count || 0) >= 3
+      ),
+      detail: `${economicSummary?.treatment_count ?? 0} treatments`,
+    },
+    {
+      title: "High Health Activity",
+      status: getDecisionSupportStatus(
+        Number(economicSummary?.health_event_count || 0) >= 5
+      ),
+      detail: `${economicSummary?.health_event_count ?? 0} health events`,
+    },
+    {
+      title: "Active Withdrawal Lock",
+      status: getDecisionSupportStatus(
+        operationalData.activeLocks.length > 0,
+        !canViewCare
+      ),
+      detail: canViewCare
+        ? `${operationalData.activeLocks.length} active locks`
+        : "Not available for your role",
+    },
+    {
+      title: "Recently Exited Animal",
+      status: getDecisionSupportStatus(
+        isDateWithinRange(animal?.exit_date, last30DaysStart, today)
+      ),
+      detail: animal?.exit_date
+        ? `${animal.exit_reason || "Exited"} on ${animal.exit_date}`
+        : "No exit date",
+    },
+  ];
 
   useEffect(() => {
     async function loadOperationalData() {
@@ -620,6 +692,36 @@ function AnimalDetail() {
             </dd>
           </div>
         </dl>
+      </section>
+
+      <section className="dashboard-section">
+        <div className="dashboard-section-header">
+          <div>
+            <h2>Decision Support</h2>
+            <p>Simple rule-based indicators from current animal data</p>
+          </div>
+        </div>
+
+        <div className="dashboard-records-table">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Indicator</th>
+                <th>Status</th>
+                <th>Basis</th>
+              </tr>
+            </thead>
+            <tbody>
+              {decisionSupportIndicators.map((indicator) => (
+                <tr key={indicator.title}>
+                  <td>{indicator.title}</td>
+                  <td>{indicator.status}</td>
+                  <td>{indicator.detail}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       {operationalError && (

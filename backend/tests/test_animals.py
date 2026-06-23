@@ -348,6 +348,7 @@ def test_animal_economic_summary_uses_actual_records(db) -> None:
 
 
 def test_animal_economic_summary_handles_missing_prices(db) -> None:
+    settings_service.update_settings(db, SettingsUpdate(milk_price=None))
     animal = animal_service.create_animal(
         db, AnimalCreate(ear_tag=f"ECON-MISSING-{uuid4().hex[:12]}")
     )
