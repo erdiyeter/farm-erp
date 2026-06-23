@@ -504,6 +504,41 @@ function AnimalDetail() {
         </dl>
       </section>
 
+      <section className="dashboard-section">
+        <div className="dashboard-section-header">
+          <div>
+            <h2>Lactation Summary</h2>
+            <p>Current lactation state for dairy operations</p>
+          </div>
+        </div>
+        <div className="dashboard-kpi-grid animal-profile-metrics">
+          <KpiCard
+            title="Lactation Status"
+            value={animal.lactation_status || "Unknown"}
+          />
+          <KpiCard
+            title="Lactation Number"
+            value={animal.lactation_number || "-"}
+          />
+          <KpiCard
+            title="Lactation Start Date"
+            value={animal.lactation_start_date || "-"}
+          />
+          <KpiCard
+            title="Lactation End Date"
+            value={animal.lactation_end_date || "-"}
+          />
+          <KpiCard
+            title="Days In Milk"
+            value={animal.days_in_milk ?? "-"}
+          />
+          <KpiCard
+            title="Active Lactation"
+            value={animal.active_lactation ? "Yes" : "No"}
+          />
+        </div>
+      </section>
+
       {operationalError && (
         <ErrorMessage message={operationalError} className="error-text" />
       )}
@@ -1013,7 +1048,6 @@ function AnimalDetail() {
         </div>
         <div className="animal-profile-placeholder-grid">
           {[
-            ["Lactation", "Lactation tracking will be added in a future sprint."],
             ["Performance", "Performance indicators will be added in a future sprint."],
             ["Genetics / Breeding", "Genetics and breeding data will be added in a future sprint."],
           ].map(([title, message]) => (

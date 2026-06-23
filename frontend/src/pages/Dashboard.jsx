@@ -658,6 +658,10 @@ function Dashboard() {
             title="Sales Exits"
             value={reportSummary?.sold_exits ?? "-"}
           />
+          <KpiCard
+            title="Animals In Lactation"
+            value={reportSummary?.animals_in_lactation ?? "-"}
+          />
         </div>
       </section>
 
@@ -1356,7 +1360,7 @@ function Dashboard() {
             <div className="report-kpi-group">
               <div className="report-section-header">
                 <h3>Production</h3>
-                <p>Milk record dates within the applied period.</p>
+                <p>Milk record dates and current lactation status.</p>
               </div>
               <div className="dashboard-kpi-grid report-kpi-grid">
                 <KpiCard
@@ -1370,6 +1374,22 @@ function Dashboard() {
                 <KpiCard
                   title="Milk Records (Record Date)"
                   value={reportSummary.total_milk_records}
+                />
+                <KpiCard
+                  title="Animals In Lactation"
+                  value={reportSummary.animals_in_lactation}
+                />
+                <KpiCard
+                  title="Active Lactations"
+                  value={reportSummary.active_lactations}
+                />
+                <KpiCard
+                  title="Average DIM"
+                  value={
+                    reportSummary.average_days_in_milk === null
+                      ? "-"
+                      : formatReportValue(reportSummary.average_days_in_milk)
+                  }
                 />
                 <div className="dashboard-kpi-card report-trend-card">
                   <h2>Latest Daily Milk Trend</h2>

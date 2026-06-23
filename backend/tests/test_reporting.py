@@ -20,7 +20,12 @@ def test_reporting_summary_filters_and_csv_export(db) -> None:
     end_date = date(2098, 2, 11)
     initial = report_service.get_report_summary(db, start_date, end_date)
     animal = animal_service.create_animal(
-        db, AnimalCreate(ear_tag=f"REPORT-{uuid4().hex[:12]}")
+        db,
+        AnimalCreate(
+            ear_tag=f"REPORT-{uuid4().hex[:12]}",
+            lactation_number=3,
+            lactation_start_date=date.today(),
+        ),
     )
     exited_sold = animal_service.create_animal(
         db,
@@ -151,6 +156,9 @@ def test_reporting_summary_filters_and_csv_export(db) -> None:
     assert summary.total_milk_records == initial.total_milk_records + 1
     assert summary.total_milk_liters == initial.total_milk_liters + 12.5
     assert summary.average_daily_milk == 12.5
+    assert summary.animals_in_lactation >= initial.animals_in_lactation + 1
+    assert summary.active_lactations >= initial.active_lactations + 1
+    assert summary.average_days_in_milk is not None
     assert summary.total_health_records == initial.total_health_records + 1
     assert summary.total_weight_records == initial.total_weight_records + 2
     assert summary.latest_weight_kg == 425.5
@@ -230,6 +238,8 @@ def test_reporting_empty_filtered_period_returns_zero_values(db) -> None:
     assert summary.total_milk_records == 0
     assert summary.total_milk_liters == 0
     assert summary.average_daily_milk == 0
+    assert summary.animals_in_lactation >= 0
+    assert summary.active_lactations >= 0
     assert summary.total_health_records == 0
     assert summary.total_weight_records == 0
     assert summary.latest_weight_kg is None

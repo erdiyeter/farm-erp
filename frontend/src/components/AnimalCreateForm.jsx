@@ -12,6 +12,9 @@ function AnimalCreateForm() {
     breed: "",
     sex: "",
     birth_date: "",
+    lactation_number: "",
+    lactation_start_date: "",
+    lactation_end_date: "",
     notes: "",
   });
 
@@ -39,6 +42,11 @@ function AnimalCreateForm() {
       breed: formData.breed.trim() || null,
       sex: formData.sex.trim() || null,
       birth_date: formData.birth_date || null,
+      lactation_number: formData.lactation_number
+        ? Number(formData.lactation_number)
+        : null,
+      lactation_start_date: formData.lactation_start_date || null,
+      lactation_end_date: formData.lactation_end_date || null,
       notes: formData.notes.trim() || null,
     };
 
@@ -100,6 +108,38 @@ function AnimalCreateForm() {
           type="date"
           name="birth_date"
           value={formData.birth_date}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div>
+        <label>Lactation Number:</label>
+        <input
+          type="number"
+          name="lactation_number"
+          value={formData.lactation_number}
+          onChange={handleChange}
+          min="1"
+          step="1"
+        />
+      </div>
+
+      <div>
+        <label>Lactation Start Date:</label>
+        <input
+          type="date"
+          name="lactation_start_date"
+          value={formData.lactation_start_date}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div>
+        <label>Lactation End Date:</label>
+        <input
+          type="date"
+          name="lactation_end_date"
+          value={formData.lactation_end_date}
           onChange={handleChange}
         />
       </div>

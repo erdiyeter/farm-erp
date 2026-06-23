@@ -6,6 +6,7 @@ from app.schemas.animal import (
     AnimalCreate,
     AnimalStatsResponse,
     AnimalUpdate,
+    validate_lactation_fields,
     validate_lifecycle_fields,
 )
 
@@ -27,6 +28,9 @@ def create_animal(db: Session, animal_data: AnimalCreate) -> Animal:
     if existing_animal is not None:
         raise ValueError("Ear tag already exists")
     validate_lifecycle_fields(animal_data.exit_date, animal_data.exit_reason)
+    validate_lactation_fields(
+        animal_data.lactation_start_date, animal_data.lactation_end_date
+    )
     lifecycle_data = animal_data.model_copy(
         update={"is_active": animal_data.exit_date is None}
     )
@@ -48,7 +52,14 @@ def update_animal(
     changes = animal_data.model_dump(exclude_unset=True)
     exit_date = changes.get("exit_date", animal.exit_date)
     exit_reason = changes.get("exit_reason", animal.exit_reason)
+    lactation_start_date = changes.get(
+        "lactation_start_date", animal.lactation_start_date
+    )
+    lactation_end_date = changes.get(
+        "lactation_end_date", animal.lactation_end_date
+    )
     validate_lifecycle_fields(exit_date, exit_reason)
+    validate_lactation_fields(lactation_start_date, lactation_end_date)
 
     if {"exit_date", "exit_reason", "is_active"} & changes.keys():
         changes["is_active"] = exit_date is None

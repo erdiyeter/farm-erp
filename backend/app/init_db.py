@@ -48,6 +48,28 @@ def ensure_animal_lifecycle_columns() -> None:
         )
 
 
+def ensure_animal_lactation_columns() -> None:
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE animals ADD COLUMN IF NOT EXISTS "
+                "lactation_number INTEGER"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE animals ADD COLUMN IF NOT EXISTS "
+                "lactation_start_date DATE"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE animals ADD COLUMN IF NOT EXISTS "
+                "lactation_end_date DATE"
+            )
+        )
+
+
 def ensure_reproduction_outcome_column() -> None:
     with engine.begin() as connection:
         connection.execute(
@@ -61,6 +83,7 @@ def ensure_reproduction_outcome_column() -> None:
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     ensure_animal_lifecycle_columns()
+    ensure_animal_lactation_columns()
     ensure_reproduction_outcome_column()
     ensure_finance_soft_delete_column()
     ensure_user_role_column()

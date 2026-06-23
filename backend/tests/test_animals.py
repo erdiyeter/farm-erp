@@ -116,3 +116,50 @@ def test_animal_lifecycle_rejects_exit_reason_without_date() -> None:
             ear_tag=f"EXIT-REASON-{uuid4().hex[:12]}",
             exit_reason="died",
         )
+
+
+def test_animal_lactation_active_and_ended_scenarios(db) -> None:
+    active_start = date(2026, 6, 1)
+    ended_start = date(2026, 5, 1)
+    ended_end = date(2026, 5, 21)
+    active = animal_service.create_animal(
+        db,
+        AnimalCreate(
+            ear_tag=f"LACT-ACTIVE-{uuid4().hex[:12]}",
+            lactation_number=2,
+            lactation_start_date=active_start,
+        ),
+    )
+    ended = animal_service.create_animal(
+        db,
+        AnimalCreate(
+            ear_tag=f"LACT-ENDED-{uuid4().hex[:12]}",
+            lactation_number=1,
+            lactation_start_date=ended_start,
+            lactation_end_date=ended_end,
+        ),
+    )
+
+    assert active.lactation_status == "Active"
+    assert active.active_lactation is True
+    assert active.days_in_milk == (date.today() - active_start).days
+    assert ended.lactation_status == "Ended"
+    assert ended.active_lactation is False
+    assert ended.days_in_milk == 20
+
+
+def test_animal_lactation_rejects_end_before_start() -> None:
+    with pytest.raises(ValidationError, match="cannot be before"):
+        AnimalCreate(
+            ear_tag=f"LACT-BAD-{uuid4().hex[:12]}",
+            lactation_start_date=date(2026, 6, 2),
+            lactation_end_date=date(2026, 6, 1),
+        )
+
+
+def test_animal_lactation_rejects_end_without_start() -> None:
+    with pytest.raises(ValidationError, match="start date is required"):
+        AnimalCreate(
+            ear_tag=f"LACT-END-{uuid4().hex[:12]}",
+            lactation_end_date=date(2026, 6, 1),
+        )

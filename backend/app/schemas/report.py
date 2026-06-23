@@ -46,6 +46,9 @@ class ReportSummary(BaseModel):
     total_milk_records: int
     total_milk_liters: float
     average_daily_milk: float
+    animals_in_lactation: int
+    active_lactations: int
+    average_days_in_milk: float | None
     total_health_records: int
     total_weight_records: int
     latest_weight_kg: float | None

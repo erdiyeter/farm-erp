@@ -91,6 +91,30 @@ def list_exited_animals_for_report(
     return list(db.scalars(statement).all())
 
 
+def count_animals_in_lactation(db: Session) -> int:
+    statement = select(func.count()).where(
+        Animal.lactation_start_date.is_not(None),
+        Animal.lactation_end_date.is_(None),
+    )
+    return db.scalar(statement) or 0
+
+
+def get_average_active_days_in_milk(db: Session) -> float | None:
+    today = date.today()
+    statement = select(Animal).where(
+        Animal.lactation_start_date.is_not(None),
+        Animal.lactation_end_date.is_(None),
+    )
+    active_animals = list(db.scalars(statement).all())
+    if not active_animals:
+        return None
+    total_days = sum(
+        (today - animal.lactation_start_date).days
+        for animal in active_animals
+    )
+    return total_days / len(active_animals)
+
+
 def get_today_milk_total(db: Session) -> Decimal:
     today = date.today()
     statement = select(func.coalesce(func.sum(MilkRecord.milk_liters), 0)).where(

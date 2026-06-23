@@ -110,6 +110,11 @@ def get_report_summary(
         ),
         total_milk_liters=float(total_milk),
         average_daily_milk=float(total_milk / milk_days) if milk_days else 0,
+        animals_in_lactation=report_repository.count_animals_in_lactation(db),
+        active_lactations=report_repository.count_animals_in_lactation(db),
+        average_days_in_milk=report_repository.get_average_active_days_in_milk(
+            db
+        ),
         total_health_records=report_repository.count_filtered_health_records(
             db, start_date, end_date
         ),

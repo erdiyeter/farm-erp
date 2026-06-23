@@ -16,6 +16,24 @@ def validate_lifecycle_fields(
         raise ValueError("Exit date is required when exit reason is provided")
 
 
+def validate_lactation_fields(
+    lactation_start_date: date | None,
+    lactation_end_date: date | None,
+) -> None:
+    if lactation_end_date is not None and lactation_start_date is None:
+        raise ValueError(
+            "Lactation start date is required when lactation end date is provided"
+        )
+    if (
+        lactation_start_date is not None
+        and lactation_end_date is not None
+        and lactation_end_date < lactation_start_date
+    ):
+        raise ValueError(
+            "Lactation end date cannot be before lactation start date"
+        )
+
+
 class AnimalCreate(BaseModel):
     ear_tag: str = Field(max_length=50)
     name: str | None = Field(default=None, max_length=100)
@@ -23,6 +41,9 @@ class AnimalCreate(BaseModel):
     breed: str | None = Field(default=None, max_length=100)
     sex: str | None = Field(default=None, max_length=10)
     birth_date: date | None = None
+    lactation_number: int | None = Field(default=None, ge=1)
+    lactation_start_date: date | None = None
+    lactation_end_date: date | None = None
     exit_date: date | None = None
     exit_reason: ExitReason | None = None
     notes: str | None = None
@@ -31,6 +52,9 @@ class AnimalCreate(BaseModel):
     @model_validator(mode="after")
     def validate_lifecycle(self):
         validate_lifecycle_fields(self.exit_date, self.exit_reason)
+        validate_lactation_fields(
+            self.lactation_start_date, self.lactation_end_date
+        )
         return self
 
 
@@ -41,6 +65,9 @@ class AnimalUpdate(BaseModel):
     breed: str | None = Field(default=None, max_length=100)
     sex: str | None = Field(default=None, max_length=10)
     birth_date: date | None = None
+    lactation_number: int | None = Field(default=None, ge=1)
+    lactation_start_date: date | None = None
+    lactation_end_date: date | None = None
     exit_date: date | None = None
     exit_reason: ExitReason | None = None
     notes: str | None = None
@@ -67,6 +94,12 @@ class AnimalDetailResponse(BaseModel):
     breed: str | None
     sex: str | None
     birth_date: date | None
+    lactation_number: int | None
+    lactation_start_date: date | None
+    lactation_end_date: date | None
+    lactation_status: str
+    active_lactation: bool
+    days_in_milk: int | None
     exit_date: date | None
     exit_reason: ExitReason | None
     notes: str | None
