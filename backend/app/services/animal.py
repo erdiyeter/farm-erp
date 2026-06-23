@@ -6,6 +6,7 @@ from app.schemas.animal import (
     AnimalCreate,
     AnimalStatsResponse,
     AnimalUpdate,
+    validate_lifecycle_fields,
 )
 
 def list_active_animals(db: Session) -> list[Animal]:
@@ -25,7 +26,11 @@ def create_animal(db: Session, animal_data: AnimalCreate) -> Animal:
     )
     if existing_animal is not None:
         raise ValueError("Ear tag already exists")
-    return animal_repository.create_animal(db, animal_data)
+    validate_lifecycle_fields(animal_data.exit_date, animal_data.exit_reason)
+    lifecycle_data = animal_data.model_copy(
+        update={"is_active": animal_data.exit_date is None}
+    )
+    return animal_repository.create_animal(db, lifecycle_data)
 
 
 def update_animal(
@@ -40,7 +45,17 @@ def update_animal(
         if existing_animal is not None:
             raise ValueError("Ear tag already exists")
 
-    return animal_repository.update_animal(db, animal, animal_data)
+    changes = animal_data.model_dump(exclude_unset=True)
+    exit_date = changes.get("exit_date", animal.exit_date)
+    exit_reason = changes.get("exit_reason", animal.exit_reason)
+    validate_lifecycle_fields(exit_date, exit_reason)
+
+    if {"exit_date", "exit_reason", "is_active"} & changes.keys():
+        changes["is_active"] = exit_date is None
+
+    return animal_repository.update_animal(
+        db, animal, AnimalUpdate.model_validate(changes)
+    )
 
 
 def soft_delete_animal(db: Session, animal_id: int) -> Animal:

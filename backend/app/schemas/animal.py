@@ -1,6 +1,19 @@
 from datetime import date, datetime
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+
+ExitReason = Literal["sold", "died", "culled", "transferred", "other"]
+
+
+def validate_lifecycle_fields(
+    exit_date: date | None, exit_reason: ExitReason | None
+) -> None:
+    if exit_date is not None and exit_reason is None:
+        raise ValueError("Exit reason is required when exit date is provided")
+    if exit_reason is not None and exit_date is None:
+        raise ValueError("Exit date is required when exit reason is provided")
 
 
 class AnimalCreate(BaseModel):
@@ -10,8 +23,15 @@ class AnimalCreate(BaseModel):
     breed: str | None = Field(default=None, max_length=100)
     sex: str | None = Field(default=None, max_length=10)
     birth_date: date | None = None
+    exit_date: date | None = None
+    exit_reason: ExitReason | None = None
     notes: str | None = None
     is_active: bool = True
+
+    @model_validator(mode="after")
+    def validate_lifecycle(self):
+        validate_lifecycle_fields(self.exit_date, self.exit_reason)
+        return self
 
 
 class AnimalUpdate(BaseModel):
@@ -21,6 +41,8 @@ class AnimalUpdate(BaseModel):
     breed: str | None = Field(default=None, max_length=100)
     sex: str | None = Field(default=None, max_length=10)
     birth_date: date | None = None
+    exit_date: date | None = None
+    exit_reason: ExitReason | None = None
     notes: str | None = None
     is_active: bool | None = None
 
@@ -45,6 +67,8 @@ class AnimalDetailResponse(BaseModel):
     breed: str | None
     sex: str | None
     birth_date: date | None
+    exit_date: date | None
+    exit_reason: ExitReason | None
     notes: str | None
     is_active: bool | None
     created_at: datetime | None

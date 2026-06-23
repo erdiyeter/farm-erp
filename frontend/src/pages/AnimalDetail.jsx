@@ -434,9 +434,31 @@ function AnimalDetail() {
           <div><dt>Breed</dt><dd>{animal.breed || "-"}</dd></div>
           <div><dt>Sex</dt><dd>{animal.sex || "-"}</dd></div>
           <div><dt>Birth Date</dt><dd>{animal.birth_date || "-"}</dd></div>
-          <div><dt>Status</dt><dd>{animal.is_active ? "Active" : "Inactive"}</dd></div>
           <div className="animal-identity-notes">
             <dt>Notes</dt><dd>{animal.notes || "-"}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section className="dashboard-section">
+        <div className="dashboard-section-header">
+          <div>
+            <h2>Lifecycle Information</h2>
+            <p>Current herd lifecycle status</p>
+          </div>
+        </div>
+        <dl className="animal-identity-grid">
+          <div>
+            <dt>Status</dt>
+            <dd>{animal.exit_date ? "Exited" : "Active"}</dd>
+          </div>
+          <div>
+            <dt>Exit Date</dt>
+            <dd>{animal.exit_date || "-"}</dd>
+          </div>
+          <div>
+            <dt>Exit Reason</dt>
+            <dd>{animal.exit_reason || "-"}</dd>
           </div>
         </dl>
       </section>

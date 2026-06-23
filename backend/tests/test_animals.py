@@ -1,6 +1,8 @@
+from datetime import date
 from uuid import uuid4
 
 import pytest
+from pydantic import ValidationError
 
 from app.schemas.animal import AnimalCreate, AnimalUpdate
 from app.services import animal as animal_service
@@ -19,6 +21,9 @@ def test_animal_crud_stats_validation_and_soft_delete(db) -> None:
 
     assert stats.total_active == initial_stats.total_active + 1
     assert stats.male_count == initial_stats.male_count + 1
+    assert animal.exit_date is None
+    assert animal.exit_reason is None
+    assert animal.is_active is True
 
     with pytest.raises(ValueError, match="Ear tag already exists"):
         animal_service.create_animal(db, animal_data)
@@ -34,6 +39,8 @@ def test_animal_crud_stats_validation_and_soft_delete(db) -> None:
         for active_animal in animal_service.list_active_animals(db)
     }
     assert deleted.is_active is False
+    assert deleted.exit_date == date.today()
+    assert deleted.exit_reason == "other"
     assert animal.id not in active_ids
     assert (
         animal_service.get_animal_stats(db).total_active
@@ -67,4 +74,45 @@ def test_animal_update_rejects_duplicate_ear_tag(db) -> None:
     with pytest.raises(ValueError, match="Ear tag already exists"):
         animal_service.update_animal(
             db, second.id, AnimalUpdate(ear_tag=first.ear_tag)
+        )
+
+
+def test_animal_lifecycle_exited_scenario(db) -> None:
+    exit_date = date.today()
+    animal = animal_service.create_animal(
+        db,
+        AnimalCreate(
+            ear_tag=f"EXITED-{uuid4().hex[:12]}",
+            exit_date=exit_date,
+            exit_reason="sold",
+        ),
+    )
+
+    assert animal.exit_date == exit_date
+    assert animal.exit_reason == "sold"
+    assert animal.is_active is False
+
+    updated = animal_service.update_animal(
+        db,
+        animal.id,
+        AnimalUpdate(exit_date=None, exit_reason=None),
+    )
+    assert updated.exit_date is None
+    assert updated.exit_reason is None
+    assert updated.is_active is True
+
+
+def test_animal_lifecycle_rejects_exit_date_without_reason() -> None:
+    with pytest.raises(ValidationError, match="Exit reason is required"):
+        AnimalCreate(
+            ear_tag=f"EXIT-DATE-{uuid4().hex[:12]}",
+            exit_date=date.today(),
+        )
+
+
+def test_animal_lifecycle_rejects_exit_reason_without_date() -> None:
+    with pytest.raises(ValidationError, match="Exit date is required"):
+        AnimalCreate(
+            ear_tag=f"EXIT-REASON-{uuid4().hex[:12]}",
+            exit_reason="died",
         )

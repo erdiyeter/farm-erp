@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -45,6 +45,9 @@ def update_animal(
 
 def soft_delete_animal(db: Session, animal: Animal) -> Animal:
     animal.is_active = False
+    if animal.exit_date is None:
+        animal.exit_date = date.today()
+        animal.exit_reason = "other"
     animal.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(animal)

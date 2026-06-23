@@ -35,8 +35,22 @@ def ensure_user_role_column() -> None:
         )
 
 
+def ensure_animal_lifecycle_columns() -> None:
+    with engine.begin() as connection:
+        connection.execute(
+            text("ALTER TABLE animals ADD COLUMN IF NOT EXISTS exit_date DATE")
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE animals ADD COLUMN IF NOT EXISTS "
+                "exit_reason VARCHAR(20)"
+            )
+        )
+
+
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
+    ensure_animal_lifecycle_columns()
     ensure_finance_soft_delete_column()
     ensure_user_role_column()
     with SessionLocal() as db:

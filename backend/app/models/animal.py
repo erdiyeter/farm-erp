@@ -18,6 +18,8 @@ class Animal(Base):
     breed: Mapped[str | None] = mapped_column(String(100))
     sex: Mapped[str | None] = mapped_column(String(10))
     birth_date: Mapped[date | None] = mapped_column(Date)
+    exit_date: Mapped[date | None] = mapped_column(Date)
+    exit_reason: Mapped[str | None] = mapped_column(String(20))
     notes: Mapped[str | None] = mapped_column(Text)
     is_active: Mapped[bool | None] = mapped_column(
         Boolean, server_default=text("true")

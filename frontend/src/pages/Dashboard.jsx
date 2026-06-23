@@ -11,7 +11,9 @@ import {
 } from "../api/dashboardApi";
 import { getAlarms, updateAlarm } from "../api/alarmApi";
 import { getInventoryItems } from "../api/inventoryApi";
+import { getReproductionEvents } from "../api/reproductionEventApi";
 import { getVaccinations } from "../api/vaccinationApi";
+import { getWeightRecords } from "../api/weightRecordApi";
 import { updateWithdrawalLock } from "../api/withdrawalLockApi";
 import { useAuth } from "../context/authContext";
 import useAnimals from "../hooks/useAnimals";
@@ -176,13 +178,56 @@ function getPresetDates(days) {
   };
 }
 
+function getLatestRecordsByAnimal(records, dateField) {
+  const latestByAnimal = new Map();
+  sortNewest(records, dateField).forEach((record) => {
+    if (!latestByAnimal.has(record.animal_id)) {
+      latestByAnimal.set(record.animal_id, record);
+    }
+  });
+  return latestByAnimal;
+}
+
+function getAverageDailyGain(records) {
+  const recordsByAnimal = new Map();
+  records.forEach((record) => {
+    const animalRecords = recordsByAnimal.get(record.animal_id) || [];
+    animalRecords.push(record);
+    recordsByAnimal.set(record.animal_id, animalRecords);
+  });
+
+  const gains = [];
+  recordsByAnimal.forEach((animalRecords) => {
+    const [latest, previous] = sortNewest(animalRecords, "record_date");
+    if (!previous) {
+      return;
+    }
+    const days = Math.round(
+      (Date.parse(`${latest.record_date}T00:00:00Z`) -
+        Date.parse(`${previous.record_date}T00:00:00Z`)) /
+        (24 * 60 * 60 * 1000)
+    );
+    if (days > 0) {
+      gains.push(
+        (Number(latest.weight_kg) - Number(previous.weight_kg)) / days
+      );
+    }
+  });
+
+  return gains.length
+    ? gains.reduce((total, gain) => total + gain, 0) / gains.length
+    : null;
+}
+
 function Dashboard() {
   const { user } = useAuth();
-  const { getAnimalLabel } = useAnimals();
+  const { animals, getAnimalLabel } = useAnimals();
   const [stats, setStats] = useState(null);
   const [alarms, setAlarms] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
   const [vaccinations, setVaccinations] = useState([]);
+  const [weightRecords, setWeightRecords] = useState([]);
+  const [reproductionEvents, setReproductionEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reportStartDate, setReportStartDate] = useState("");
@@ -207,6 +252,8 @@ function Dashboard() {
   const canViewVeterinaryData =
     user?.role === "admin" || user?.role === "veterinarian";
   const canViewInventory =
+    user?.role === "admin" || user?.role === "worker";
+  const canViewOperations =
     user?.role === "admin" || user?.role === "worker";
   const canViewVaccinations = user?.role === "admin";
   const lowStockItems = inventoryItems
@@ -289,6 +336,57 @@ function Dashboard() {
     reportDetails?.alarms || [],
     "due_date"
   );
+  const activeAnimals = animals;
+  const activeAnimalIds = new Set(activeAnimals.map((animal) => animal.id));
+  const recentWeightStart = addDays(today, -29);
+  const latestWeightsByAnimal = getLatestRecordsByAnimal(
+    weightRecords,
+    "record_date"
+  );
+  const animalsWithRecentWeight = activeAnimals.filter((animal) => {
+    const latest = latestWeightsByAnimal.get(animal.id);
+    return latest && latest.record_date >= recentWeightStart;
+  }).length;
+  const animalsMissingRecentWeight =
+    activeAnimals.length - animalsWithRecentWeight;
+  const latestWeightValues = activeAnimals
+    .map((animal) => latestWeightsByAnimal.get(animal.id))
+    .filter(Boolean)
+    .map((record) => Number(record.weight_kg));
+  const averageLatestWeight = latestWeightValues.length
+    ? latestWeightValues.reduce((total, weight) => total + weight, 0) /
+      latestWeightValues.length
+    : null;
+  const averageDailyGain = getAverageDailyGain(
+    weightRecords.filter((record) => activeAnimalIds.has(record.animal_id))
+  );
+  const recentWeightRecords = sortNewest(
+    weightRecords,
+    "record_date"
+  ).slice(0, 5);
+  const sortedReproductionEvents = sortNewest(
+    reproductionEvents,
+    "event_date"
+  );
+  const confirmedPregnancies = reproductionEvents.filter(
+    (event) =>
+      event.event_type === "pregnancy" && event.pregnancy_status === true
+  ).length;
+  const birthEvents = reproductionEvents.filter(
+    (event) => event.event_type === "birth"
+  );
+  const totalOffspring = birthEvents.reduce(
+    (total, event) => total + Number(event.offspring_count || 0),
+    0
+  );
+  const twinBirths = birthEvents.filter(
+    (event) => event.is_twin_birth
+  ).length;
+  const recentReproductionEvents = sortedReproductionEvents.slice(0, 5);
+  const recentWithdrawalLocks = sortNewest(
+    withdrawalLocks,
+    "start_date"
+  ).slice(0, 5);
   const perAnimalBreakdown = getPerAnimalBreakdown(
     reportMilkRecords,
     reportHealthRecords,
@@ -309,12 +407,16 @@ function Dashboard() {
     async function loadDashboardStats() {
       try {
         if (user?.role === "worker") {
-          const [statsData, itemData] = await Promise.all([
+          const [statsData, itemData, weightData, reproductionData] = await Promise.all([
             getDashboardStats(),
             getInventoryItems(),
+            getWeightRecords(),
+            getReproductionEvents(),
           ]);
           setStats(statsData);
           setInventoryItems(itemData);
+          setWeightRecords(weightData);
+          setReproductionEvents(reproductionData);
         } else if (user?.role === "admin") {
           const [
             statsData,
@@ -323,6 +425,8 @@ function Dashboard() {
             detailData,
             itemData,
             vaccinationData,
+            weightData,
+            reproductionData,
           ] = await Promise.all([
             getDashboardStats(),
             getAlarms(),
@@ -330,6 +434,8 @@ function Dashboard() {
             getReportDetails(),
             getInventoryItems(),
             getVaccinations(),
+            getWeightRecords(),
+            getReproductionEvents(),
           ]);
           setStats(statsData);
           setAlarms(alarmData);
@@ -337,6 +443,8 @@ function Dashboard() {
           setReportDetails(detailData);
           setInventoryItems(itemData);
           setVaccinations(vaccinationData);
+          setWeightRecords(weightData);
+          setReproductionEvents(reproductionData);
         } else {
           const [alarmData, summaryData, detailData] = await Promise.all([
             getAlarms(),
@@ -487,6 +595,209 @@ function Dashboard() {
         <ErrorMessage message={actionError} className="error-text" />
       )}
       {actionMessage && <p className="status-text">{actionMessage}</p>}
+
+      <section className="dashboard-section">
+        <div className="dashboard-section-header">
+          <div>
+            <h2>Farm Overview</h2>
+            <p>Current herd and operational status at a glance</p>
+          </div>
+          <Link className="dashboard-nav-link" to="/animals">
+            View Animals
+          </Link>
+        </div>
+        <div className="dashboard-kpi-grid">
+          <KpiCard
+            title="Total Active Animals"
+            value={stats?.total_animals ?? activeAnimals.length}
+          />
+          <KpiCard
+            title="Active Withdrawal Locks"
+            value={
+              stats?.active_withdrawal_locks ??
+              reportSummary?.active_withdrawal_locks ??
+              "-"
+            }
+          />
+          <KpiCard
+            title="Open Alarms"
+            value={canViewVeterinaryData ? openAlarms.length : "-"}
+          />
+        </div>
+      </section>
+
+      {canViewOperations && (
+        <section className="dashboard-section">
+          <div className="dashboard-section-header">
+            <div>
+              <h2>Weight Overview</h2>
+              <p>
+                Latest herd measurements and 30-day recording coverage
+              </p>
+            </div>
+            <Link className="dashboard-nav-link" to="/weight-records">
+              View Weight Records
+            </Link>
+          </div>
+          <div className="dashboard-kpi-grid">
+            <KpiCard
+              title="Animals with Recent Weight"
+              value={animalsWithRecentWeight}
+            />
+            <KpiCard
+              title="Animals Missing Recent Weight"
+              value={animalsMissingRecentWeight}
+            />
+            <KpiCard
+              title="Average Latest Weight"
+              value={
+                averageLatestWeight === null
+                  ? "-"
+                  : `${averageLatestWeight.toFixed(2)} kg`
+              }
+            />
+            <KpiCard
+              title="Average Daily Gain"
+              value={
+                averageDailyGain === null
+                  ? "-"
+                  : `${averageDailyGain.toFixed(3)} kg/day`
+              }
+            />
+          </div>
+          {recentWeightRecords.length === 0 ? (
+            <p className="empty-text">No weight records found.</p>
+          ) : (
+            <div className="dashboard-records-table">
+              <table className="data-table">
+                <thead>
+                  <tr><th>Date</th><th>Animal</th><th>Weight</th><th>Details</th></tr>
+                </thead>
+                <tbody>
+                  {recentWeightRecords.map((record) => (
+                    <tr key={record.id}>
+                      <td>{record.record_date}</td>
+                      <td>
+                        <Link to={`/animals/${record.animal_id}`}>
+                          {getAnimalLabel(record.animal_id)}
+                        </Link>
+                      </td>
+                      <td>{record.weight_kg} kg</td>
+                      <td><Link to={`/weight-records/${record.id}`}>View</Link></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      {canViewOperations && (
+        <section className="dashboard-section">
+          <div className="dashboard-section-header">
+            <div>
+              <h2>Reproduction Overview</h2>
+              <p>Recorded pregnancy and birth outcomes across the herd</p>
+            </div>
+            <Link className="dashboard-nav-link" to="/reproduction-events">
+              View Reproduction
+            </Link>
+          </div>
+          <div className="dashboard-kpi-grid">
+            <KpiCard title="Total Pregnancies" value={confirmedPregnancies} />
+            <KpiCard title="Total Births" value={birthEvents.length} />
+            <KpiCard title="Total Offspring" value={totalOffspring} />
+            <KpiCard title="Twin Births" value={twinBirths} />
+          </div>
+          {recentReproductionEvents.length === 0 ? (
+            <p className="empty-text">No reproduction events found.</p>
+          ) : (
+            <div className="dashboard-records-table">
+              <table className="data-table">
+                <thead>
+                  <tr><th>Date</th><th>Animal</th><th>Event</th><th>Outcome</th></tr>
+                </thead>
+                <tbody>
+                  {recentReproductionEvents.map((event) => (
+                    <tr key={event.id}>
+                      <td>
+                        <Link to={`/reproduction-events/${event.id}`}>
+                          {event.event_date}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link to={`/animals/${event.animal_id}`}>
+                          {getAnimalLabel(event.animal_id)}
+                        </Link>
+                      </td>
+                      <td>{event.event_type}</td>
+                      <td>
+                        {event.event_type === "pregnancy"
+                          ? event.pregnancy_status
+                            ? "Pregnancy confirmed"
+                            : "Not pregnant"
+                          : event.event_type === "birth"
+                            ? `${event.offspring_count} offspring${event.is_twin_birth ? " (twins)" : ""}`
+                            : "Mating recorded"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      {canViewVeterinaryData && reportDetails && (
+        <section className="dashboard-section">
+          <div className="dashboard-section-header">
+            <div>
+              <h2>Health &amp; Operations</h2>
+              <p>Recent health activity, withdrawal periods, and workload highlights</p>
+            </div>
+          </div>
+          <div className="dashboard-kpi-grid">
+            <KpiCard title="Recent Health Records" value={recentHealthActivity.length} />
+            <KpiCard title="Recent Withdrawal Locks" value={recentWithdrawalLocks.length} />
+            <KpiCard title="Overdue Withdrawal Locks" value={stats?.overdue_withdrawal_locks ?? withdrawalRisks.filter((item) => item.priority === "Overdue").length} />
+            <KpiCard title="Open Operational Alarms" value={openAlarms.length} />
+          </div>
+          <div className="dashboard-cockpit-grid">
+            <div>
+              <div className="report-section-header">
+                <h3>Recent Health Records</h3>
+              </div>
+              {recentHealthActivity.length === 0 ? (
+                <p className="empty-text">No recent health records.</p>
+              ) : (
+                <div className="dashboard-records-table">
+                  <table className="data-table">
+                    <thead><tr><th>Date</th><th>Animal</th><th>Type</th></tr></thead>
+                    <tbody>{recentHealthActivity.map((record) => <tr key={record.id}><td>{record.record_date}</td><td><Link to={`/animals/${record.animal_id}`}>{getAnimalLabel(record.animal_id)}</Link></td><td><Link to={`/health-records/${record.id}`}>{record.record_type}</Link></td></tr>)}</tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="report-section-header">
+                <h3>Recent Withdrawal Locks</h3>
+              </div>
+              {recentWithdrawalLocks.length === 0 ? (
+                <p className="empty-text">No withdrawal locks found.</p>
+              ) : (
+                <div className="dashboard-records-table">
+                  <table className="data-table">
+                    <thead><tr><th>Start</th><th>Animal</th><th>End</th><th>Status</th></tr></thead>
+                    <tbody>{recentWithdrawalLocks.map((lock) => <tr key={lock.id}><td>{lock.start_date}</td><td><Link to={`/animals/${lock.animal_id}`}>{getAnimalLabel(lock.animal_id)}</Link></td><td>{lock.end_date}</td><td><Link to={`/withdrawal-locks/${lock.id}`}>{!lock.is_active ? "Released" : lock.end_date < today ? "Expired" : "Active"}</Link></td></tr>)}</tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="dashboard-cockpit-grid">
         {canViewVeterinaryData && reportDetails && (
