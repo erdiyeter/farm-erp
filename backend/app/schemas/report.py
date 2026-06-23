@@ -3,7 +3,7 @@ from datetime import date
 from pydantic import BaseModel
 
 from app.schemas.alarm import AlarmResponse
-from app.schemas.animal import AnimalDetailResponse
+from app.schemas.animal import AnimalDetailResponse, AnimalEconomicRanking
 from app.schemas.finance import FinancialRecordResponse
 from app.schemas.health_record import HealthRecordResponse
 from app.schemas.milk_record import MilkRecordListResponse
@@ -75,6 +75,8 @@ class ReportSummary(BaseModel):
     total_expense: float
     active_withdrawal_locks: int
     open_alarms: int
+    top_performing_animals: list[AnimalEconomicRanking]
+    lowest_performing_animals: list[AnimalEconomicRanking]
 
 
 class ReportDetails(BaseModel):

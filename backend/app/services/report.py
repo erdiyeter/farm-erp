@@ -5,6 +5,7 @@ from io import StringIO
 from sqlalchemy.orm import Session
 
 from app.repositories import report as report_repository
+from app.services import animal as animal_service
 from app.schemas.report import (
     AnimalSummaryReport,
     ExitReasonCount,
@@ -102,6 +103,9 @@ def get_report_summary(
     latest_weight_record, average_weight_change, animals_with_weight_change = (
         get_weight_change_metrics(weight_records)
     )
+    top_performing_animals, lowest_performing_animals = (
+        animal_service.get_active_animal_economic_rankings(db)
+    )
 
     return ReportSummary(
         total_animals=report_repository.count_animals(db),
@@ -198,6 +202,8 @@ def get_report_summary(
         open_alarms=report_repository.count_open_alarms(
             db, start_date, end_date
         ),
+        top_performing_animals=top_performing_animals,
+        lowest_performing_animals=lowest_performing_animals,
     )
 
 

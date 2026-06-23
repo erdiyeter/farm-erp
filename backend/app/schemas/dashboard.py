@@ -2,6 +2,8 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict
 
+from app.schemas.animal import AnimalEconomicRanking
+
 
 class DashboardRecentRecord(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -71,6 +73,8 @@ class DashboardDecisionSupportSummary(BaseModel):
     lowest_weight_gain_animals: list[DashboardDecisionSupportRankingAnimal]
     golden_list_animals: list[DashboardGoldenListAnimal]
     priority_review_animals: list[DashboardPriorityReviewAnimal]
+    top_performing_animals: list[AnimalEconomicRanking]
+    lowest_performing_animals: list[AnimalEconomicRanking]
 
 
 class DashboardResponse(BaseModel):

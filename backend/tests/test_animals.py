@@ -365,3 +365,111 @@ def test_animal_economic_summary_handles_missing_prices(db) -> None:
     assert detail.economic_summary.lifetime_milk_production == Decimal("0")
     assert detail.economic_summary.health_event_count == 0
     assert detail.economic_summary.treatment_count == 0
+
+
+def test_animal_economic_score_rankings_are_deterministic_and_active_only(db):
+    settings_service.update_settings(
+        db, SettingsUpdate(milk_price=Decimal("1.00"))
+    )
+    strong = animal_service.create_animal(
+        db,
+        AnimalCreate(
+            ear_tag=f"AAA-SCORE-STRONG-{uuid4().hex[:8]}",
+            purchase_price=Decimal("1.00"),
+            sale_price=Decimal("999999.00"),
+            lactation_start_date=date(2026, 1, 1),
+        ),
+    )
+    lower = animal_service.create_animal(
+        db,
+        AnimalCreate(
+            ear_tag=f"AAA-SCORE-LOWER-{uuid4().hex[:8]}",
+            purchase_price=Decimal("999999.00"),
+            sale_price=Decimal("1.00"),
+        ),
+    )
+    exited = animal_service.create_animal(
+        db,
+        AnimalCreate(
+            ear_tag=f"AAA-SCORE-EXITED-{uuid4().hex[:8]}",
+            purchase_price=Decimal("1.00"),
+            sale_price=Decimal("9999.00"),
+            exit_date=date.today(),
+            exit_reason="sold",
+        ),
+    )
+    db.add_all(
+        [
+            MilkRecord(
+                animal_id=strong.id,
+                record_date=date.today(),
+                milk_liters=Decimal("100.00"),
+            ),
+            MilkRecord(
+                animal_id=lower.id,
+                record_date=date.today(),
+                milk_liters=Decimal("1.00"),
+            ),
+        ]
+    )
+    db.commit()
+    inventory_item = inventory_service.create_inventory_item(
+        db,
+        InventoryItemCreate(
+            name=f"Score Treatment {uuid4().hex[:8]}",
+            unit="dose",
+            current_quantity=Decimal("10"),
+            unit_cost=Decimal("1.00"),
+        ),
+    )
+    health_record_service.create_health_record(
+        db,
+        HealthRecordCreate(
+            animal_id=strong.id,
+            record_type="treatment",
+            record_date=date.today(),
+            dosage="1",
+            inventory_item_id=inventory_item.id,
+        ),
+    )
+    db.add_all(
+        [
+            HealthRecord(
+                animal_id=lower.id,
+                record_type="treatment",
+                record_date=date.today(),
+            ),
+            HealthRecord(
+                animal_id=lower.id,
+                record_type="treatment",
+                record_date=date.today(),
+            ),
+            HealthRecord(
+                animal_id=lower.id,
+                record_type="checkup",
+                record_date=date.today(),
+            ),
+            HealthRecord(
+                animal_id=lower.id,
+                record_type="checkup",
+                record_date=date.today(),
+            ),
+        ]
+    )
+    db.commit()
+
+    strong_score = animal_service.calculate_animal_economic_score(db, strong)
+    lower_score = animal_service.calculate_animal_economic_score(db, lower)
+    top_rankings, lowest_rankings = (
+        animal_service.get_active_animal_economic_rankings(db)
+    )
+    top_ids = [ranking.animal_id for ranking in top_rankings]
+    lowest_ids = [ranking.animal_id for ranking in lowest_rankings]
+
+    assert strong_score > lower_score
+    assert top_ids[0] == strong.id
+    assert lower.id in lowest_ids
+    assert exited.id not in top_ids
+    assert exited.id not in lowest_ids
+    assert top_rankings[0].rank_position == 1
+    assert isinstance(top_rankings[0].economic_score, float)

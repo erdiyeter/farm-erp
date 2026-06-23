@@ -106,6 +106,14 @@ class AnimalEconomicSummary(BaseModel):
     net_economic_value: Decimal | None
 
 
+class AnimalEconomicRanking(BaseModel):
+    animal_id: int
+    ear_tag: str
+    name: str | None
+    economic_score: float
+    rank_position: int
+
+
 class AnimalDetailResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

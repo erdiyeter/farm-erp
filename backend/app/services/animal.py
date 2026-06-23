@@ -8,10 +8,13 @@ from app.repositories import health_record as health_record_repository
 from app.repositories import inventory as inventory_repository
 from app.repositories import milk_record as milk_record_repository
 from app.repositories import settings as settings_repository
+from app.repositories import weight_record as weight_record_repository
+from app.repositories import withdrawal_lock as withdrawal_lock_repository
 from app.schemas.animal import (
     AnimalCreate,
     AnimalDetailResponse,
     AnimalEconomicSummary,
+    AnimalEconomicRanking,
     AnimalStatsResponse,
     AnimalUpdate,
     validate_lactation_fields,
@@ -42,6 +45,101 @@ def calculate_health_cost(db: Session, health_records) -> Decimal | None:
         has_costed_consumption = True
 
     return total_cost if has_costed_consumption else None
+
+
+def get_latest_weight_gain(db: Session, animal_id: int) -> Decimal | None:
+    records = weight_record_repository.get_weight_records_by_animal_id(
+        db, animal_id
+    )
+    if len(records) < 2:
+        return None
+
+    latest, previous = records[0], records[1]
+    if latest.record_date == previous.record_date:
+        return None
+
+    return latest.weight_kg - previous.weight_kg
+
+
+def count_withdrawal_locks_for_animal(db: Session, animal_id: int) -> int:
+    return sum(
+        1
+        for lock in withdrawal_lock_repository.get_withdrawal_locks(db)
+        if lock.animal_id == animal_id
+    )
+
+
+def calculate_animal_economic_score(db: Session, animal: Animal) -> Decimal:
+    economic_summary = get_animal_economic_summary(db, animal)
+    score = Decimal("0")
+
+    # Keep the first scoring model simple and deterministic. The score is a
+    # management index, not a financial statement or prediction.
+    score += economic_summary.lifetime_milk_production * Decimal("0.10")
+
+    if animal.active_lactation:
+        score += Decimal("20")
+    elif animal.lactation_status == "Ended":
+        score += Decimal("5")
+
+    weight_gain = get_latest_weight_gain(db, animal.id)
+    if weight_gain is not None:
+        score += weight_gain * Decimal("0.20")
+
+    if economic_summary.net_economic_value is not None:
+        score += economic_summary.net_economic_value * Decimal("0.01")
+    elif economic_summary.profit_loss is not None:
+        score += economic_summary.profit_loss * Decimal("0.01")
+
+    score -= Decimal(economic_summary.health_event_count) * Decimal("5")
+    score -= Decimal(economic_summary.treatment_count) * Decimal("10")
+    withdrawal_lock_count = count_withdrawal_locks_for_animal(db, animal.id)
+    score -= Decimal(withdrawal_lock_count) * Decimal("5")
+
+    if animal.exit_date is not None:
+        score -= Decimal("100")
+
+    return score
+
+
+def get_active_animal_economic_rankings(
+    db: Session, limit: int = 5
+) -> tuple[list[AnimalEconomicRanking], list[AnimalEconomicRanking]]:
+    scored_animals = [
+        (animal, calculate_animal_economic_score(db, animal))
+        for animal in list_active_animals(db)
+    ]
+    ranked_desc = sorted(
+        scored_animals,
+        key=lambda item: (-item[1], item[0].ear_tag, item[0].id),
+    )
+    ranked_asc = sorted(
+        scored_animals,
+        key=lambda item: (item[1], item[0].ear_tag, item[0].id),
+    )
+
+    top_rankings = [
+        AnimalEconomicRanking(
+            animal_id=animal.id,
+            ear_tag=animal.ear_tag,
+            name=animal.name,
+            economic_score=float(score),
+            rank_position=index,
+        )
+        for index, (animal, score) in enumerate(ranked_desc[:limit], start=1)
+    ]
+    lowest_rankings = [
+        AnimalEconomicRanking(
+            animal_id=animal.id,
+            ear_tag=animal.ear_tag,
+            name=animal.name,
+            economic_score=float(score),
+            rank_position=index,
+        )
+        for index, (animal, score) in enumerate(ranked_asc[:limit], start=1)
+    ]
+
+    return top_rankings, lowest_rankings
 
 
 def list_active_animals(db: Session) -> list[Animal]:

@@ -380,6 +380,9 @@ def get_dashboard_decision_support(
     priority_review_animals.sort(
         key=lambda item: (item.urgency_rank, item.ear_tag, item.animal_id)
     )
+    top_performing_animals, lowest_performing_animals = (
+        animal_service.get_active_animal_economic_rankings(db)
+    )
 
     return DashboardDecisionSupportSummary(
         animals_requiring_attention=len(attention_animals),
@@ -401,6 +404,8 @@ def get_dashboard_decision_support(
         lowest_weight_gain_animals=lowest_weight_gain_animals[:5],
         golden_list_animals=golden_list_animals[:5],
         priority_review_animals=priority_review_animals[:10],
+        top_performing_animals=top_performing_animals,
+        lowest_performing_animals=lowest_performing_animals,
     )
 
 
