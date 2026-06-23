@@ -1,5 +1,6 @@
 import csv
-from datetime import date
+from datetime import date, timedelta
+from decimal import Decimal
 from io import StringIO
 
 from sqlalchemy.orm import Session
@@ -10,10 +11,13 @@ from app.schemas.report import (
     AnimalSummaryReport,
     ExitReasonCount,
     FinanceSummaryReport,
+    HerdKpiSummary,
+    HerdTrendSummary,
     HealthSummaryReport,
     MilkSummaryReport,
     ReportDetails,
     ReportSummary,
+    TrendMetric,
 )
 
 
@@ -86,6 +90,142 @@ def get_finance_summary(db: Session) -> FinanceSummaryReport:
     )
 
 
+def build_trend_metric(
+    current_value: Decimal | float | int,
+    previous_value: Decimal | float | int,
+) -> TrendMetric:
+    current = float(current_value)
+    previous = float(previous_value)
+    change = current - previous
+    if current == 0 and previous == 0:
+        direction = "no_data"
+    elif change > 0:
+        direction = "up"
+    elif change < 0:
+        direction = "down"
+    else:
+        direction = "flat"
+
+    return TrendMetric(
+        current_value=current,
+        previous_value=previous,
+        change=change,
+        direction=direction,
+    )
+
+
+def build_no_baseline_trend_metric(
+    current_value: Decimal | float | int,
+) -> TrendMetric:
+    current = float(current_value)
+    return TrendMetric(
+        current_value=current,
+        previous_value=0,
+        change=0,
+        direction="no_baseline" if current else "no_data",
+    )
+
+
+def get_trend_windows(
+    end_date: date | None = None,
+) -> tuple[date, date, date, date]:
+    current_end = end_date or date.today()
+    current_start = current_end - timedelta(days=29)
+    previous_end = current_start - timedelta(days=1)
+    previous_start = previous_end - timedelta(days=29)
+    return current_start, current_end, previous_start, previous_end
+
+
+def get_herd_kpis(db: Session) -> HerdKpiSummary:
+    total_animals = report_repository.count_animals(db)
+    active_animals = report_repository.count_active_animals(db)
+    exited_animals = report_repository.count_exited_animals(db)
+    mortality_count = report_repository.count_exits_by_reason(db, "died")
+    sales_count = report_repository.count_exits_by_reason(db, "sold")
+    scored_animals = animal_service.get_active_animal_economic_scores(db)
+    scores = [score for _, score in scored_animals]
+
+    return HerdKpiSummary(
+        total_animals=total_animals,
+        active_animals=active_animals,
+        exited_animals=exited_animals,
+        exit_rate=(
+            float(exited_animals / total_animals) if total_animals else 0
+        ),
+        mortality_count=mortality_count,
+        mortality_rate=(
+            float(mortality_count / total_animals) if total_animals else 0
+        ),
+        sales_count=sales_count,
+        sales_rate=float(sales_count / total_animals) if total_animals else 0,
+        average_economic_score=(
+            float(sum(scores, Decimal("0")) / len(scores))
+            if scores
+            else None
+        ),
+        highest_economic_score=float(max(scores)) if scores else None,
+        lowest_economic_score=float(min(scores)) if scores else None,
+    )
+
+
+def get_herd_trends(
+    db: Session,
+    end_date: date | None = None,
+) -> HerdTrendSummary:
+    current_start, current_end, previous_start, previous_end = (
+        get_trend_windows(end_date)
+    )
+    current_income = report_repository.get_financial_total(
+        db, "income", current_start, current_end
+    )
+    current_expense = report_repository.get_financial_total(
+        db, "expense", current_start, current_end
+    )
+    previous_income = report_repository.get_financial_total(
+        db, "income", previous_start, previous_end
+    )
+    previous_expense = report_repository.get_financial_total(
+        db, "expense", previous_start, previous_end
+    )
+    scored_animals = animal_service.get_active_animal_economic_scores(db)
+    scores = [score for _, score in scored_animals]
+    average_score = (
+        sum(scores, Decimal("0")) / len(scores) if scores else Decimal("0")
+    )
+
+    return HerdTrendSummary(
+        milk_production=build_trend_metric(
+            report_repository.get_filtered_milk_total(
+                db, current_start, current_end
+            ),
+            report_repository.get_filtered_milk_total(
+                db, previous_start, previous_end
+            ),
+        ),
+        weight=build_trend_metric(
+            report_repository.get_filtered_weight_total(
+                db, current_start, current_end
+            ),
+            report_repository.get_filtered_weight_total(
+                db, previous_start, previous_end
+            ),
+        ),
+        health_activity=build_trend_metric(
+            report_repository.count_filtered_health_records(
+                db, current_start, current_end
+            ),
+            report_repository.count_filtered_health_records(
+                db, previous_start, previous_end
+            ),
+        ),
+        financial=build_trend_metric(
+            current_income - current_expense,
+            previous_income - previous_expense,
+        ),
+        economic_score=build_no_baseline_trend_metric(average_score),
+    )
+
+
 def get_report_summary(
     db: Session,
     start_date: date | None = None,
@@ -106,6 +246,8 @@ def get_report_summary(
     top_performing_animals, lowest_performing_animals = (
         animal_service.get_active_animal_economic_rankings(db)
     )
+    herd_kpis = get_herd_kpis(db)
+    herd_trends = get_herd_trends(db, end_date)
 
     return ReportSummary(
         total_animals=report_repository.count_animals(db),
@@ -202,6 +344,8 @@ def get_report_summary(
         open_alarms=report_repository.count_open_alarms(
             db, start_date, end_date
         ),
+        herd_kpis=herd_kpis,
+        herd_trends=herd_trends,
         top_performing_animals=top_performing_animals,
         lowest_performing_animals=lowest_performing_animals,
     )

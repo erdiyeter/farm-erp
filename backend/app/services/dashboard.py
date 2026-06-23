@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.repositories import dashboard as dashboard_repository
 from app.services import animal as animal_service
+from app.services import report as report_service
 from app.schemas.dashboard import (
     DashboardDecisionSupportAnimal,
     DashboardDecisionSupportRankingAnimal,
@@ -24,6 +25,10 @@ def build_decision_support_animal(
         ear_tag=animal.ear_tag,
         name=animal.name,
         indicators=indicators,
+        explanations=[
+            f"Triggered by stored rule: {indicator}"
+            for indicator in indicators
+        ],
         net_economic_value=(
             float(net_economic_value)
             if net_economic_value is not None
@@ -37,6 +42,7 @@ def build_ranking_animal(
     animal,
     metric_value,
     metric_label: str,
+    explanations: list[str] | None = None,
 ) -> DashboardDecisionSupportRankingAnimal:
     return DashboardDecisionSupportRankingAnimal(
         animal_id=animal.id,
@@ -44,7 +50,76 @@ def build_ranking_animal(
         name=animal.name,
         metric_value=float(metric_value),
         metric_label=metric_label,
+        explanations=explanations or [],
     )
+
+
+def get_economic_value_explanations(economic_summary) -> list[str]:
+    net_economic_value = economic_summary.net_economic_value
+    if net_economic_value is None:
+        return ["Net economic value is not calculable from current data"]
+    if net_economic_value > 0:
+        return ["Positive net economic value"]
+    if net_economic_value < 0:
+        return ["Negative net economic value"]
+    return ["Net economic value is zero"]
+
+
+def get_milk_explanations(economic_summary, is_low: bool = False) -> list[str]:
+    liters = economic_summary.lifetime_milk_production
+    if is_low:
+        return [f"Lower lifetime milk production: {liters} L"]
+    return [f"High lifetime milk production: {liters} L"]
+
+
+def get_treatment_explanations(treatment_count: int) -> list[str]:
+    if treatment_count >= 3:
+        return [f"Repeated treatments: {treatment_count} records"]
+    return [f"Treatment records: {treatment_count}"]
+
+
+def get_weight_gain_explanations(weight_gain, is_low: bool = False) -> list[str]:
+    if is_low:
+        return [f"Lower latest weight gain: {weight_gain} kg"]
+    return [f"Higher latest weight gain: {weight_gain} kg"]
+
+
+def get_herd_decision_support_explanations(
+    herd_kpis,
+    active_lock_count: int,
+    repeated_treatment_count: int,
+    negative_economic_count: int,
+) -> tuple[list[str], list[str]]:
+    warnings = []
+    opportunities = []
+
+    if active_lock_count:
+        warnings.append(f"{active_lock_count} active withdrawal lock(s)")
+    if repeated_treatment_count:
+        warnings.append(
+            f"{repeated_treatment_count} animal(s) with repeated treatments"
+        )
+    if negative_economic_count:
+        warnings.append(
+            f"{negative_economic_count} animal(s) with negative economic value"
+        )
+    if herd_kpis.mortality_count:
+        warnings.append(f"{herd_kpis.mortality_count} mortality exit(s)")
+
+    if herd_kpis.average_economic_score is not None:
+        opportunities.append(
+            f"Average economic score is {herd_kpis.average_economic_score:.2f}"
+        )
+    if herd_kpis.highest_economic_score is not None:
+        opportunities.append(
+            f"Highest economic score is {herd_kpis.highest_economic_score:.2f}"
+        )
+    if herd_kpis.active_animals:
+        opportunities.append(
+            f"{herd_kpis.active_animals} active animal(s) available for ranking"
+        )
+
+    return warnings[:5], opportunities[:5]
 
 
 def build_golden_list_animal(
@@ -121,6 +196,7 @@ def get_weight_gain_rankings(
                 animals_by_id[animal_id],
                 weight_gain,
                 f"{weight_gain} kg",
+                get_weight_gain_explanations(weight_gain),
             )
         )
 
@@ -174,6 +250,7 @@ def get_dashboard_decision_support(
                     animal,
                     net_economic_value,
                     f"{net_economic_value}",
+                    get_economic_value_explanations(economic_summary),
                 )
             )
 
@@ -184,6 +261,7 @@ def get_dashboard_decision_support(
                         animal,
                         economic_summary.lifetime_milk_production,
                         f"{economic_summary.lifetime_milk_production} L",
+                        get_milk_explanations(economic_summary),
                     )
                 )
 
@@ -194,6 +272,7 @@ def get_dashboard_decision_support(
                         animal,
                         treatment_count,
                         f"{treatment_count} treatments",
+                        get_treatment_explanations(treatment_count),
                     )
                 )
 
@@ -281,6 +360,16 @@ def get_dashboard_decision_support(
         milk_rankings,
         key=lambda item: (item.metric_value, item.ear_tag),
     )
+    low_milk_producers = [
+        item.model_copy(
+            update={
+                "explanations": [
+                    f"Lower lifetime milk production: {item.metric_label}"
+                ]
+            }
+        )
+        for item in low_milk_producers
+    ]
     treatment_rankings.sort(
         key=lambda item: (item.metric_value, item.ear_tag),
         reverse=True,
@@ -293,6 +382,16 @@ def get_dashboard_decision_support(
         weight_gain_rankings,
         key=lambda item: (item.metric_value, item.ear_tag),
     )
+    lowest_weight_gain_animals = [
+        item.model_copy(
+            update={
+                "explanations": [
+                    f"Lower latest weight gain: {item.metric_label}"
+                ]
+            }
+        )
+        for item in lowest_weight_gain_animals
+    ]
     highest_milk_value = (
         max(item.metric_value for item in milk_rankings)
         if milk_rankings
@@ -383,6 +482,13 @@ def get_dashboard_decision_support(
     top_performing_animals, lowest_performing_animals = (
         animal_service.get_active_animal_economic_rankings(db)
     )
+    herd_kpis = report_service.get_herd_kpis(db)
+    herd_warnings, herd_opportunities = get_herd_decision_support_explanations(
+        herd_kpis,
+        len(active_lock_animal_ids),
+        sum(1 for count in treatment_counts.values() if count >= 3),
+        len(negative_economic_animals),
+    )
 
     return DashboardDecisionSupportSummary(
         animals_requiring_attention=len(attention_animals),
@@ -392,6 +498,8 @@ def get_dashboard_decision_support(
             1 for count in treatment_counts.values() if count >= 3
         ),
         recently_exited_animals=len(recently_exited_animals),
+        key_herd_warnings=herd_warnings,
+        key_herd_opportunities=herd_opportunities,
         attention_required_animals=attention_animals[:5],
         negative_economic_value_animals=negative_economic_animals[:5],
         recently_exited_animal_list=recently_exited_animals[:5],
@@ -446,5 +554,7 @@ def get_dashboard_summary(db: Session) -> DashboardResponse:
         withdrawal_locks_expiring_today=expiring_today,
         overdue_withdrawal_locks=overdue_withdrawal_locks,
         recent_records=dashboard_repository.get_recent_milk_records(db),
+        herd_kpis=report_service.get_herd_kpis(db),
+        herd_trends=report_service.get_herd_trends(db),
         decision_support=get_dashboard_decision_support(db),
     )

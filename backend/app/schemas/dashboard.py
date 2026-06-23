@@ -3,6 +3,7 @@ from datetime import date
 from pydantic import BaseModel, ConfigDict
 
 from app.schemas.animal import AnimalEconomicRanking
+from app.schemas.report import HerdKpiSummary, HerdTrendSummary
 
 
 class DashboardRecentRecord(BaseModel):
@@ -21,6 +22,7 @@ class DashboardDecisionSupportAnimal(BaseModel):
     ear_tag: str
     name: str | None
     indicators: list[str]
+    explanations: list[str]
     net_economic_value: float | None = None
     exit_date: date | None = None
 
@@ -31,6 +33,7 @@ class DashboardDecisionSupportRankingAnimal(BaseModel):
     name: str | None
     metric_value: float
     metric_label: str
+    explanations: list[str]
 
 
 class DashboardGoldenListAnimal(BaseModel):
@@ -61,6 +64,8 @@ class DashboardDecisionSupportSummary(BaseModel):
     animals_with_active_withdrawal_locks: int
     animals_with_repeated_treatments: int
     recently_exited_animals: int
+    key_herd_warnings: list[str]
+    key_herd_opportunities: list[str]
     attention_required_animals: list[DashboardDecisionSupportAnimal]
     negative_economic_value_animals: list[DashboardDecisionSupportAnimal]
     recently_exited_animal_list: list[DashboardDecisionSupportAnimal]
@@ -89,4 +94,6 @@ class DashboardResponse(BaseModel):
     withdrawal_locks_expiring_today: int
     overdue_withdrawal_locks: int
     recent_records: list[DashboardRecentRecord]
+    herd_kpis: HerdKpiSummary
+    herd_trends: HerdTrendSummary
     decision_support: DashboardDecisionSupportSummary

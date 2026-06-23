@@ -252,11 +252,30 @@ def test_dashboard_decision_support_rankings_order_seeded_records(db):
 
     assert rankings.top_economic_animals[0].animal_id == top_economic.id
     assert rankings.bottom_economic_animals[0].animal_id == bottom_economic.id
+    assert "Positive net economic value" in (
+        rankings.top_economic_animals[0].explanations
+    )
+    assert "Negative net economic value" in (
+        rankings.bottom_economic_animals[0].explanations
+    )
     assert rankings.top_milk_producers[0].animal_id == top_milk.id
     assert rankings.low_milk_producers[0].animal_id == low_milk.id
+    assert rankings.top_milk_producers[0].explanations
+    assert rankings.low_milk_producers[0].explanations[0].startswith(
+        "Lower lifetime milk production"
+    )
     assert rankings.most_treated_animals[0].animal_id == most_treated.id
     assert rankings.highest_weight_gain_animals[0].animal_id == highest_gain.id
     assert rankings.lowest_weight_gain_animals[0].animal_id == lowest_gain.id
+    assert rankings.top_performing_animals[0].animal_id == top_economic.id
+    assert rankings.lowest_performing_animals[0].animal_id == bottom_economic.id
+    assert "Positive economic score" in (
+        rankings.top_performing_animals[0].explanations
+    )
+    assert "Negative economic score" in (
+        rankings.lowest_performing_animals[0].explanations
+    )
+    assert rankings.key_herd_opportunities
 
     ranking_ids = {
         item.animal_id

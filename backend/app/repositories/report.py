@@ -389,6 +389,19 @@ def get_filtered_milk_total(
     return db.scalar(statement) or Decimal("0")
 
 
+def get_filtered_weight_total(
+    db: Session,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> Decimal:
+    statement = select(func.coalesce(func.sum(WeightRecord.weight_kg), 0))
+    if start_date:
+        statement = statement.where(WeightRecord.record_date >= start_date)
+    if end_date:
+        statement = statement.where(WeightRecord.record_date <= end_date)
+    return db.scalar(statement) or Decimal("0")
+
+
 def count_filtered_milk_days(
     db: Session,
     start_date: date | None = None,

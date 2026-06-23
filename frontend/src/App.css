@@ -267,6 +267,13 @@
   margin-top: 0;
 }
 
+.dashboard-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #374151;
+  line-height: 1.6;
+}
+
 @media (max-width: 700px) {
   .dashboard-cockpit-grid {
     grid-template-columns: 1fr;

@@ -41,6 +41,35 @@ class ExitReasonCount(BaseModel):
     count: int
 
 
+class HerdKpiSummary(BaseModel):
+    total_animals: int
+    active_animals: int
+    exited_animals: int
+    exit_rate: float
+    mortality_count: int
+    mortality_rate: float
+    sales_count: int
+    sales_rate: float
+    average_economic_score: float | None
+    highest_economic_score: float | None
+    lowest_economic_score: float | None
+
+
+class TrendMetric(BaseModel):
+    current_value: float
+    previous_value: float
+    change: float
+    direction: str
+
+
+class HerdTrendSummary(BaseModel):
+    milk_production: TrendMetric
+    weight: TrendMetric
+    health_activity: TrendMetric
+    financial: TrendMetric
+    economic_score: TrendMetric
+
+
 class ReportSummary(BaseModel):
     total_animals: int
     total_milk_records: int
@@ -75,6 +104,8 @@ class ReportSummary(BaseModel):
     total_expense: float
     active_withdrawal_locks: int
     open_alarms: int
+    herd_kpis: HerdKpiSummary
+    herd_trends: HerdTrendSummary
     top_performing_animals: list[AnimalEconomicRanking]
     lowest_performing_animals: list[AnimalEconomicRanking]
 

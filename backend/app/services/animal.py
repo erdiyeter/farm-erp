@@ -102,13 +102,65 @@ def calculate_animal_economic_score(db: Session, animal: Animal) -> Decimal:
     return score
 
 
+def get_animal_economic_score_explanations(
+    db: Session,
+    animal: Animal,
+    score: Decimal,
+) -> list[str]:
+    economic_summary = get_animal_economic_summary(db, animal)
+    explanations = []
+
+    if score > 0:
+        explanations.append("Positive economic score")
+    elif score < 0:
+        explanations.append("Negative economic score")
+    else:
+        explanations.append("Neutral economic score")
+
+    if economic_summary.lifetime_milk_production > 0:
+        explanations.append("Milk production recorded")
+
+    if economic_summary.net_economic_value is not None:
+        if economic_summary.net_economic_value > 0:
+            explanations.append("Positive net economic value")
+        elif economic_summary.net_economic_value < 0:
+            explanations.append("Negative net economic value")
+    elif economic_summary.profit_loss is not None:
+        if economic_summary.profit_loss > 0:
+            explanations.append("Positive sale and purchase value difference")
+        elif economic_summary.profit_loss < 0:
+            explanations.append("Negative sale and purchase value difference")
+
+    if economic_summary.treatment_count >= 3:
+        explanations.append("Repeated treatments")
+    elif economic_summary.treatment_count == 0:
+        explanations.append("No treatments recorded")
+    else:
+        explanations.append("Low treatment count")
+
+    if economic_summary.health_event_count >= 5:
+        explanations.append("High health activity")
+
+    weight_gain = get_latest_weight_gain(db, animal.id)
+    if weight_gain is not None:
+        if weight_gain > 0:
+            explanations.append("Positive latest weight gain")
+        elif weight_gain < 0:
+            explanations.append("Negative latest weight change")
+
+    if count_withdrawal_locks_for_animal(db, animal.id) > 0:
+        explanations.append("Withdrawal lock history")
+
+    if animal.active_lactation:
+        explanations.append("Active lactation")
+
+    return explanations
+
+
 def get_active_animal_economic_rankings(
     db: Session, limit: int = 5
 ) -> tuple[list[AnimalEconomicRanking], list[AnimalEconomicRanking]]:
-    scored_animals = [
-        (animal, calculate_animal_economic_score(db, animal))
-        for animal in list_active_animals(db)
-    ]
+    scored_animals = get_active_animal_economic_scores(db)
     ranked_desc = sorted(
         scored_animals,
         key=lambda item: (-item[1], item[0].ear_tag, item[0].id),
@@ -125,6 +177,9 @@ def get_active_animal_economic_rankings(
             name=animal.name,
             economic_score=float(score),
             rank_position=index,
+            explanations=get_animal_economic_score_explanations(
+                db, animal, score
+            ),
         )
         for index, (animal, score) in enumerate(ranked_desc[:limit], start=1)
     ]
@@ -135,11 +190,23 @@ def get_active_animal_economic_rankings(
             name=animal.name,
             economic_score=float(score),
             rank_position=index,
+            explanations=get_animal_economic_score_explanations(
+                db, animal, score
+            ),
         )
         for index, (animal, score) in enumerate(ranked_asc[:limit], start=1)
     ]
 
     return top_rankings, lowest_rankings
+
+
+def get_active_animal_economic_scores(
+    db: Session,
+) -> list[tuple[Animal, Decimal]]:
+    return [
+        (animal, calculate_animal_economic_score(db, animal))
+        for animal in list_active_animals(db)
+    ]
 
 
 def list_active_animals(db: Session) -> list[Animal]:

@@ -138,6 +138,10 @@ function formatDecisionSupportAnimal(animal) {
   return `${animal.ear_tag}${animal.name ? ` - ${animal.name}` : ""} (ID: ${animal.animal_id})`;
 }
 
+function formatOptionalScore(value) {
+  return value === null || value === undefined ? "-" : Number(value).toFixed(2);
+}
+
 function formatPregnancyOutcome(outcome) {
   const labels = {
     pregnant: "Pregnant",
@@ -182,7 +186,7 @@ function RankingTable({ title, records, emptyMessage }) {
         <div className="dashboard-records-table">
           <table className="data-table">
             <thead>
-              <tr><th>Animal</th><th>Metric</th></tr>
+              <tr><th>Animal</th><th>Metric</th><th>Explanation</th></tr>
             </thead>
             <tbody>
               {records.map((animal) => (
@@ -193,6 +197,50 @@ function RankingTable({ title, records, emptyMessage }) {
                     </Link>
                   </td>
                   <td>{animal.metric_label}</td>
+                  <td>
+                    {animal.explanations?.length
+                      ? animal.explanations.join(", ")
+                      : "-"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EconomicScoreRankingTable({ title, records, emptyMessage }) {
+  return (
+    <div>
+      <div className="report-section-header">
+        <h3>{title}</h3>
+      </div>
+      {records.length === 0 ? (
+        <p className="empty-text">{emptyMessage}</p>
+      ) : (
+        <div className="dashboard-records-table">
+          <table className="data-table">
+            <thead>
+              <tr><th>Rank</th><th>Animal</th><th>Score</th><th>Explanation</th></tr>
+            </thead>
+            <tbody>
+              {records.map((animal) => (
+                <tr key={animal.animal_id}>
+                  <td>{animal.rank_position}</td>
+                  <td>
+                    <Link to={`/animals/${animal.animal_id}`}>
+                      {formatDecisionSupportAnimal(animal)}
+                    </Link>
+                  </td>
+                  <td>{formatOptionalScore(animal.economic_score)}</td>
+                  <td>
+                    {animal.explanations?.length
+                      ? animal.explanations.join(", ")
+                      : "-"}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -461,6 +509,10 @@ function Dashboard() {
         ? `through ${appliedEndDate}`
         : "all available dates";
   const decisionSupport = stats?.decision_support;
+  const herdKpis = stats?.herd_kpis || reportSummary?.herd_kpis;
+  const keyHerdWarnings = decisionSupport?.key_herd_warnings || [];
+  const keyHerdOpportunities =
+    decisionSupport?.key_herd_opportunities || [];
   const emptyReportMessage = (recordType) =>
     `No ${recordType} found for ${reportPeriod}. Adjust or clear the filters.`;
 
@@ -733,9 +785,59 @@ function Dashboard() {
               title="Recently Exited Animals"
               value={decisionSupport.recently_exited_animals}
             />
+            <KpiCard
+              title="Highest Economic Score"
+              value={formatOptionalScore(herdKpis?.highest_economic_score)}
+            />
+            <KpiCard
+              title="Lowest Economic Score"
+              value={formatOptionalScore(herdKpis?.lowest_economic_score)}
+            />
+            <KpiCard
+              title="Average Economic Score"
+              value={formatOptionalScore(herdKpis?.average_economic_score)}
+            />
+            <KpiCard
+              title="Active Animals"
+              value={herdKpis?.active_animals ?? "-"}
+            />
+            <KpiCard
+              title="Exited Animals"
+              value={herdKpis?.exited_animals ?? "-"}
+            />
           </div>
 
           <div className="dashboard-cockpit-grid">
+            <div>
+              <div className="report-section-header">
+                <h3>Key Herd Warnings</h3>
+              </div>
+              {keyHerdWarnings.length === 0 ? (
+                <p className="empty-text">No herd warnings from current rules.</p>
+              ) : (
+                <ul className="dashboard-list">
+                  {keyHerdWarnings.map((warning) => (
+                    <li key={warning}>{warning}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div>
+              <div className="report-section-header">
+                <h3>Key Herd Opportunities</h3>
+              </div>
+              {keyHerdOpportunities.length === 0 ? (
+                <p className="empty-text">No herd opportunities from current rules.</p>
+              ) : (
+                <ul className="dashboard-list">
+                  {keyHerdOpportunities.map((opportunity) => (
+                    <li key={opportunity}>{opportunity}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
             <div>
               <div className="report-section-header">
                 <h3>Attention Required Animals</h3>
@@ -746,7 +848,7 @@ function Dashboard() {
                 <div className="dashboard-records-table">
                   <table className="data-table">
                     <thead>
-                      <tr><th>Animal</th><th>Triggered Indicators</th></tr>
+                      <tr><th>Animal</th><th>Triggered Indicators</th><th>Explanation</th></tr>
                     </thead>
                     <tbody>
                       {decisionSupport.attention_required_animals.map((animal) => (
@@ -757,6 +859,7 @@ function Dashboard() {
                             </Link>
                           </td>
                           <td>{animal.indicators.join(", ")}</td>
+                          <td>{animal.explanations.join(", ")}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -775,7 +878,7 @@ function Dashboard() {
                 <div className="dashboard-records-table">
                   <table className="data-table">
                     <thead>
-                      <tr><th>Animal</th><th>Net Economic Value</th></tr>
+                      <tr><th>Animal</th><th>Net Economic Value</th><th>Explanation</th></tr>
                     </thead>
                     <tbody>
                       {decisionSupport.negative_economic_value_animals.map((animal) => (
@@ -790,6 +893,7 @@ function Dashboard() {
                               ? "-"
                               : animal.net_economic_value.toFixed(2)}
                           </td>
+                          <td>{animal.explanations.join(", ")}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -808,7 +912,7 @@ function Dashboard() {
                 <div className="dashboard-records-table">
                   <table className="data-table">
                     <thead>
-                      <tr><th>Animal</th><th>Exit Date</th><th>Indicator</th></tr>
+                      <tr><th>Animal</th><th>Exit Date</th><th>Indicator</th><th>Explanation</th></tr>
                     </thead>
                     <tbody>
                       {decisionSupport.recently_exited_animal_list.map((animal) => (
@@ -820,6 +924,7 @@ function Dashboard() {
                           </td>
                           <td>{animal.exit_date || "-"}</td>
                           <td>{animal.indicators.join(", ")}</td>
+                          <td>{animal.explanations.join(", ")}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -935,6 +1040,16 @@ function Dashboard() {
           </div>
 
           <div className="dashboard-cockpit-grid">
+            <EconomicScoreRankingTable
+              title="Top Performing Animals"
+              records={decisionSupport.top_performing_animals}
+              emptyMessage="No active animals have economic scores yet."
+            />
+            <EconomicScoreRankingTable
+              title="Lowest Performing Animals"
+              records={decisionSupport.lowest_performing_animals}
+              emptyMessage="No active animals have economic scores yet."
+            />
             <RankingTable
               title="Top Economic Animals"
               records={decisionSupport.top_economic_animals}

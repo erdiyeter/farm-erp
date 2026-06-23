@@ -112,6 +112,7 @@ class AnimalEconomicRanking(BaseModel):
     name: str | None
     economic_score: float
     rank_position: int
+    explanations: list[str]
 
 
 class AnimalDetailResponse(BaseModel):

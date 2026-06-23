@@ -1,10 +1,11 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
 
+from app.models.finance import FinancialRecord
 from app.models.health_record import HealthRecord
 from app.models.milk_record import MilkRecord
 from app.models.reproduction_event import ReproductionEvent
@@ -264,9 +265,161 @@ def test_reporting_empty_filtered_period_returns_zero_values(db) -> None:
     assert summary.exits_by_reason == []
     assert summary.total_income == 0
     assert summary.total_expense == 0
+    assert summary.herd_trends.milk_production.current_value == 0
+    assert summary.herd_trends.milk_production.previous_value == 0
+    assert summary.herd_trends.milk_production.direction == "no_data"
     assert details.milk_records == []
     assert details.health_records == []
     assert details.weight_records == []
     assert details.reproduction_events == []
     assert details.exited_animals == []
     assert details.financial_records == []
+
+
+def test_herd_kpis_and_trends_use_existing_records(db) -> None:
+    today = date.today()
+    current_date = today
+    previous_date = today - timedelta(days=30)
+    initial = report_service.get_report_summary(db)
+
+    active_animal = animal_service.create_animal(
+        db,
+        AnimalCreate(
+            ear_tag=f"HERD-ACTIVE-{uuid4().hex[:12]}",
+            purchase_price=Decimal("100.00"),
+            sale_price=Decimal("250.00"),
+        ),
+    )
+    animal_service.create_animal(
+        db,
+        AnimalCreate(
+            ear_tag=f"HERD-SOLD-{uuid4().hex[:12]}",
+            exit_date=current_date,
+            exit_reason="sold",
+        ),
+    )
+    animal_service.create_animal(
+        db,
+        AnimalCreate(
+            ear_tag=f"HERD-DIED-{uuid4().hex[:12]}",
+            exit_date=current_date,
+            exit_reason="died",
+        ),
+    )
+    db.add_all(
+        [
+            MilkRecord(
+                animal_id=active_animal.id,
+                record_date=current_date,
+                milk_liters=Decimal("30.00"),
+                session="morning",
+            ),
+            MilkRecord(
+                animal_id=active_animal.id,
+                record_date=previous_date,
+                milk_liters=Decimal("10.00"),
+                session="morning",
+            ),
+            WeightRecord(
+                animal_id=active_animal.id,
+                record_date=current_date,
+                weight_kg=Decimal("300.00"),
+            ),
+            WeightRecord(
+                animal_id=active_animal.id,
+                record_date=previous_date,
+                weight_kg=Decimal("100.00"),
+            ),
+            HealthRecord(
+                animal_id=active_animal.id,
+                record_type="checkup",
+                diagnosis="Current herd trend",
+                record_date=current_date,
+            ),
+            HealthRecord(
+                animal_id=active_animal.id,
+                record_type="checkup",
+                diagnosis="Previous herd trend",
+                record_date=previous_date,
+            ),
+            FinancialRecord(
+                record_type="income",
+                category="Herd trend",
+                amount=Decimal("120.00"),
+                record_date=current_date,
+                description="Current trend income",
+            ),
+            FinancialRecord(
+                record_type="expense",
+                category="Herd trend",
+                amount=Decimal("20.00"),
+                record_date=current_date,
+                description="Current trend expense",
+            ),
+            FinancialRecord(
+                record_type="income",
+                category="Herd trend",
+                amount=Decimal("50.00"),
+                record_date=previous_date,
+                description="Previous trend income",
+            ),
+            FinancialRecord(
+                record_type="expense",
+                category="Herd trend",
+                amount=Decimal("10.00"),
+                record_date=previous_date,
+                description="Previous trend expense",
+            ),
+        ]
+    )
+    db.commit()
+
+    summary = report_service.get_report_summary(db)
+
+    assert summary.herd_kpis.total_animals == (
+        initial.herd_kpis.total_animals + 3
+    )
+    assert summary.herd_kpis.active_animals == (
+        initial.herd_kpis.active_animals + 1
+    )
+    assert summary.herd_kpis.exited_animals == (
+        initial.herd_kpis.exited_animals + 2
+    )
+    assert summary.herd_kpis.sales_count == initial.herd_kpis.sales_count + 1
+    assert summary.herd_kpis.mortality_count == (
+        initial.herd_kpis.mortality_count + 1
+    )
+    assert summary.herd_kpis.exit_rate == (
+        summary.herd_kpis.exited_animals / summary.herd_kpis.total_animals
+    )
+    assert summary.herd_kpis.average_economic_score is not None
+    assert summary.herd_kpis.highest_economic_score is not None
+    assert summary.herd_kpis.lowest_economic_score is not None
+    assert summary.herd_trends.milk_production.current_value == (
+        initial.herd_trends.milk_production.current_value + 30
+    )
+    assert summary.herd_trends.milk_production.previous_value == (
+        initial.herd_trends.milk_production.previous_value + 10
+    )
+    assert summary.herd_trends.weight.current_value == (
+        initial.herd_trends.weight.current_value + 300
+    )
+    assert summary.herd_trends.weight.previous_value == (
+        initial.herd_trends.weight.previous_value + 100
+    )
+    assert summary.herd_trends.health_activity.current_value == (
+        initial.herd_trends.health_activity.current_value + 1
+    )
+    assert summary.herd_trends.health_activity.previous_value == (
+        initial.herd_trends.health_activity.previous_value + 1
+    )
+    assert summary.herd_trends.financial.current_value == (
+        initial.herd_trends.financial.current_value + 100
+    )
+    assert summary.herd_trends.financial.previous_value == (
+        initial.herd_trends.financial.previous_value + 40
+    )
+    assert summary.herd_trends.economic_score.direction in {
+        "no_baseline",
+        "no_data",
+    }
