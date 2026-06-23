@@ -8,6 +8,7 @@ from app.schemas.dashboard import (
     DashboardDecisionSupportAnimal,
     DashboardDecisionSupportRankingAnimal,
     DashboardDecisionSupportSummary,
+    DashboardGoldenListAnimal,
     DashboardResponse,
 )
 
@@ -42,6 +43,29 @@ def build_ranking_animal(
         name=animal.name,
         metric_value=float(metric_value),
         metric_label=metric_label,
+    )
+
+
+def build_golden_list_animal(
+    animal,
+    economic_summary,
+) -> DashboardGoldenListAnimal:
+    strengths = ["Positive Economic Value", "Low Treatment Frequency"]
+    if economic_summary.lifetime_milk_production > 0:
+        strengths.append("Milk Production Recorded")
+    if economic_summary.health_event_count < 5:
+        strengths.append("Low Health Activity")
+
+    return DashboardGoldenListAnimal(
+        animal_id=animal.id,
+        ear_tag=animal.ear_tag,
+        name=animal.name,
+        strengths=strengths,
+        net_economic_value=float(economic_summary.net_economic_value),
+        lifetime_milk_production=float(
+            economic_summary.lifetime_milk_production
+        ),
+        treatment_count=economic_summary.treatment_count,
     )
 
 
@@ -108,6 +132,7 @@ def get_dashboard_decision_support(
     economic_rankings = []
     milk_rankings = []
     treatment_rankings = []
+    golden_list_animals = []
 
     for animal in animals:
         indicators = []
@@ -142,6 +167,17 @@ def get_dashboard_decision_support(
                         treatment_count,
                         f"{treatment_count} treatments",
                     )
+                )
+
+            if (
+                net_economic_value is not None
+                and net_economic_value > 0
+                and animal.id not in active_lock_animal_ids
+                and economic_summary.treatment_count < 3
+                and economic_summary.health_event_count < 5
+            ):
+                golden_list_animals.append(
+                    build_golden_list_animal(animal, economic_summary)
                 )
 
         if net_economic_value is not None and net_economic_value < 0:
@@ -229,6 +265,14 @@ def get_dashboard_decision_support(
         weight_gain_rankings,
         key=lambda item: (item.metric_value, item.ear_tag),
     )
+    golden_list_animals.sort(
+        key=lambda item: (
+            item.net_economic_value,
+            item.lifetime_milk_production,
+            -item.treatment_count,
+        ),
+        reverse=True,
+    )
 
     return DashboardDecisionSupportSummary(
         animals_requiring_attention=len(attention_animals),
@@ -248,6 +292,7 @@ def get_dashboard_decision_support(
         most_treated_animals=treatment_rankings[:5],
         highest_weight_gain_animals=weight_gain_rankings[:5],
         lowest_weight_gain_animals=lowest_weight_gain_animals[:5],
+        golden_list_animals=golden_list_animals[:5],
     )
 
 

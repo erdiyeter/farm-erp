@@ -31,6 +31,16 @@ class DashboardDecisionSupportRankingAnimal(BaseModel):
     metric_label: str
 
 
+class DashboardGoldenListAnimal(BaseModel):
+    animal_id: int
+    ear_tag: str
+    name: str | None
+    strengths: list[str]
+    net_economic_value: float
+    lifetime_milk_production: float
+    treatment_count: int
+
+
 class DashboardDecisionSupportSummary(BaseModel):
     animals_requiring_attention: int
     animals_with_negative_economic_value: int
@@ -47,6 +57,7 @@ class DashboardDecisionSupportSummary(BaseModel):
     most_treated_animals: list[DashboardDecisionSupportRankingAnimal]
     highest_weight_gain_animals: list[DashboardDecisionSupportRankingAnimal]
     lowest_weight_gain_animals: list[DashboardDecisionSupportRankingAnimal]
+    golden_list_animals: list[DashboardGoldenListAnimal]
 
 
 class DashboardResponse(BaseModel):

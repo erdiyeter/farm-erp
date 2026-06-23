@@ -835,6 +835,50 @@ function Dashboard() {
         <section className="dashboard-section">
           <div className="dashboard-section-header">
             <div>
+              <h2>Golden List</h2>
+              <p>Active animals with positive economic value and low operational concern</p>
+            </div>
+          </div>
+
+          {decisionSupport.golden_list_animals.length === 0 ? (
+            <p className="empty-text">No animals currently qualify for the Golden List.</p>
+          ) : (
+            <div className="dashboard-records-table">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Animal</th>
+                    <th>Key Strengths</th>
+                    <th>Net Economic Value</th>
+                    <th>Lifetime Milk</th>
+                    <th>Treatments</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {decisionSupport.golden_list_animals.map((animal) => (
+                    <tr key={animal.animal_id}>
+                      <td>
+                        <Link to={`/animals/${animal.animal_id}`}>
+                          {formatDecisionSupportAnimal(animal)}
+                        </Link>
+                      </td>
+                      <td>{animal.strengths.join(", ")}</td>
+                      <td>{animal.net_economic_value.toFixed(2)}</td>
+                      <td>{animal.lifetime_milk_production.toFixed(2)} L</td>
+                      <td>{animal.treatment_count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      {decisionSupport && (
+        <section className="dashboard-section">
+          <div className="dashboard-section-header">
+            <div>
               <h2>Decision Support Rankings</h2>
               <p>Compact rankings from existing economic, production, health, and weight data</p>
             </div>

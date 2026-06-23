@@ -5,7 +5,7 @@ from uuid import uuid4
 from app.models.health_record import HealthRecord
 from app.models.milk_record import MilkRecord
 from app.models.weight_record import WeightRecord
-from app.schemas.animal import AnimalCreate
+from app.schemas.animal import AnimalCreate, AnimalUpdate
 from app.schemas.health_record import HealthRecordCreate
 from app.schemas.inventory import InventoryItemCreate
 from app.schemas.settings import SettingsUpdate
@@ -48,6 +48,17 @@ def seed_costed_treatment(db, animal_id: int) -> None:
             inventory_item_id=inventory_item.id,
         ),
     )
+
+
+def seed_milk(db, animal_id: int, liters: str) -> None:
+    db.add(
+        MilkRecord(
+            animal_id=animal_id,
+            record_date=date.today(),
+            milk_liters=Decimal(liters),
+        )
+    )
+    db.commit()
 
 
 def test_dashboard_decision_support_indicators_change_with_seeded_records(db):
@@ -261,3 +272,128 @@ def test_dashboard_decision_support_rankings_order_seeded_records(db):
         for item in ranking
     }
     assert no_data.id not in ranking_ids
+
+
+def test_dashboard_golden_list_membership_and_order(db):
+    settings_service.update_settings(
+        db, SettingsUpdate(milk_price=Decimal("1.00"))
+    )
+
+    top_golden = create_dashboard_test_animal(
+        db,
+        "GOLD-TOP",
+        purchase_price=Decimal("1.00"),
+        sale_price=Decimal("999999.00"),
+    )
+    seed_milk(db, top_golden.id, "10.00")
+    seed_costed_treatment(db, top_golden.id)
+
+    milk_tiebreaker = create_dashboard_test_animal(
+        db,
+        "GOLD-MILK",
+        purchase_price=Decimal("1.00"),
+        sale_price=Decimal("899906.00"),
+    )
+    seed_milk(db, milk_tiebreaker.id, "100.00")
+    seed_costed_treatment(db, milk_tiebreaker.id)
+
+    treatment_tiebreaker = create_dashboard_test_animal(
+        db,
+        "GOLD-TREAT",
+        purchase_price=Decimal("1.00"),
+        sale_price=Decimal("899911.00"),
+    )
+    seed_milk(db, treatment_tiebreaker.id, "100.00")
+    seed_costed_treatment(db, treatment_tiebreaker.id)
+    seed_costed_treatment(db, treatment_tiebreaker.id)
+
+    locked_animal = create_dashboard_test_animal(
+        db,
+        "GOLD-LOCK",
+        purchase_price=Decimal("1.00"),
+        sale_price=Decimal("999999.00"),
+    )
+    seed_costed_treatment(db, locked_animal.id)
+    withdrawal_lock_service.create_withdrawal_lock(
+        db,
+        WithdrawalLockCreate(
+            animal_id=locked_animal.id,
+            start_date=date.today(),
+            end_date=date.today(),
+            reason="Golden List exclusion test",
+        ),
+    )
+
+    negative_animal = create_dashboard_test_animal(
+        db,
+        "GOLD-NEG",
+        purchase_price=Decimal("5000.00"),
+        sale_price=Decimal("1.00"),
+    )
+    seed_costed_treatment(db, negative_animal.id)
+
+    repeated_treatments = create_dashboard_test_animal(
+        db,
+        "GOLD-REPEAT",
+        purchase_price=Decimal("1.00"),
+        sale_price=Decimal("999999.00"),
+    )
+    for _ in range(3):
+        seed_costed_treatment(db, repeated_treatments.id)
+
+    high_health = create_dashboard_test_animal(
+        db,
+        "GOLD-HEALTH",
+        purchase_price=Decimal("1.00"),
+        sale_price=Decimal("999999.00"),
+    )
+    seed_costed_treatment(db, high_health.id)
+    db.add_all(
+        [
+            HealthRecord(
+                animal_id=high_health.id,
+                record_type="checkup",
+                record_date=date.today(),
+            )
+            for _ in range(4)
+        ]
+    )
+    db.commit()
+
+    exited_animal = create_dashboard_test_animal(
+        db,
+        "GOLD-EXIT",
+        purchase_price=Decimal("1.00"),
+        sale_price=Decimal("999999.00"),
+    )
+    seed_costed_treatment(db, exited_animal.id)
+    animal_service.update_animal(
+        db,
+        exited_animal.id,
+        AnimalUpdate(exit_date=date.today(), exit_reason="sold"),
+    )
+
+    golden_list = (
+        dashboard_service.get_dashboard_summary(db)
+        .decision_support
+        .golden_list_animals
+    )
+    golden_ids = [animal.animal_id for animal in golden_list]
+
+    assert golden_ids[:3] == [
+        top_golden.id,
+        milk_tiebreaker.id,
+        treatment_tiebreaker.id,
+    ]
+    assert locked_animal.id not in golden_ids
+    assert negative_animal.id not in golden_ids
+    assert repeated_treatments.id not in golden_ids
+    assert high_health.id not in golden_ids
+    assert exited_animal.id not in golden_ids
+
+    top_entry = golden_list[0]
+    assert "Positive Economic Value" in top_entry.strengths
+    assert "Low Treatment Frequency" in top_entry.strengths
+    assert top_entry.net_economic_value > 0
+    assert top_entry.lifetime_milk_production == 10
+    assert top_entry.treatment_count == 1
