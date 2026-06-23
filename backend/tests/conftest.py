@@ -3,13 +3,18 @@ from sqlalchemy.orm import Session
 
 import app.models  # noqa: F401
 from app.database import Base, engine
-from app.init_db import ensure_animal_lifecycle_columns, ensure_user_role_column
+from app.init_db import (
+    ensure_animal_lifecycle_columns,
+    ensure_reproduction_outcome_column,
+    ensure_user_role_column,
+)
 
 
 @pytest.fixture(scope="session", autouse=True)
 def initialize_test_database() -> None:
     Base.metadata.create_all(bind=engine)
     ensure_animal_lifecycle_columns()
+    ensure_reproduction_outcome_column()
     ensure_user_role_column()
 
 

@@ -84,24 +84,42 @@ def test_reporting_summary_filters_and_csv_export(db) -> None:
         animal_id=animal.id,
         event_type="mating",
         event_date=start_date,
+        pregnancy_outcome="unknown",
     )
     pregnancy_event = ReproductionEvent(
         animal_id=animal.id,
         event_type="pregnancy",
         event_date=start_date,
         pregnancy_status=True,
+        pregnancy_outcome="pregnant",
     )
     birth_event = ReproductionEvent(
         animal_id=animal.id,
         event_type="birth",
         event_date=end_date,
         offspring_count=2,
+        pregnancy_outcome="birth",
+    )
+    abortion_event = ReproductionEvent(
+        animal_id=animal.id,
+        event_type="pregnancy",
+        event_date=end_date,
+        pregnancy_status=True,
+        pregnancy_outcome="abortion",
+    )
+    failed_event = ReproductionEvent(
+        animal_id=animal.id,
+        event_type="pregnancy",
+        event_date=end_date,
+        pregnancy_status=False,
+        pregnancy_outcome="failed",
     )
     reproduction_outside_range = ReproductionEvent(
         animal_id=animal.id,
         event_type="birth",
         event_date=date(2098, 2, 12),
         offspring_count=1,
+        pregnancy_outcome="birth",
     )
     db.add_all(
         [
@@ -114,6 +132,8 @@ def test_reporting_summary_filters_and_csv_export(db) -> None:
             mating_event,
             pregnancy_event,
             birth_event,
+            abortion_event,
+            failed_event,
             reproduction_outside_range,
         ]
     )
@@ -137,12 +157,16 @@ def test_reporting_summary_filters_and_csv_export(db) -> None:
     assert summary.latest_weight_record_date == end_date
     assert summary.average_weight_change_kg == 5.5
     assert summary.animals_with_weight_change == 1
-    assert summary.total_reproduction_events == 3
+    assert summary.total_reproduction_events == 5
     assert summary.total_matings == 1
-    assert summary.total_pregnancies == 1
+    assert summary.total_pregnancies == 2
     assert summary.total_births == 1
     assert summary.total_offspring == 2
     assert summary.twin_births == 1
+    assert summary.pregnant_outcomes == 1
+    assert summary.abortion_outcomes == 1
+    assert summary.failed_outcomes == 1
+    assert summary.unknown_outcomes == 1
     assert summary.animals_with_reproduction_history == 1
     assert summary.last_birth_date == end_date
     assert summary.total_exited_animals == initial.total_exited_animals + 2
@@ -180,7 +204,13 @@ def test_reporting_summary_filters_and_csv_export(db) -> None:
     exited_ids = {animal.id for animal in details.exited_animals}
     assert {exited_sold.id, exited_died.id} <= exited_ids
     reproduction_ids = {event.id for event in details.reproduction_events}
-    assert {mating_event.id, pregnancy_event.id, birth_event.id} <= reproduction_ids
+    assert {
+        mating_event.id,
+        pregnancy_event.id,
+        birth_event.id,
+        abortion_event.id,
+        failed_event.id,
+    } <= reproduction_ids
     assert reproduction_outside_range.id not in reproduction_ids
 
 
@@ -212,6 +242,10 @@ def test_reporting_empty_filtered_period_returns_zero_values(db) -> None:
     assert summary.total_births == 0
     assert summary.total_offspring == 0
     assert summary.twin_births == 0
+    assert summary.pregnant_outcomes == 0
+    assert summary.abortion_outcomes == 0
+    assert summary.failed_outcomes == 0
+    assert summary.unknown_outcomes == 0
     assert summary.animals_with_reproduction_history == 0
     assert summary.last_birth_date is None
     assert summary.total_exited_animals == 0

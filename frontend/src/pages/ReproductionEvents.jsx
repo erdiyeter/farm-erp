@@ -14,20 +14,32 @@ const initialFormData = {
   event_type: "mating",
   event_date: "",
   pregnancy_status: "true",
+  pregnancy_outcome: "unknown",
   offspring_count: "",
   notes: "",
 };
 
+function formatPregnancyOutcome(outcome) {
+  const labels = {
+    pregnant: "Pregnant",
+    birth: "Birth",
+    abortion: "Abortion",
+    failed: "Failed",
+    unknown: "Unknown",
+  };
+  return labels[outcome] || "-";
+}
+
 function getEventDetails(event) {
   if (event.event_type === "pregnancy") {
-    return event.pregnancy_status ? "Pregnancy confirmed" : "Not pregnant";
+    return `${event.pregnancy_status ? "Pregnancy confirmed" : "Not pregnant"}; outcome: ${formatPregnancyOutcome(event.pregnancy_outcome)}`;
   }
   if (event.event_type === "birth") {
     return `${event.offspring_count} offspring${
       event.is_twin_birth ? " (twin birth)" : ""
     }`;
   }
-  return "Mating recorded";
+  return `Mating recorded; outcome: ${formatPregnancyOutcome(event.pregnancy_outcome)}`;
 }
 
 function ReproductionEvents() {
@@ -63,7 +75,11 @@ function ReproductionEvents() {
       ...current,
       [name]: value,
       ...(name === "event_type"
-        ? { pregnancy_status: "true", offspring_count: "" }
+        ? {
+            pregnancy_status: "true",
+            pregnancy_outcome: value === "birth" ? "birth" : "unknown",
+            offspring_count: "",
+          }
         : {}),
     }));
   }
@@ -83,6 +99,10 @@ function ReproductionEvents() {
           formData.event_type === "pregnancy"
             ? formData.pregnancy_status === "true"
             : null,
+        pregnancy_outcome:
+          formData.event_type === "birth"
+            ? "birth"
+            : formData.pregnancy_outcome,
         offspring_count:
           formData.event_type === "birth"
             ? Number(formData.offspring_count)
@@ -171,6 +191,23 @@ function ReproductionEvents() {
               >
                 <option value="true">Pregnancy confirmed</option>
                 <option value="false">Not pregnant</option>
+              </select>
+            </label>
+          </div>
+        )}
+        {formData.event_type !== "birth" && (
+          <div>
+            <label>
+              Pregnancy Outcome:
+              <select
+                name="pregnancy_outcome"
+                value={formData.pregnancy_outcome}
+                onChange={handleChange}
+              >
+                <option value="unknown">Unknown</option>
+                <option value="pregnant">Pregnant</option>
+                <option value="abortion">Abortion</option>
+                <option value="failed">Failed</option>
               </select>
             </label>
           </div>

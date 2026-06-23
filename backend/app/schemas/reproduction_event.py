@@ -5,6 +5,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 ReproductionEventType = Literal["mating", "pregnancy", "birth"]
+PregnancyOutcome = Literal[
+    "pregnant", "birth", "abortion", "failed", "unknown"
+]
 
 
 class ReproductionEventCreate(BaseModel):
@@ -12,6 +15,7 @@ class ReproductionEventCreate(BaseModel):
     event_type: ReproductionEventType
     event_date: date
     pregnancy_status: bool | None = None
+    pregnancy_outcome: PregnancyOutcome | None = None
     offspring_count: int | None = Field(default=None, ge=1)
     notes: str | None = None
 
@@ -21,6 +25,7 @@ class ReproductionEventUpdate(BaseModel):
     event_type: ReproductionEventType | None = None
     event_date: date | None = None
     pregnancy_status: bool | None = None
+    pregnancy_outcome: PregnancyOutcome | None = None
     offspring_count: int | None = Field(default=None, ge=1)
     notes: str | None = None
 
@@ -33,6 +38,7 @@ class ReproductionEventResponse(BaseModel):
     event_type: ReproductionEventType
     event_date: date
     pregnancy_status: bool | None
+    pregnancy_outcome: PregnancyOutcome | None
     offspring_count: int | None
     is_twin_birth: bool
     notes: str | None

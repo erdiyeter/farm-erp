@@ -16,6 +16,7 @@ class ReproductionEvent(Base):
     event_type: Mapped[str] = mapped_column(String(20), nullable=False)
     event_date: Mapped[date] = mapped_column(Date, nullable=False)
     pregnancy_status: Mapped[bool | None] = mapped_column(Boolean)
+    pregnancy_outcome: Mapped[str | None] = mapped_column(String(20))
     offspring_count: Mapped[int | None] = mapped_column(Integer)
     notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime | None] = mapped_column(

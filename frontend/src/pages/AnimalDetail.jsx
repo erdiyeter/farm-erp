@@ -42,6 +42,45 @@ function formatMilkLiters(value) {
   return `${Number(value).toFixed(2)} L`;
 }
 
+function formatPregnancyOutcome(outcome) {
+  const labels = {
+    pregnant: "Pregnant",
+    birth: "Birth",
+    abortion: "Abortion",
+    failed: "Failed",
+    unknown: "Unknown",
+  };
+  return labels[outcome] || "-";
+}
+
+function getCurrentPregnancyStatus(event) {
+  if (!event) {
+    return "-";
+  }
+  if (event.pregnancy_outcome === "pregnant") {
+    return "Pregnant";
+  }
+  if (event.pregnancy_outcome === "birth") {
+    return "Birth recorded";
+  }
+  if (event.pregnancy_outcome === "abortion") {
+    return "Abortion recorded";
+  }
+  if (event.pregnancy_outcome === "failed") {
+    return "Not pregnant / failed";
+  }
+  if (event.pregnancy_outcome === "unknown") {
+    return "Unknown";
+  }
+  if (event.event_type === "pregnancy") {
+    return event.pregnancy_status ? "Pregnant" : "Not pregnant";
+  }
+  if (event.event_type === "birth") {
+    return "Birth recorded";
+  }
+  return "Unknown";
+}
+
 function getDailyMilkTotals(records) {
   const totalsByDate = new Map();
 
@@ -115,7 +154,9 @@ function buildTimeline(operationalData) {
           : event.event_type === "birth"
             ? `Birth (${event.offspring_count} offspring)`
             : "Mating",
-      details: event.notes || "Reproduction event recorded",
+      details: `${formatPregnancyOutcome(event.pregnancy_outcome)} outcome${
+        event.notes ? `; ${event.notes}` : ""
+      }`,
       to: `/reproduction-events/${event.id}`,
     })),
     ...operationalData.withdrawalLocks.map((lock) => ({
@@ -244,6 +285,7 @@ function AnimalDetail() {
       second.event_date.localeCompare(first.event_date) ||
       second.id - first.id
   );
+  const latestReproductionEvent = sortedReproductionEvents[0];
   const matingCount = sortedReproductionEvents.filter(
     (event) => event.event_type === "mating"
   ).length;
@@ -264,14 +306,13 @@ function AnimalDetail() {
   const latestBirth = birthEvents[0];
   const latestPregnancyOutcome = sortedReproductionEvents.find(
     (event) =>
-      event.event_type === "pregnancy" || event.event_type === "birth"
+      event.pregnancy_outcome ||
+      event.event_type === "pregnancy" ||
+      event.event_type === "birth"
   );
-  const currentPregnancyStatus = latestPregnancyOutcome
-    ? latestPregnancyOutcome.event_type === "pregnancy" &&
-      latestPregnancyOutcome.pregnancy_status
-      ? "Pregnant"
-      : "Not pregnant"
-    : "-";
+  const currentPregnancyStatus = getCurrentPregnancyStatus(
+    latestPregnancyOutcome
+  );
   const daysSinceLastMilk = getDaysSince(lastMilkRecordDate, today);
   const daysSinceLastHealth = getDaysSince(lastHealthRecordDate, today);
   const timelineItems = buildTimeline(operationalData);
@@ -651,6 +692,24 @@ function AnimalDetail() {
                 <KpiCard title="Twin Birth Count" value={canViewReproduction ? twinBirthCount : "-"} />
                 <KpiCard title="Last Birth Date" value={canViewReproduction ? latestBirth?.event_date || "-" : "-"} />
                 <KpiCard title="Current Pregnancy Status" value={canViewReproduction ? currentPregnancyStatus : "-"} />
+                <KpiCard
+                  title="Latest Reproduction Event"
+                  value={
+                    canViewReproduction && latestReproductionEvent
+                      ? `${latestReproductionEvent.event_type} on ${latestReproductionEvent.event_date}`
+                      : "-"
+                  }
+                />
+                <KpiCard
+                  title="Latest Pregnancy Outcome"
+                  value={
+                    canViewReproduction
+                      ? formatPregnancyOutcome(
+                          latestPregnancyOutcome?.pregnancy_outcome
+                        )
+                      : "-"
+                  }
+                />
               </div>
             </div>
           </section>
@@ -719,7 +778,7 @@ function AnimalDetail() {
               <div className="dashboard-records-table">
                 <table className="data-table">
                   <thead>
-                    <tr><th>Date</th><th>Type</th><th>Status / Offspring</th><th>Notes</th></tr>
+                    <tr><th>Date</th><th>Type</th><th>Status / Offspring</th><th>Outcome</th><th>Notes</th></tr>
                   </thead>
                   <tbody>
                     {sortedReproductionEvents.slice(0, 5).map((event) => (
@@ -735,6 +794,7 @@ function AnimalDetail() {
                               ? `${event.offspring_count} offspring${event.is_twin_birth ? " (twins)" : ""}`
                               : "-"}
                         </td>
+                        <td>{formatPregnancyOutcome(event.pregnancy_outcome)}</td>
                         <td>{event.notes || "-"}</td>
                       </tr>
                     ))}

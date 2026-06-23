@@ -9,6 +9,17 @@ import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import useAnimals from "../hooks/useAnimals";
 
+function formatPregnancyOutcome(outcome) {
+  const labels = {
+    pregnant: "Pregnant",
+    birth: "Birth",
+    abortion: "Abortion",
+    failed: "Failed",
+    unknown: "Unknown",
+  };
+  return labels[outcome] || "-";
+}
+
 function ReproductionEventDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -65,6 +76,7 @@ function ReproductionEventDetail() {
           <dt>Pregnancy Status</dt>
           <dd>{event.pregnancy_status === null ? "-" : event.pregnancy_status ? "Confirmed" : "Not pregnant"}</dd>
         </div>
+        <div><dt>Pregnancy Outcome</dt><dd>{formatPregnancyOutcome(event.pregnancy_outcome)}</dd></div>
         <div><dt>Offspring Count</dt><dd>{event.offspring_count ?? "-"}</dd></div>
         <div><dt>Twin Birth</dt><dd>{event.is_twin_birth ? "Yes" : "No"}</dd></div>
         <div className="health-detail-wide"><dt>Notes</dt><dd>{event.notes || "-"}</dd></div>

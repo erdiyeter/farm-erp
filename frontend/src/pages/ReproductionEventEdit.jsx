@@ -13,6 +13,7 @@ const initialFormData = {
   event_type: "mating",
   event_date: "",
   pregnancy_status: "true",
+  pregnancy_outcome: "unknown",
   offspring_count: "",
   notes: "",
 };
@@ -36,6 +37,7 @@ function ReproductionEventEdit() {
           event_type: event.event_type,
           event_date: event.event_date,
           pregnancy_status: String(event.pregnancy_status ?? true),
+          pregnancy_outcome: event.pregnancy_outcome || "unknown",
           offspring_count: event.offspring_count ?? "",
           notes: event.notes || "",
         });
@@ -54,7 +56,11 @@ function ReproductionEventEdit() {
       ...current,
       [name]: value,
       ...(name === "event_type"
-        ? { pregnancy_status: "true", offspring_count: "" }
+        ? {
+            pregnancy_status: "true",
+            pregnancy_outcome: value === "birth" ? "birth" : "unknown",
+            offspring_count: "",
+          }
         : {}),
     }));
   }
@@ -72,6 +78,10 @@ function ReproductionEventEdit() {
           formData.event_type === "pregnancy"
             ? formData.pregnancy_status === "true"
             : null,
+        pregnancy_outcome:
+          formData.event_type === "birth"
+            ? "birth"
+            : formData.pregnancy_outcome,
         offspring_count:
           formData.event_type === "birth"
             ? Number(formData.offspring_count)
@@ -120,6 +130,9 @@ function ReproductionEventEdit() {
         <div><label>Event Date:<input type="date" name="event_date" value={formData.event_date} onChange={handleChange} required /></label></div>
         {formData.event_type === "pregnancy" && (
           <div><label>Pregnancy Status:<select name="pregnancy_status" value={formData.pregnancy_status} onChange={handleChange}><option value="true">Pregnancy confirmed</option><option value="false">Not pregnant</option></select></label></div>
+        )}
+        {formData.event_type !== "birth" && (
+          <div><label>Pregnancy Outcome:<select name="pregnancy_outcome" value={formData.pregnancy_outcome} onChange={handleChange}><option value="unknown">Unknown</option><option value="pregnant">Pregnant</option><option value="abortion">Abortion</option><option value="failed">Failed</option></select></label></div>
         )}
         {formData.event_type === "birth" && (
           <div><label>Offspring Count:<input type="number" name="offspring_count" value={formData.offspring_count} onChange={handleChange} min="1" step="1" required /></label></div>

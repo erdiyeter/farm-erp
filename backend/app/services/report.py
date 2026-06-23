@@ -144,6 +144,18 @@ def get_report_summary(
         twin_births=report_repository.count_filtered_twin_births(
             db, start_date, end_date
         ),
+        pregnant_outcomes=report_repository.count_filtered_pregnancy_outcomes(
+            db, "pregnant", start_date, end_date
+        ),
+        abortion_outcomes=report_repository.count_filtered_pregnancy_outcomes(
+            db, "abortion", start_date, end_date
+        ),
+        failed_outcomes=report_repository.count_filtered_pregnancy_outcomes(
+            db, "failed", start_date, end_date
+        ),
+        unknown_outcomes=report_repository.count_filtered_pregnancy_outcomes(
+            db, "unknown", start_date, end_date
+        ),
         animals_with_reproduction_history=report_repository.count_animals_with_reproduction_history(
             db, start_date, end_date
         ),

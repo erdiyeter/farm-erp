@@ -48,9 +48,20 @@ def ensure_animal_lifecycle_columns() -> None:
         )
 
 
+def ensure_reproduction_outcome_column() -> None:
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE reproduction_events ADD COLUMN IF NOT EXISTS "
+                "pregnancy_outcome VARCHAR(20)"
+            )
+        )
+
+
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     ensure_animal_lifecycle_columns()
+    ensure_reproduction_outcome_column()
     ensure_finance_soft_delete_column()
     ensure_user_role_column()
     with SessionLocal() as db:

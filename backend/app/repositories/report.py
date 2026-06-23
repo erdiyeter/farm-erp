@@ -280,6 +280,22 @@ def count_filtered_twin_births(
     return db.scalar(statement) or 0
 
 
+def count_filtered_pregnancy_outcomes(
+    db: Session,
+    pregnancy_outcome: str,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> int:
+    statement = select(func.count()).where(
+        ReproductionEvent.pregnancy_outcome == pregnancy_outcome
+    )
+    if start_date:
+        statement = statement.where(ReproductionEvent.event_date >= start_date)
+    if end_date:
+        statement = statement.where(ReproductionEvent.event_date <= end_date)
+    return db.scalar(statement) or 0
+
+
 def count_animals_with_reproduction_history(
     db: Session,
     start_date: date | None = None,

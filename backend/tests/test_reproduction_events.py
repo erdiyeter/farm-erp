@@ -38,6 +38,16 @@ def test_reproduction_event_crud_history_and_twin_tracking(db) -> None:
             pregnancy_status=True,
         ),
     )
+    abortion = event_service.create_reproduction_event(
+        db,
+        ReproductionEventCreate(
+            animal_id=animal.id,
+            event_type="pregnancy",
+            event_date=date.today() - timedelta(days=30),
+            pregnancy_status=True,
+            pregnancy_outcome="abortion",
+        ),
+    )
     birth = event_service.create_reproduction_event(
         db,
         ReproductionEventCreate(
@@ -51,11 +61,15 @@ def test_reproduction_event_crud_history_and_twin_tracking(db) -> None:
     history = event_service.list_reproduction_events_by_animal_id(
         db, animal.id
     )
-    assert [event.id for event in history[:3]] == [
+    assert [event.id for event in history[:4]] == [
         birth.id,
+        abortion.id,
         pregnancy.id,
         mating.id,
     ]
+    assert pregnancy.pregnancy_outcome == "pregnant"
+    assert abortion.pregnancy_outcome == "abortion"
+    assert birth.pregnancy_outcome == "birth"
     assert birth.is_twin_birth is True
 
     updated = event_service.update_reproduction_event(
@@ -92,6 +106,18 @@ def test_reproduction_event_validation(db) -> None:
             ),
         )
 
+    with pytest.raises(ValueError, match="Birth events must use"):
+        event_service.create_reproduction_event(
+            db,
+            ReproductionEventCreate(
+                animal_id=animal.id,
+                event_type="birth",
+                event_date=date.today(),
+                offspring_count=1,
+                pregnancy_outcome="failed",
+            ),
+        )
+
     with pytest.raises(ValueError, match="cannot be in the future"):
         event_service.create_reproduction_event(
             db,
@@ -101,6 +127,22 @@ def test_reproduction_event_validation(db) -> None:
                 event_date=date.today() + timedelta(days=1),
             ),
         )
+
+
+def test_mating_can_track_optional_pregnancy_result(db) -> None:
+    animal = create_test_animal(db)
+    mating = event_service.create_reproduction_event(
+        db,
+        ReproductionEventCreate(
+            animal_id=animal.id,
+            event_type="mating",
+            event_date=date.today(),
+            pregnancy_status=True,
+        ),
+    )
+
+    assert mating.pregnancy_status is True
+    assert mating.pregnancy_outcome == "pregnant"
 
 
 def test_reproduction_event_routes_are_registered() -> None:

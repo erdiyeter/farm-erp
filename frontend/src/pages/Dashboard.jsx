@@ -134,6 +134,17 @@ function formatReportValue(value) {
   });
 }
 
+function formatPregnancyOutcome(outcome) {
+  const labels = {
+    pregnant: "Pregnant",
+    birth: "Birth",
+    abortion: "Abortion",
+    failed: "Failed",
+    unknown: "Unknown",
+  };
+  return labels[outcome] || "-";
+}
+
 function ReportSection({ title, description, records, emptyMessage, children }) {
   return (
     <div className="report-detail-section">
@@ -745,7 +756,7 @@ function Dashboard() {
             <div className="dashboard-records-table">
               <table className="data-table">
                 <thead>
-                  <tr><th>Date</th><th>Animal</th><th>Event</th><th>Outcome</th></tr>
+                  <tr><th>Date</th><th>Animal</th><th>Event</th><th>Status</th><th>Outcome</th></tr>
                 </thead>
                 <tbody>
                   {recentReproductionEvents.map((event) => (
@@ -770,6 +781,7 @@ function Dashboard() {
                             ? `${event.offspring_count} offspring${event.is_twin_birth ? " (twins)" : ""}`
                             : "Mating recorded"}
                       </td>
+                      <td>{formatPregnancyOutcome(event.pregnancy_outcome)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1467,6 +1479,22 @@ function Dashboard() {
                   value={reportSummary.twin_births}
                 />
                 <KpiCard
+                  title="Pregnant Outcomes"
+                  value={reportSummary.pregnant_outcomes}
+                />
+                <KpiCard
+                  title="Abortion Outcomes"
+                  value={reportSummary.abortion_outcomes}
+                />
+                <KpiCard
+                  title="Failed Outcomes"
+                  value={reportSummary.failed_outcomes}
+                />
+                <KpiCard
+                  title="Unknown Outcomes"
+                  value={reportSummary.unknown_outcomes}
+                />
+                <KpiCard
                   title="Animals with Reproduction History"
                   value={reportSummary.animals_with_reproduction_history}
                 />
@@ -1698,6 +1726,7 @@ function Dashboard() {
                       <th>Date</th>
                       <th>Animal</th>
                       <th>Event</th>
+                      <th>Status</th>
                       <th>Outcome</th>
                     </tr>
                   </thead>
@@ -1724,6 +1753,7 @@ function Dashboard() {
                               ? `${event.offspring_count} offspring${event.is_twin_birth ? " (twins)" : ""}`
                               : "Mating recorded"}
                         </td>
+                        <td>{formatPregnancyOutcome(event.pregnancy_outcome)}</td>
                       </tr>
                     ))}
                   </tbody>

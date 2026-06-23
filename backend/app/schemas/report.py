@@ -58,6 +58,10 @@ class ReportSummary(BaseModel):
     total_births: int
     total_offspring: int
     twin_births: int
+    pregnant_outcomes: int
+    abortion_outcomes: int
+    failed_outcomes: int
+    unknown_outcomes: int
     animals_with_reproduction_history: int
     last_birth_date: date | None
     total_exited_animals: int
