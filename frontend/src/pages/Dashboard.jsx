@@ -324,6 +324,14 @@ function Dashboard() {
     reportDetails?.weight_records || [],
     "record_date"
   );
+  const reportReproductionEvents = sortNewest(
+    reportDetails?.reproduction_events || [],
+    "event_date"
+  );
+  const reportExitedAnimals = sortNewest(
+    reportDetails?.exited_animals || [],
+    "exit_date"
+  );
   const reportFinancialRecords = sortNewest(
     reportDetails?.financial_records || [],
     "record_date"
@@ -375,6 +383,9 @@ function Dashboard() {
   const birthEvents = reproductionEvents.filter(
     (event) => event.event_type === "birth"
   );
+  const animalsWithReproductionHistory = new Set(
+    reproductionEvents.map((event) => event.animal_id)
+  ).size;
   const totalOffspring = birthEvents.reduce(
     (total, event) => total + Number(event.offspring_count || 0),
     0
@@ -382,6 +393,7 @@ function Dashboard() {
   const twinBirths = birthEvents.filter(
     (event) => event.is_twin_birth
   ).length;
+  const lastBirthDate = sortNewest(birthEvents, "event_date")[0]?.event_date;
   const recentReproductionEvents = sortedReproductionEvents.slice(0, 5);
   const recentWithdrawalLocks = sortNewest(
     withdrawalLocks,
@@ -623,6 +635,18 @@ function Dashboard() {
             title="Open Alarms"
             value={canViewVeterinaryData ? openAlarms.length : "-"}
           />
+          <KpiCard
+            title="Total Exits"
+            value={reportSummary?.total_exited_animals ?? "-"}
+          />
+          <KpiCard
+            title="Mortality Exits"
+            value={reportSummary?.mortality_exits ?? "-"}
+          />
+          <KpiCard
+            title="Sales Exits"
+            value={reportSummary?.sold_exits ?? "-"}
+          />
         </div>
       </section>
 
@@ -709,6 +733,11 @@ function Dashboard() {
             <KpiCard title="Total Births" value={birthEvents.length} />
             <KpiCard title="Total Offspring" value={totalOffspring} />
             <KpiCard title="Twin Births" value={twinBirths} />
+            <KpiCard
+              title="Animals with Reproduction History"
+              value={animalsWithReproductionHistory}
+            />
+            <KpiCard title="Last Birth Date" value={lastBirthDate || "-"} />
           </div>
           {recentReproductionEvents.length === 0 ? (
             <p className="empty-text">No reproduction events found.</p>
@@ -1299,8 +1328,9 @@ function Dashboard() {
         <p className="report-period-banner">
           <strong>Applied period:</strong> {reportPeriod}
           <br />
-          Milk, health, and finance use record dates; withdrawal locks use
-          start dates; alarms use due dates. Animal count is current.
+          Milk, health, weight, and finance use record dates; lifecycle uses
+          exit dates; reproduction uses event dates; withdrawal locks use start
+          dates; alarms use due dates. Animal count is current.
         </p>
 
         {reportError && (
@@ -1339,6 +1369,130 @@ function Dashboard() {
 
             <div className="report-kpi-group">
               <div className="report-section-header">
+                <h3>Weight Analytics</h3>
+                <p>Weight record facts within the applied period.</p>
+              </div>
+              <div className="dashboard-kpi-grid report-kpi-grid">
+                <KpiCard
+                  title="Latest Weight"
+                  value={
+                    reportSummary.latest_weight_kg === null
+                      ? "-"
+                      : `${formatReportValue(reportSummary.latest_weight_kg)} kg`
+                  }
+                />
+                <KpiCard
+                  title="Latest Weight Date"
+                  value={reportSummary.latest_weight_record_date || "-"}
+                />
+                <KpiCard
+                  title="Total Weight Records"
+                  value={reportSummary.total_weight_records}
+                />
+                <KpiCard
+                  title="Average Weight Change"
+                  value={
+                    reportSummary.average_weight_change_kg === null
+                      ? "-"
+                      : `${formatReportValue(reportSummary.average_weight_change_kg)} kg`
+                  }
+                />
+                <KpiCard
+                  title="Animals with Weight Change"
+                  value={reportSummary.animals_with_weight_change}
+                />
+              </div>
+            </div>
+
+            <div className="report-kpi-group">
+              <div className="report-section-header">
+                <h3>Lifecycle</h3>
+                <p>Animal exits by exit date in the applied period.</p>
+              </div>
+              <div className="dashboard-kpi-grid report-kpi-grid">
+                <KpiCard
+                  title="Total Exits"
+                  value={reportSummary.total_exited_animals}
+                />
+                <KpiCard
+                  title="Mortality Exits"
+                  value={reportSummary.mortality_exits}
+                />
+                <KpiCard
+                  title="Sales Exits"
+                  value={reportSummary.sold_exits}
+                />
+                <div className="dashboard-kpi-card report-trend-card">
+                  <h2>Exits by Reason</h2>
+                  <p>{reportSummary.exits_by_reason.length}</p>
+                  <small>
+                    {reportSummary.exits_by_reason.length === 0
+                      ? "No exits in this period."
+                      : reportSummary.exits_by_reason
+                          .map((item) => `${item.exit_reason}: ${item.count}`)
+                          .join(", ")}
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <div className="report-kpi-group">
+              <div className="report-section-header">
+                <h3>Reproduction Analytics</h3>
+                <p>Reproduction event facts within the applied period.</p>
+              </div>
+              <div className="dashboard-kpi-grid report-kpi-grid">
+                <KpiCard
+                  title="Reproduction Events"
+                  value={reportSummary.total_reproduction_events}
+                />
+                <KpiCard
+                  title="Total Matings"
+                  value={reportSummary.total_matings}
+                />
+                <KpiCard
+                  title="Total Pregnancies"
+                  value={reportSummary.total_pregnancies}
+                />
+                <KpiCard
+                  title="Total Births"
+                  value={reportSummary.total_births}
+                />
+                <KpiCard
+                  title="Total Offspring"
+                  value={reportSummary.total_offspring}
+                />
+                <KpiCard
+                  title="Twin Births"
+                  value={reportSummary.twin_births}
+                />
+                <KpiCard
+                  title="Animals with Reproduction History"
+                  value={reportSummary.animals_with_reproduction_history}
+                />
+                <KpiCard
+                  title="Last Birth Date"
+                  value={reportSummary.last_birth_date || "-"}
+                />
+              </div>
+            </div>
+
+            <ReportSection
+              title="Lifecycle Exit Report"
+              description="Exited animals by exit date, newest first."
+              records={reportExitedAnimals}
+              emptyMessage={emptyReportMessage("animal exits")}
+            >
+              <div className="dashboard-records-table">
+                <table className="data-table report-data-table">
+                  <thead><tr><th>Exit Date</th><th>Animal</th><th>Reason</th><th>Status</th></tr></thead>
+                  <tbody>{reportExitedAnimals.map((animal) => <tr key={animal.id}><td>{animal.exit_date}</td><td><Link to={`/animals/${animal.id}`}>{getAnimalLabel(animal.id)}</Link></td><td>{animal.exit_reason}</td><td>Exited</td></tr>)}</tbody>
+                </table>
+              </div>
+            </ReportSection>
+
+            <div className="report-kpi-group">
+              <div className="report-section-header">
                 <h3>Operations</h3>
                 <p>Current herd count and date-based operational activity.</p>
               </div>
@@ -1354,6 +1508,10 @@ function Dashboard() {
                 <KpiCard
                   title="Weight Records (Record Date)"
                   value={reportSummary.total_weight_records}
+                />
+                <KpiCard
+                  title="Reproduction Events (Event Date)"
+                  value={reportSummary.total_reproduction_events}
                 />
                 <KpiCard
                   title="Active Locks (Start Date)"
@@ -1523,6 +1681,52 @@ function Dashboard() {
                 <table className="data-table report-data-table">
                   <thead><tr><th>Date</th><th>Animal</th><th>Weight</th><th>Notes</th></tr></thead>
                   <tbody>{reportWeightRecords.map((record) => <tr key={record.id}><td><Link to={`/weight-records/${record.id}`}>{record.record_date}</Link></td><td><Link to={`/animals/${record.animal_id}`}>{getAnimalLabel(record.animal_id)}</Link></td><td>{record.weight_kg} kg</td><td>{record.notes || "-"}</td></tr>)}</tbody>
+                </table>
+              </div>
+            </ReportSection>
+
+            <ReportSection
+              title="Reproduction Report"
+              description="Reproduction events, newest first."
+              records={reportReproductionEvents}
+              emptyMessage={emptyReportMessage("reproduction events")}
+            >
+              <div className="dashboard-records-table">
+                <table className="data-table report-data-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Animal</th>
+                      <th>Event</th>
+                      <th>Outcome</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportReproductionEvents.map((event) => (
+                      <tr key={event.id}>
+                        <td>
+                          <Link to={`/reproduction-events/${event.id}`}>
+                            {event.event_date}
+                          </Link>
+                        </td>
+                        <td>
+                          <Link to={`/animals/${event.animal_id}`}>
+                            {getAnimalLabel(event.animal_id)}
+                          </Link>
+                        </td>
+                        <td>{event.event_type}</td>
+                        <td>
+                          {event.event_type === "pregnancy"
+                            ? event.pregnancy_status
+                              ? "Pregnancy confirmed"
+                              : "Not pregnant"
+                            : event.event_type === "birth"
+                              ? `${event.offspring_count} offspring${event.is_twin_birth ? " (twins)" : ""}`
+                              : "Mating recorded"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
                 </table>
               </div>
             </ReportSection>

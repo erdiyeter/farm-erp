@@ -7,6 +7,7 @@ from fastapi import HTTPException
 
 from app.models.health_record import HealthRecord
 from app.models.milk_record import MilkRecord
+from app.models.reproduction_event import ReproductionEvent
 from app.models.weight_record import WeightRecord
 from app.routers.report import validate_date_range
 from app.schemas.animal import AnimalCreate
@@ -20,6 +21,30 @@ def test_reporting_summary_filters_and_csv_export(db) -> None:
     initial = report_service.get_report_summary(db, start_date, end_date)
     animal = animal_service.create_animal(
         db, AnimalCreate(ear_tag=f"REPORT-{uuid4().hex[:12]}")
+    )
+    exited_sold = animal_service.create_animal(
+        db,
+        AnimalCreate(
+            ear_tag=f"EXIT-SOLD-{uuid4().hex[:12]}",
+            exit_date=end_date,
+            exit_reason="sold",
+        ),
+    )
+    exited_died = animal_service.create_animal(
+        db,
+        AnimalCreate(
+            ear_tag=f"EXIT-DIED-{uuid4().hex[:12]}",
+            exit_date=end_date,
+            exit_reason="died",
+        ),
+    )
+    animal_service.create_animal(
+        db,
+        AnimalCreate(
+            ear_tag=f"EXIT-OUT-{uuid4().hex[:12]}",
+            exit_date=date(2098, 2, 12),
+            exit_reason="transferred",
+        ),
     )
     milk_in_range = MilkRecord(
         animal_id=animal.id,
@@ -45,10 +70,38 @@ def test_reporting_summary_filters_and_csv_export(db) -> None:
         weight_kg=Decimal("425.50"),
         notes="Reporting test",
     )
+    weight_previous_in_range = WeightRecord(
+        animal_id=animal.id,
+        record_date=start_date,
+        weight_kg=Decimal("420.00"),
+    )
     weight_outside_range = WeightRecord(
         animal_id=animal.id,
         record_date=date(2098, 2, 12),
         weight_kg=Decimal("430.00"),
+    )
+    mating_event = ReproductionEvent(
+        animal_id=animal.id,
+        event_type="mating",
+        event_date=start_date,
+    )
+    pregnancy_event = ReproductionEvent(
+        animal_id=animal.id,
+        event_type="pregnancy",
+        event_date=start_date,
+        pregnancy_status=True,
+    )
+    birth_event = ReproductionEvent(
+        animal_id=animal.id,
+        event_type="birth",
+        event_date=end_date,
+        offspring_count=2,
+    )
+    reproduction_outside_range = ReproductionEvent(
+        animal_id=animal.id,
+        event_type="birth",
+        event_date=date(2098, 2, 12),
+        offspring_count=1,
     )
     db.add_all(
         [
@@ -56,7 +109,12 @@ def test_reporting_summary_filters_and_csv_export(db) -> None:
             milk_outside_range,
             health_record,
             weight_in_range,
+            weight_previous_in_range,
             weight_outside_range,
+            mating_event,
+            pregnancy_event,
+            birth_event,
+            reproduction_outside_range,
         ]
     )
     db.commit()
@@ -74,7 +132,25 @@ def test_reporting_summary_filters_and_csv_export(db) -> None:
     assert summary.total_milk_liters == initial.total_milk_liters + 12.5
     assert summary.average_daily_milk == 12.5
     assert summary.total_health_records == initial.total_health_records + 1
-    assert summary.total_weight_records == initial.total_weight_records + 1
+    assert summary.total_weight_records == initial.total_weight_records + 2
+    assert summary.latest_weight_kg == 425.5
+    assert summary.latest_weight_record_date == end_date
+    assert summary.average_weight_change_kg == 5.5
+    assert summary.animals_with_weight_change == 1
+    assert summary.total_reproduction_events == 3
+    assert summary.total_matings == 1
+    assert summary.total_pregnancies == 1
+    assert summary.total_births == 1
+    assert summary.total_offspring == 2
+    assert summary.twin_births == 1
+    assert summary.animals_with_reproduction_history == 1
+    assert summary.last_birth_date == end_date
+    assert summary.total_exited_animals == initial.total_exited_animals + 2
+    assert summary.sold_exits == initial.sold_exits + 1
+    assert summary.mortality_exits == initial.mortality_exits + 1
+    assert {item.exit_reason: item.count for item in summary.exits_by_reason}[
+        "sold"
+    ] >= 1
     assert any(
         row.startswith(f"{milk_in_range.id},")
         for row in milk_csv.splitlines()
@@ -91,10 +167,21 @@ def test_reporting_summary_filters_and_csv_export(db) -> None:
         row.startswith(f"{weight_in_range.id},")
         for row in weight_csv.splitlines()
     )
+    assert any(
+        row.startswith(f"{weight_previous_in_range.id},")
+        for row in weight_csv.splitlines()
+    )
     assert not any(
         row.startswith(f"{weight_outside_range.id},")
         for row in weight_csv.splitlines()
     )
+
+    details = report_service.get_report_details(db, start_date, end_date)
+    exited_ids = {animal.id for animal in details.exited_animals}
+    assert {exited_sold.id, exited_died.id} <= exited_ids
+    reproduction_ids = {event.id for event in details.reproduction_events}
+    assert {mating_event.id, pregnancy_event.id, birth_event.id} <= reproduction_ids
+    assert reproduction_outside_range.id not in reproduction_ids
 
 
 def test_reporting_rejects_invalid_date_range() -> None:
@@ -115,9 +202,27 @@ def test_reporting_empty_filtered_period_returns_zero_values(db) -> None:
     assert summary.average_daily_milk == 0
     assert summary.total_health_records == 0
     assert summary.total_weight_records == 0
+    assert summary.latest_weight_kg is None
+    assert summary.latest_weight_record_date is None
+    assert summary.average_weight_change_kg is None
+    assert summary.animals_with_weight_change == 0
+    assert summary.total_reproduction_events == 0
+    assert summary.total_matings == 0
+    assert summary.total_pregnancies == 0
+    assert summary.total_births == 0
+    assert summary.total_offspring == 0
+    assert summary.twin_births == 0
+    assert summary.animals_with_reproduction_history == 0
+    assert summary.last_birth_date is None
+    assert summary.total_exited_animals == 0
+    assert summary.sold_exits == 0
+    assert summary.mortality_exits == 0
+    assert summary.exits_by_reason == []
     assert summary.total_income == 0
     assert summary.total_expense == 0
     assert details.milk_records == []
     assert details.health_records == []
     assert details.weight_records == []
+    assert details.reproduction_events == []
+    assert details.exited_animals == []
     assert details.financial_records == []

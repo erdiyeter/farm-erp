@@ -551,6 +551,18 @@ function AnimalDetail() {
               <p>Recent activity and current restrictions.</p>
               <div className="dashboard-kpi-grid animal-profile-metrics">
                 <KpiCard
+                  title="Lifecycle Status"
+                  value={animal.exit_date ? "Exited" : "Active"}
+                />
+                <KpiCard
+                  title="Exit Date"
+                  value={animal.exit_date || "-"}
+                />
+                <KpiCard
+                  title="Exit Reason"
+                  value={animal.exit_reason || "-"}
+                />
+                <KpiCard
                   title="Last 30 Days Milk Liters"
                   value={canViewMilk ? last30DaysMilkLiters : "-"}
                 />

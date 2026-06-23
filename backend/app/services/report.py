@@ -7,12 +7,39 @@ from sqlalchemy.orm import Session
 from app.repositories import report as report_repository
 from app.schemas.report import (
     AnimalSummaryReport,
+    ExitReasonCount,
     FinanceSummaryReport,
     HealthSummaryReport,
     MilkSummaryReport,
     ReportDetails,
     ReportSummary,
 )
+
+
+def get_weight_change_metrics(
+    weight_records,
+) -> tuple[object | None, float | None, int]:
+    sorted_records = sorted(
+        weight_records,
+        key=lambda record: (record.record_date, record.id),
+        reverse=True,
+    )
+    latest_record = sorted_records[0] if sorted_records else None
+    records_by_animal = {}
+    for record in sorted_records:
+        records_by_animal.setdefault(record.animal_id, []).append(record)
+
+    changes = []
+    for records in records_by_animal.values():
+        if len(records) < 2:
+            continue
+        latest, previous = records[0], records[1]
+        if latest.record_date == previous.record_date:
+            continue
+        changes.append(float(latest.weight_kg - previous.weight_kg))
+
+    average_change = sum(changes) / len(changes) if changes else None
+    return latest_record, average_change, len(changes)
 
 
 def get_animals_summary(db: Session) -> AnimalSummaryReport:
@@ -69,6 +96,12 @@ def get_report_summary(
     milk_days = report_repository.count_filtered_milk_days(
         db, start_date, end_date
     )
+    weight_records = report_repository.list_weight_records_for_export(
+        db, start_date, end_date
+    )
+    latest_weight_record, average_weight_change, animals_with_weight_change = (
+        get_weight_change_metrics(weight_records)
+    )
 
     return ReportSummary(
         total_animals=report_repository.count_animals(db),
@@ -83,6 +116,55 @@ def get_report_summary(
         total_weight_records=report_repository.count_filtered_weight_records(
             db, start_date, end_date
         ),
+        latest_weight_kg=(
+            float(latest_weight_record.weight_kg)
+            if latest_weight_record
+            else None
+        ),
+        latest_weight_record_date=(
+            latest_weight_record.record_date if latest_weight_record else None
+        ),
+        average_weight_change_kg=average_weight_change,
+        animals_with_weight_change=animals_with_weight_change,
+        total_reproduction_events=report_repository.count_filtered_reproduction_events(
+            db, start_date, end_date
+        ),
+        total_matings=report_repository.count_filtered_reproduction_events_by_type(
+            db, "mating", start_date, end_date
+        ),
+        total_pregnancies=report_repository.count_filtered_reproduction_events_by_type(
+            db, "pregnancy", start_date, end_date
+        ),
+        total_births=report_repository.count_filtered_reproduction_events_by_type(
+            db, "birth", start_date, end_date
+        ),
+        total_offspring=report_repository.get_filtered_offspring_total(
+            db, start_date, end_date
+        ),
+        twin_births=report_repository.count_filtered_twin_births(
+            db, start_date, end_date
+        ),
+        animals_with_reproduction_history=report_repository.count_animals_with_reproduction_history(
+            db, start_date, end_date
+        ),
+        last_birth_date=report_repository.get_latest_birth_date(
+            db, start_date, end_date
+        ),
+        total_exited_animals=report_repository.count_exited_animals(
+            db, start_date, end_date
+        ),
+        sold_exits=report_repository.count_exits_by_reason(
+            db, "sold", start_date, end_date
+        ),
+        mortality_exits=report_repository.count_exits_by_reason(
+            db, "died", start_date, end_date
+        ),
+        exits_by_reason=[
+            ExitReasonCount(exit_reason=reason, count=count)
+            for reason, count in report_repository.list_exit_reason_counts(
+                db, start_date, end_date
+            )
+        ],
         total_income=float(
             report_repository.get_financial_total(
                 db, "income", start_date, end_date
@@ -115,6 +197,12 @@ def get_report_details(
             db, start_date, end_date
         ),
         weight_records=report_repository.list_weight_records_for_export(
+            db, start_date, end_date
+        ),
+        reproduction_events=report_repository.list_reproduction_events_for_report(
+            db, start_date, end_date
+        ),
+        exited_animals=report_repository.list_exited_animals_for_report(
             db, start_date, end_date
         ),
         financial_records=report_repository.list_financial_records_for_report(
