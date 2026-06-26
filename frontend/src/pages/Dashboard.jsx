@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Loading from "../components/Loading";
 import ErrorMessage from "../components/ErrorMessage";
-import KpiCard from "../components/KpiCard";
 import {
   getDashboardStats,
   downloadReportCsv,
@@ -17,6 +16,11 @@ import { getWeightRecords } from "../api/weightRecordApi";
 import { updateWithdrawalLock } from "../api/withdrawalLockApi";
 import { useAuth } from "../context/authContext";
 import useAnimals from "../hooks/useAnimals";
+import BaseKpiCard from "../components/KpiCard";
+import {
+  tDashboard as t,
+  tDashboardValue as tv,
+} from "../i18n";
 
 function getTodayText() {
   return new Date().toISOString().slice(0, 10);
@@ -45,8 +49,9 @@ function getWithdrawalRisks(locks, today, upcomingEnd) {
       lockId: lock.id,
       animalId: lock.animal_id,
       dueDate: lock.end_date,
-      reason: lock.reason || "Withdrawal lock",
+      reason: lock.reason || t("Withdrawal lock"),
       priority: lock.end_date < today ? "Overdue" : "Due soon",
+      priorityLabel: t(lock.end_date < today ? "Overdue" : "Due soon"),
       rank: lock.end_date < today ? 0 : 1,
     }))
     .sort(
@@ -70,15 +75,15 @@ function getMilkTrend(records) {
 
   if (dates.length < 2) {
     return {
-      value: "Not enough data",
-      detail: "Two production days are needed for comparison.",
+      value: t("Not enough data"),
+      detail: t("Two production days are needed for comparison."),
     };
   }
 
   const difference = totalsByDate.get(dates[0]) - totalsByDate.get(dates[1]);
   return {
     value: `${difference > 0 ? "+" : ""}${difference.toFixed(2)} L`,
-    detail: `${dates[0]} compared with ${dates[1]}`,
+    detail: `${dates[0]} ${t("compared with")} ${dates[1]}`,
   };
 }
 
@@ -144,14 +149,18 @@ function formatOptionalScore(value) {
 
 function formatAttentionReasons(animal) {
   return animal.attention_reasons.length
-    ? animal.attention_reasons.join(", ")
+    ? animal.attention_reasons.map(tv).join(", ")
     : "-";
 }
 
 function formatRecommendedActions(animal) {
   return animal.recommended_actions?.length
-    ? animal.recommended_actions.join(", ")
+    ? animal.recommended_actions.map(tv).join(", ")
     : "-";
+}
+
+function formatDashboardTexts(values) {
+  return values?.length ? values.map(tv).join(", ") : "-";
 }
 
 function getPriorityBadgeClass(priority) {
@@ -160,13 +169,17 @@ function getPriorityBadgeClass(priority) {
 
 function formatPregnancyOutcome(outcome) {
   const labels = {
-    pregnant: "Pregnant",
-    birth: "Birth",
-    abortion: "Abortion",
-    failed: "Failed",
-    unknown: "Unknown",
+    pregnant: t("Pregnant"),
+    birth: t("Birth"),
+    abortion: t("Abortion"),
+    failed: t("Failed"),
+    unknown: t("Unknown"),
   };
   return labels[outcome] || "-";
+}
+
+function KpiCard({ title, ...props }) {
+  return <BaseKpiCard title={t(title)} {...props} />;
 }
 
 function ReportSection({ title, description, records, emptyMessage, children }) {
@@ -174,11 +187,11 @@ function ReportSection({ title, description, records, emptyMessage, children }) 
     <div className="report-detail-section">
       <div className="report-section-header report-section-header-row">
         <div>
-          <h3>{title}</h3>
-          <p>{description}</p>
+          <h3>{t(title)}</h3>
+          <p>{t(description)}</p>
         </div>
         <span className="report-record-count">
-          {records.length} {records.length === 1 ? "record" : "records"}
+          {records.length} {t(records.length === 1 ? "record" : "records")}
         </span>
       </div>
       {records.length === 0 ? (
@@ -194,15 +207,15 @@ function RankingTable({ title, records, emptyMessage }) {
   return (
     <div>
       <div className="report-section-header">
-        <h3>{title}</h3>
+        <h3>{t(title)}</h3>
       </div>
       {records.length === 0 ? (
-        <p className="empty-text">{emptyMessage}</p>
+        <p className="empty-text">{t(emptyMessage)}</p>
       ) : (
         <div className="dashboard-records-table">
           <table className="data-table">
             <thead>
-              <tr><th>Animal</th><th>Metric</th><th>Explanation</th></tr>
+              <tr><th>{t("Animal")}</th><th>{t("Metric")}</th><th>{t("Explanation")}</th></tr>
             </thead>
             <tbody>
               {records.map((animal) => (
@@ -213,11 +226,7 @@ function RankingTable({ title, records, emptyMessage }) {
                     </Link>
                   </td>
                   <td>{animal.metric_label}</td>
-                  <td>
-                    {animal.explanations?.length
-                      ? animal.explanations.join(", ")
-                      : "-"}
-                  </td>
+                  <td>{formatDashboardTexts(animal.explanations)}</td>
                 </tr>
               ))}
             </tbody>
@@ -232,15 +241,15 @@ function EconomicScoreRankingTable({ title, records, emptyMessage }) {
   return (
     <div>
       <div className="report-section-header">
-        <h3>{title}</h3>
+        <h3>{t(title)}</h3>
       </div>
       {records.length === 0 ? (
-        <p className="empty-text">{emptyMessage}</p>
+        <p className="empty-text">{t(emptyMessage)}</p>
       ) : (
         <div className="dashboard-records-table">
           <table className="data-table">
             <thead>
-              <tr><th>Rank</th><th>Animal</th><th>Score</th><th>Explanation</th></tr>
+              <tr><th>{t("Rank")}</th><th>{t("Animal")}</th><th>{t("Score")}</th><th>{t("Explanation")}</th></tr>
             </thead>
             <tbody>
               {records.map((animal) => (
@@ -252,11 +261,7 @@ function EconomicScoreRankingTable({ title, records, emptyMessage }) {
                     </Link>
                   </td>
                   <td>{formatOptionalScore(animal.economic_score)}</td>
-                  <td>
-                    {animal.explanations?.length
-                      ? animal.explanations.join(", ")
-                      : "-"}
-                  </td>
+                  <td>{formatDashboardTexts(animal.explanations)}</td>
                 </tr>
               ))}
             </tbody>
@@ -518,12 +523,12 @@ function Dashboard() {
   );
   const milkTrend = getMilkTrend(reportMilkRecords);
   const reportPeriod = appliedStartDate && appliedEndDate
-    ? `${appliedStartDate} to ${appliedEndDate}`
+    ? `${appliedStartDate} ${t("to")} ${appliedEndDate}`
     : appliedStartDate
-      ? `from ${appliedStartDate}`
+      ? `${t("from")} ${appliedStartDate}`
       : appliedEndDate
-        ? `through ${appliedEndDate}`
-        : "all available dates";
+        ? `${t("through")} ${appliedEndDate}`
+        : t("all available dates");
   const decisionSupport = stats?.decision_support;
   const herdKpis = stats?.herd_kpis || reportSummary?.herd_kpis;
   const keyHerdWarnings = decisionSupport?.key_herd_warnings || [];
@@ -533,7 +538,7 @@ function Dashboard() {
     decisionSupport?.priority_review_animals ||
     [];
   const emptyReportMessage = (recordType) =>
-    `No ${recordType} found for ${reportPeriod}. Adjust or clear the filters.`;
+    `${t("No records found for")} ${t(recordType)} (${reportPeriod}). ${t("Adjust or clear the filters.")}`;
 
   useEffect(() => {
     async function loadDashboardStats() {
@@ -588,7 +593,7 @@ function Dashboard() {
           setReportDetails(detailData);
         }
       } catch {
-        setError("Unable to load dashboard data.");
+        setError(t("Unable to load dashboard data."));
       } finally {
         setLoading(false);
       }
@@ -611,7 +616,7 @@ function Dashboard() {
       setAppliedStartDate(startDate);
       setAppliedEndDate(endDate);
     } catch (err) {
-      setReportError(err.message);
+      setReportError(err.message || t("Unable to load report data."));
     } finally {
       setReportLoading(false);
     }
@@ -645,7 +650,7 @@ function Dashboard() {
         useDateRange ? appliedEndDate : ""
       );
     } catch (err) {
-      setReportError(err.message);
+      setReportError(err.message || t("Unable to export CSV."));
     }
   }
 
@@ -671,7 +676,7 @@ function Dashboard() {
   }
 
   async function handleCompleteAlarm(alarm) {
-    if (!window.confirm(`Complete alarm "${alarm.title}"?`)) {
+    if (!window.confirm(`${t("Complete alarm")} "${alarm.title}"?`)) {
       return;
     }
 
@@ -681,7 +686,7 @@ function Dashboard() {
     try {
       await updateAlarm(alarm.id, { is_completed: true });
       await refreshDashboardAfterAction();
-      setActionMessage("Alarm completed successfully.");
+      setActionMessage(t("Alarm completed successfully."));
     } catch (err) {
       setActionError(err.message);
     } finally {
@@ -690,7 +695,7 @@ function Dashboard() {
   }
 
   async function handleReleaseLock(lockId) {
-    if (!window.confirm("Release this withdrawal lock?")) {
+    if (!window.confirm(t("Release this withdrawal lock?"))) {
       return;
     }
 
@@ -700,7 +705,7 @@ function Dashboard() {
     try {
       await updateWithdrawalLock(lockId, { is_active: false });
       await refreshDashboardAfterAction();
-      setActionMessage("Withdrawal lock released successfully.");
+      setActionMessage(t("Withdrawal lock released successfully."));
     } catch (err) {
       setActionError(err.message);
     } finally {
@@ -709,7 +714,7 @@ function Dashboard() {
   }
 
   if (loading) {
-    return <Loading text="Loading dashboard..." className="status-text" />;
+    return <Loading text={t("Loading dashboard...")} className="status-text" />;
   }
 
   if (error) {
@@ -719,8 +724,8 @@ function Dashboard() {
   return (
     <div className="dashboard-page">
       <div className="dashboard-header">
-        <h1>Farm Operations Cockpit</h1>
-        <p>Prioritized daily activity and records requiring attention.</p>
+        <h1>{t("Farm Operations Cockpit")}</h1>
+        <p>{t("Prioritized daily activity and records requiring attention.")}</p>
       </div>
 
       {actionError && (
@@ -731,11 +736,11 @@ function Dashboard() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h2>Farm Overview</h2>
-            <p>Current herd and operational status at a glance</p>
+            <h2>{t("Farm Overview")}</h2>
+            <p>{t("Current herd and operational status at a glance")}</p>
           </div>
           <Link className="dashboard-nav-link" to="/animals">
-            View Animals
+            {t("View Animals")}
           </Link>
         </div>
         <div className="dashboard-kpi-grid">
@@ -778,29 +783,29 @@ function Dashboard() {
         <section className="dashboard-section">
           <div className="dashboard-section-header">
             <div>
-              <h2>Decision Support Summary</h2>
-              <p>Today&apos;s most important herd priorities from current attention data</p>
+              <h2>{t("Decision Support Summary")}</h2>
+              <p>{t("Today's most important herd priorities from current attention data")}</p>
             </div>
           </div>
 
           {decisionSupport.todays_focus.length === 0 ? (
-            <p className="empty-text">No decision-support priorities for today.</p>
+            <p className="empty-text">{t("No decision-support priorities for today.")}</p>
           ) : (
             <div className="dashboard-records-table">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Focus Area</th>
-                    <th>Animals</th>
-                    <th>Recommended Action</th>
+                    <th>{t("Focus Area")}</th>
+                    <th>{t("Animals")}</th>
+                    <th>{t("Recommended Action")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {decisionSupport.todays_focus.map((item) => (
                     <tr key={item.reason}>
-                      <td>{item.reason}</td>
+                      <td>{tv(item.reason)}</td>
                       <td>{item.animal_count}</td>
-                      <td>{item.recommended_action}</td>
+                      <td>{tv(item.recommended_action)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -814,8 +819,8 @@ function Dashboard() {
         <section className="dashboard-section">
           <div className="dashboard-section-header">
             <div>
-              <h2>Decision Support</h2>
-              <p>Rule-based attention indicators from current animal data</p>
+              <h2>{t("Decision Support")}</h2>
+              <p>{t("Rule-based attention indicators from current animal data")}</p>
             </div>
           </div>
 
@@ -865,14 +870,14 @@ function Dashboard() {
           <div className="dashboard-cockpit-grid">
             <div>
               <div className="report-section-header">
-                <h3>Key Herd Warnings</h3>
+                <h3>{t("Key Herd Warnings")}</h3>
               </div>
               {keyHerdWarnings.length === 0 ? (
-                <p className="empty-text">No herd warnings from current rules.</p>
+                <p className="empty-text">{t("No herd warnings from current rules.")}</p>
               ) : (
                 <ul className="dashboard-list">
                   {keyHerdWarnings.map((warning) => (
-                    <li key={warning}>{warning}</li>
+                    <li key={warning}>{tv(warning)}</li>
                   ))}
                 </ul>
               )}
@@ -880,14 +885,14 @@ function Dashboard() {
 
             <div>
               <div className="report-section-header">
-                <h3>Key Herd Opportunities</h3>
+                <h3>{t("Key Herd Opportunities")}</h3>
               </div>
               {keyHerdOpportunities.length === 0 ? (
-                <p className="empty-text">No herd opportunities from current rules.</p>
+                <p className="empty-text">{t("No herd opportunities from current rules.")}</p>
               ) : (
                 <ul className="dashboard-list">
                   {keyHerdOpportunities.map((opportunity) => (
-                    <li key={opportunity}>{opportunity}</li>
+                    <li key={opportunity}>{tv(opportunity)}</li>
                   ))}
                 </ul>
               )}
@@ -895,15 +900,15 @@ function Dashboard() {
 
             <div>
               <div className="report-section-header">
-                <h3>Attention Required Animals</h3>
+                <h3>{t("Attention Required Animals")}</h3>
               </div>
               {decisionSupport.attention_required_animals.length === 0 ? (
-                <p className="empty-text">No animals currently require attention.</p>
+                <p className="empty-text">{t("No animals currently require attention.")}</p>
               ) : (
                 <div className="dashboard-records-table">
                   <table className="data-table">
                     <thead>
-                      <tr><th>Animal</th><th>Triggered Indicators</th><th>Explanation</th></tr>
+                      <tr><th>{t("Animal")}</th><th>{t("Triggered Indicators")}</th><th>{t("Explanation")}</th></tr>
                     </thead>
                     <tbody>
                       {decisionSupport.attention_required_animals.map((animal) => (
@@ -913,8 +918,8 @@ function Dashboard() {
                               {formatDecisionSupportAnimal(animal)}
                             </Link>
                           </td>
-                          <td>{animal.indicators.join(", ")}</td>
-                          <td>{animal.explanations.join(", ")}</td>
+                          <td>{formatDashboardTexts(animal.indicators)}</td>
+                          <td>{formatDashboardTexts(animal.explanations)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -925,15 +930,15 @@ function Dashboard() {
 
             <div>
               <div className="report-section-header">
-                <h3>Economic Attention Animals</h3>
+                <h3>{t("Economic Attention Animals")}</h3>
               </div>
               {decisionSupport.negative_economic_value_animals.length === 0 ? (
-                <p className="empty-text">No animals currently require economic attention.</p>
+                <p className="empty-text">{t("No animals currently require economic attention.")}</p>
               ) : (
                 <div className="dashboard-records-table">
                   <table className="data-table">
                     <thead>
-                      <tr><th>Animal</th><th>Net Economic Value</th><th>Explanation</th></tr>
+                      <tr><th>{t("Animal")}</th><th>{t("Net Economic Value")}</th><th>{t("Explanation")}</th></tr>
                     </thead>
                     <tbody>
                       {decisionSupport.negative_economic_value_animals.map((animal) => (
@@ -948,7 +953,7 @@ function Dashboard() {
                               ? "-"
                               : animal.net_economic_value.toFixed(2)}
                           </td>
-                          <td>{animal.explanations.join(", ")}</td>
+                          <td>{formatDashboardTexts(animal.explanations)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -959,15 +964,15 @@ function Dashboard() {
 
             <div>
               <div className="report-section-header">
-                <h3>Recently Exited Animals</h3>
+                <h3>{t("Recently Exited Animals")}</h3>
               </div>
               {decisionSupport.recently_exited_animal_list.length === 0 ? (
-                <p className="empty-text">No animals exited in the last 30 days.</p>
+                <p className="empty-text">{t("No animals exited in the last 30 days.")}</p>
               ) : (
                 <div className="dashboard-records-table">
                   <table className="data-table">
                     <thead>
-                      <tr><th>Animal</th><th>Exit Date</th><th>Indicator</th><th>Explanation</th></tr>
+                      <tr><th>{t("Animal")}</th><th>{t("Exit Date")}</th><th>{t("Indicator")}</th><th>{t("Explanation")}</th></tr>
                     </thead>
                     <tbody>
                       {decisionSupport.recently_exited_animal_list.map((animal) => (
@@ -978,8 +983,8 @@ function Dashboard() {
                             </Link>
                           </td>
                           <td>{animal.exit_date || "-"}</td>
-                          <td>{animal.indicators.join(", ")}</td>
-                          <td>{animal.explanations.join(", ")}</td>
+                          <td>{formatDashboardTexts(animal.indicators)}</td>
+                          <td>{formatDashboardTexts(animal.explanations)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -995,24 +1000,24 @@ function Dashboard() {
         <section className="dashboard-section">
           <div className="dashboard-section-header">
             <div>
-              <h2>Golden List</h2>
-              <p>Active animals with positive economic value and low operational concern</p>
+              <h2>{t("Golden List")}</h2>
+              <p>{t("Active animals with positive economic value and low operational concern")}</p>
             </div>
           </div>
 
           {decisionSupport.golden_list_animals.length === 0 ? (
-            <p className="empty-text">No animals currently qualify for the Golden List.</p>
+            <p className="empty-text">{t("No animals currently qualify for the Golden List.")}</p>
           ) : (
             <div className="dashboard-records-table">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Animal</th>
-                    <th>Key Strengths</th>
-                    <th>Recommended Actions</th>
-                    <th>Net Economic Value</th>
-                    <th>Lifetime Milk</th>
-                    <th>Treatments</th>
+                    <th>{t("Animal")}</th>
+                    <th>{t("Key Strengths")}</th>
+                    <th>{t("Recommended Actions")}</th>
+                    <th>{t("Net Economic Value")}</th>
+                    <th>{t("Lifetime Milk")}</th>
+                    <th>{t("Treatments")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1023,8 +1028,8 @@ function Dashboard() {
                           {formatDecisionSupportAnimal(animal)}
                         </Link>
                       </td>
-                      <td>{animal.strengths.join(", ")}</td>
-                      <td>{animal.recommended_actions.join(", ")}</td>
+                      <td>{formatDashboardTexts(animal.strengths)}</td>
+                      <td>{formatDashboardTexts(animal.recommended_actions)}</td>
                       <td>{animal.net_economic_value.toFixed(2)}</td>
                       <td>{animal.lifetime_milk_production.toFixed(2)} L</td>
                       <td>{animal.treatment_count}</td>
@@ -1041,27 +1046,27 @@ function Dashboard() {
         <section className="dashboard-section">
           <div className="dashboard-section-header">
             <div>
-              <h2>Priority Review</h2>
-              <p>Rule-based attention queue with reasons, actions, and operational context</p>
+              <h2>{t("Priority Review")}</h2>
+              <p>{t("Rule-based attention queue with reasons, actions, and operational context")}</p>
             </div>
           </div>
 
           {attentionReviewAnimals.length === 0 ? (
-            <p className="empty-text">No animals currently require priority review.</p>
+            <p className="empty-text">{t("No animals currently require priority review.")}</p>
           ) : (
             <div className="dashboard-records-table">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Animal</th>
-                    <th>Priority</th>
-                    <th>Attention Reasons</th>
-                    <th>Priority Explanation</th>
-                    <th>Recommended Actions</th>
-                    <th>Net Economic Value</th>
-                    <th>Treatments</th>
-                    <th>Health Events</th>
-                    <th>Withdrawal Lock</th>
+                    <th>{t("Animal")}</th>
+                    <th>{t("Priority")}</th>
+                    <th>{t("Attention Reasons")}</th>
+                    <th>{t("Priority Explanation")}</th>
+                    <th>{t("Recommended Actions")}</th>
+                    <th>{t("Net Economic Value")}</th>
+                    <th>{t("Treatments")}</th>
+                    <th>{t("Health Events")}</th>
+                    <th>{t("Withdrawal Lock")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1074,11 +1079,11 @@ function Dashboard() {
                       </td>
                       <td>
                         <span className={getPriorityBadgeClass(animal.priority_level)}>
-                          {animal.priority_level}
+                          {tv(animal.priority_level)}
                         </span>
                       </td>
                       <td>{formatAttentionReasons(animal)}</td>
-                      <td>{animal.priority_explanation || "-"}</td>
+                      <td>{tv(animal.priority_explanation) || "-"}</td>
                       <td>{formatRecommendedActions(animal)}</td>
                       <td>
                         {animal.net_economic_value === null
@@ -1087,7 +1092,7 @@ function Dashboard() {
                       </td>
                       <td>{animal.treatment_count}</td>
                       <td>{animal.health_event_count}</td>
-                      <td>{animal.has_active_withdrawal_lock ? "Active" : "-"}</td>
+                      <td>{animal.has_active_withdrawal_lock ? t("Active") : "-"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1101,8 +1106,8 @@ function Dashboard() {
         <section className="dashboard-section">
           <div className="dashboard-section-header">
             <div>
-              <h2>Decision Support Rankings</h2>
-              <p>Compact rankings from existing economic, production, health, and weight data</p>
+              <h2>{t("Decision Support Rankings")}</h2>
+              <p>{t("Compact rankings from existing economic, production, health, and weight data")}</p>
             </div>
           </div>
 
@@ -1160,13 +1165,13 @@ function Dashboard() {
         <section className="dashboard-section">
           <div className="dashboard-section-header">
             <div>
-              <h2>Weight Overview</h2>
+              <h2>{t("Weight Overview")}</h2>
               <p>
-                Latest herd measurements and 30-day recording coverage
+                {t("Latest herd measurements and 30-day recording coverage")}
               </p>
             </div>
             <Link className="dashboard-nav-link" to="/weight-records">
-              View Weight Records
+              {t("View Weight Records")}
             </Link>
           </div>
           <div className="dashboard-kpi-grid">
@@ -1196,12 +1201,12 @@ function Dashboard() {
             />
           </div>
           {recentWeightRecords.length === 0 ? (
-            <p className="empty-text">No weight records found.</p>
+            <p className="empty-text">{t("No weight records found.")}</p>
           ) : (
             <div className="dashboard-records-table">
               <table className="data-table">
                 <thead>
-                  <tr><th>Date</th><th>Animal</th><th>Weight</th><th>Details</th></tr>
+                  <tr><th>{t("Date")}</th><th>{t("Animal")}</th><th>{t("Weight")}</th><th>{t("Details")}</th></tr>
                 </thead>
                 <tbody>
                   {recentWeightRecords.map((record) => (
@@ -1213,7 +1218,7 @@ function Dashboard() {
                         </Link>
                       </td>
                       <td>{record.weight_kg} kg</td>
-                      <td><Link to={`/weight-records/${record.id}`}>View</Link></td>
+                      <td><Link to={`/weight-records/${record.id}`}>{t("View")}</Link></td>
                     </tr>
                   ))}
                 </tbody>
@@ -1227,11 +1232,11 @@ function Dashboard() {
         <section className="dashboard-section">
           <div className="dashboard-section-header">
             <div>
-              <h2>Reproduction Overview</h2>
-              <p>Recorded pregnancy and birth outcomes across the herd</p>
+              <h2>{t("Reproduction Overview")}</h2>
+              <p>{t("Recorded pregnancy and birth outcomes across the herd")}</p>
             </div>
             <Link className="dashboard-nav-link" to="/reproduction-events">
-              View Reproduction
+              {t("View Reproduction")}
             </Link>
           </div>
           <div className="dashboard-kpi-grid">
@@ -1246,12 +1251,12 @@ function Dashboard() {
             <KpiCard title="Last Birth Date" value={lastBirthDate || "-"} />
           </div>
           {recentReproductionEvents.length === 0 ? (
-            <p className="empty-text">No reproduction events found.</p>
+            <p className="empty-text">{t("No reproduction events found.")}</p>
           ) : (
             <div className="dashboard-records-table">
               <table className="data-table">
                 <thead>
-                  <tr><th>Date</th><th>Animal</th><th>Event</th><th>Status</th><th>Outcome</th></tr>
+                  <tr><th>{t("Date")}</th><th>{t("Animal")}</th><th>{t("Event")}</th><th>{t("Status")}</th><th>{t("Outcome")}</th></tr>
                 </thead>
                 <tbody>
                   {recentReproductionEvents.map((event) => (
@@ -1270,11 +1275,11 @@ function Dashboard() {
                       <td>
                         {event.event_type === "pregnancy"
                           ? event.pregnancy_status
-                            ? "Pregnancy confirmed"
-                            : "Not pregnant"
+                            ? t("Pregnancy confirmed")
+                            : t("Not pregnant")
                           : event.event_type === "birth"
-                            ? `${event.offspring_count} offspring${event.is_twin_birth ? " (twins)" : ""}`
-                            : "Mating recorded"}
+                            ? `${event.offspring_count} ${t("offspring")}${event.is_twin_birth ? ` (${t("twins")})` : ""}`
+                            : t("Mating recorded")}
                       </td>
                       <td>{formatPregnancyOutcome(event.pregnancy_outcome)}</td>
                     </tr>
@@ -1290,8 +1295,8 @@ function Dashboard() {
         <section className="dashboard-section">
           <div className="dashboard-section-header">
             <div>
-              <h2>Health &amp; Operations</h2>
-              <p>Recent health activity, withdrawal periods, and workload highlights</p>
+              <h2>{t("Health & Operations")}</h2>
+              <p>{t("Recent health activity, withdrawal periods, and workload highlights")}</p>
             </div>
           </div>
           <div className="dashboard-kpi-grid">
@@ -1303,14 +1308,14 @@ function Dashboard() {
           <div className="dashboard-cockpit-grid">
             <div>
               <div className="report-section-header">
-                <h3>Recent Health Records</h3>
+                <h3>{t("Recent Health Records")}</h3>
               </div>
               {recentHealthActivity.length === 0 ? (
-                <p className="empty-text">No recent health records.</p>
+                <p className="empty-text">{t("No recent health records.")}</p>
               ) : (
                 <div className="dashboard-records-table">
                   <table className="data-table">
-                    <thead><tr><th>Date</th><th>Animal</th><th>Type</th></tr></thead>
+                    <thead><tr><th>{t("Date")}</th><th>{t("Animal")}</th><th>{t("Type")}</th></tr></thead>
                     <tbody>{recentHealthActivity.map((record) => <tr key={record.id}><td>{record.record_date}</td><td><Link to={`/animals/${record.animal_id}`}>{getAnimalLabel(record.animal_id)}</Link></td><td><Link to={`/health-records/${record.id}`}>{record.record_type}</Link></td></tr>)}</tbody>
                   </table>
                 </div>
@@ -1318,15 +1323,15 @@ function Dashboard() {
             </div>
             <div>
               <div className="report-section-header">
-                <h3>Recent Withdrawal Locks</h3>
+                <h3>{t("Recent Withdrawal Locks")}</h3>
               </div>
               {recentWithdrawalLocks.length === 0 ? (
-                <p className="empty-text">No withdrawal locks found.</p>
+                <p className="empty-text">{t("No withdrawal locks found.")}</p>
               ) : (
                 <div className="dashboard-records-table">
                   <table className="data-table">
-                    <thead><tr><th>Start</th><th>Animal</th><th>End</th><th>Status</th></tr></thead>
-                    <tbody>{recentWithdrawalLocks.map((lock) => <tr key={lock.id}><td>{lock.start_date}</td><td><Link to={`/animals/${lock.animal_id}`}>{getAnimalLabel(lock.animal_id)}</Link></td><td>{lock.end_date}</td><td><Link to={`/withdrawal-locks/${lock.id}`}>{!lock.is_active ? "Released" : lock.end_date < today ? "Expired" : "Active"}</Link></td></tr>)}</tbody>
+                    <thead><tr><th>{t("Start")}</th><th>{t("Animal")}</th><th>{t("End")}</th><th>{t("Status")}</th></tr></thead>
+                    <tbody>{recentWithdrawalLocks.map((lock) => <tr key={lock.id}><td>{lock.start_date}</td><td><Link to={`/animals/${lock.animal_id}`}>{getAnimalLabel(lock.animal_id)}</Link></td><td>{lock.end_date}</td><td><Link to={`/withdrawal-locks/${lock.id}`}>{!lock.is_active ? t("Released") : lock.end_date < today ? t("Expired") : t("Active")}</Link></td></tr>)}</tbody>
                   </table>
                 </div>
               )}
@@ -1340,38 +1345,38 @@ function Dashboard() {
           <section className="dashboard-section dashboard-cockpit-wide">
             <div className="dashboard-section-header">
               <div>
-                <h2>Withdrawal Lock Risks</h2>
-                <p>Overdue locks first, then locks ending within seven days</p>
+                <h2>{t("Withdrawal Lock Risks")}</h2>
+                <p>{t("Overdue locks first, then locks ending within seven days")}</p>
               </div>
               <Link className="dashboard-nav-link" to="/animals">
-                View Animals
+                {t("View Animals")}
               </Link>
             </div>
 
             {withdrawalRisks.length === 0 ? (
-              <p className="empty-text">No withdrawal lock risks.</p>
+              <p className="empty-text">{t("No withdrawal lock risks.")}</p>
             ) : (
               <div className="dashboard-records-table">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Priority</th>
-                      <th>Animal</th>
-                      <th>Reason</th>
-                      <th>Due Date</th>
-                      <th>Profile</th>
-                      <th>Action</th>
+                      <th>{t("Priority")}</th>
+                      <th>{t("Animal")}</th>
+                      <th>{t("Reason")}</th>
+                      <th>{t("Due Date")}</th>
+                      <th>{t("Profile")}</th>
+                      <th>{t("Action")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {withdrawalRisks.map((item) => (
                       <tr key={item.lockId}>
-                        <td>{item.priority}</td>
+                        <td>{item.priorityLabel}</td>
                         <td>{getAnimalLabel(item.animalId)}</td>
                         <td>{item.reason}</td>
                         <td>{item.dueDate}</td>
                         <td>
-                          <Link to={`/animals/${item.animalId}`}>View</Link>
+                          <Link to={`/animals/${item.animalId}`}>{t("View")}</Link>
                         </td>
                         <td>
                           <button
@@ -1381,8 +1386,8 @@ function Dashboard() {
                             disabled={Boolean(actionKey)}
                           >
                             {actionKey === `lock-${item.lockId}`
-                              ? "Releasing..."
-                              : "Release"}
+                              ? t("Releasing...")
+                              : t("Release")}
                           </button>
                         </td>
                       </tr>
@@ -1398,25 +1403,25 @@ function Dashboard() {
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
-                <h2>Overdue Alarms</h2>
-                <p>Oldest overdue items first</p>
+                <h2>{t("Overdue Alarms")}</h2>
+                <p>{t("Oldest overdue items first")}</p>
               </div>
               <Link className="dashboard-nav-link" to="/alarms">
-                View Alarms
+                {t("View Alarms")}
               </Link>
             </div>
 
             {prioritizedOverdueAlarms.length === 0 ? (
-              <p className="empty-text">No overdue alarms.</p>
+              <p className="empty-text">{t("No overdue alarms.")}</p>
             ) : (
               <div className="dashboard-records-table">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Due Date</th>
-                      <th>Priority</th>
-                      <th>Alarm</th>
-                      <th>Action</th>
+                      <th>{t("Due Date")}</th>
+                      <th>{t("Priority")}</th>
+                      <th>{t("Alarm")}</th>
+                      <th>{t("Action")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1433,8 +1438,8 @@ function Dashboard() {
                             disabled={Boolean(actionKey)}
                           >
                             {actionKey === `alarm-${alarm.id}`
-                              ? "Completing..."
-                              : "Complete"}
+                              ? t("Completing...")
+                              : t("Complete")}
                           </button>
                         </td>
                       </tr>
@@ -1450,24 +1455,24 @@ function Dashboard() {
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
-                <h2>Low Stock</h2>
-                <p>Active items at or below minimum quantity</p>
+                <h2>{t("Low Stock")}</h2>
+                <p>{t("Active items at or below minimum quantity")}</p>
               </div>
               <Link className="dashboard-nav-link" to="/inventory">
-                View Inventory
+                {t("View Inventory")}
               </Link>
             </div>
 
             {lowStockItems.length === 0 ? (
-              <p className="empty-text">No low stock items.</p>
+              <p className="empty-text">{t("No low stock items.")}</p>
             ) : (
               <div className="dashboard-records-table">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Item</th>
-                      <th>Current</th>
-                      <th>Minimum</th>
+                      <th>{t("Item")}</th>
+                      <th>{t("Current")}</th>
+                      <th>{t("Minimum")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1489,32 +1494,32 @@ function Dashboard() {
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
-                <h2>Vaccination Risks</h2>
-                <p>Overdue vaccinations first, then upcoming due dates</p>
+                <h2>{t("Vaccination Risks")}</h2>
+                <p>{t("Overdue vaccinations first, then upcoming due dates")}</p>
               </div>
               <Link className="dashboard-nav-link" to="/vaccinations">
-                View Vaccinations
+                {t("View Vaccinations")}
               </Link>
             </div>
 
             {vaccinationRisks.length === 0 ? (
-              <p className="empty-text">No vaccination risks.</p>
+              <p className="empty-text">{t("No vaccination risks.")}</p>
             ) : (
               <div className="dashboard-records-table">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Due Date</th>
-                      <th>Status</th>
-                      <th>Animal</th>
-                      <th>Vaccine</th>
+                      <th>{t("Due Date")}</th>
+                      <th>{t("Status")}</th>
+                      <th>{t("Animal")}</th>
+                      <th>{t("Vaccine")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {vaccinationRisks.map((vaccination) => (
                       <tr key={vaccination.id}>
                         <td>{vaccination.next_due_date}</td>
-                        <td>{vaccination.riskStatus}</td>
+                        <td>{t(vaccination.riskStatus)}</td>
                         <td>
                           <Link to={`/animals/${vaccination.animal_id}`}>
                             {getAnimalLabel(vaccination.animal_id)}
@@ -1534,21 +1539,21 @@ function Dashboard() {
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
-                <h2>Recent Health Activity</h2>
-                <p>Latest health records across the herd</p>
+                <h2>{t("Recent Health Activity")}</h2>
+                <p>{t("Latest health records across the herd")}</p>
               </div>
             </div>
 
             {recentHealthActivity.length === 0 ? (
-              <p className="empty-text">No recent health activity.</p>
+              <p className="empty-text">{t("No recent health activity.")}</p>
             ) : (
               <div className="dashboard-records-table">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Animal</th>
-                      <th>Type</th>
+                      <th>{t("Date")}</th>
+                      <th>{t("Animal")}</th>
+                      <th>{t("Type")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1574,21 +1579,21 @@ function Dashboard() {
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
-                <h2>Recent Milk Activity</h2>
-                <p>Latest milk records across the herd</p>
+                <h2>{t("Recent Milk Activity")}</h2>
+                <p>{t("Latest milk records across the herd")}</p>
               </div>
             </div>
 
             {recentMilkActivity.length === 0 ? (
-              <p className="empty-text">No recent milk activity.</p>
+              <p className="empty-text">{t("No recent milk activity.")}</p>
             ) : (
               <div className="dashboard-records-table">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Animal</th>
-                      <th>Liters</th>
+                      <th>{t("Date")}</th>
+                      <th>{t("Animal")}</th>
+                      <th>{t("Liters")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1616,11 +1621,11 @@ function Dashboard() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h2>Animals</h2>
-            <p>Current animal count</p>
+            <h2>{t("Animals")}</h2>
+            <p>{t("Current animal count")}</p>
           </div>
           <Link className="dashboard-nav-link" to="/animals">
-            View Animals
+            {t("View Animals")}
           </Link>
         </div>
 
@@ -1632,11 +1637,11 @@ function Dashboard() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h2>Milk Production</h2>
-            <p>Current milk production totals and recent entries</p>
+            <h2>{t("Milk Production")}</h2>
+            <p>{t("Current milk production totals and recent entries")}</p>
           </div>
           <Link className="dashboard-nav-link" to="/milk-records">
-            View Milk Records
+            {t("View Milk Records")}
           </Link>
         </div>
 
@@ -1652,18 +1657,18 @@ function Dashboard() {
         </div>
 
         {stats.recent_records.length === 0 ? (
-          <p className="empty-text">No recent records yet.</p>
+          <p className="empty-text">{t("No recent records yet.")}</p>
         ) : (
           <div className="dashboard-records-table">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Animal ID</th>
-                  <th>Date</th>
-                  <th>Milk Liters</th>
-                  <th>Session</th>
-                  <th>Notes</th>
+                  <th>{t("ID")}</th>
+                  <th>{t("Animal ID")}</th>
+                  <th>{t("Date")}</th>
+                  <th>{t("Milk Liters")}</th>
+                  <th>{t("Session")}</th>
+                  <th>{t("Notes")}</th>
                 </tr>
               </thead>
 
@@ -1696,11 +1701,11 @@ function Dashboard() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h2>Health Records</h2>
-            <p>Recent health records and active withdrawal periods</p>
+            <h2>{t("Health Records")}</h2>
+            <p>{t("Recent health records and active withdrawal periods")}</p>
           </div>
           <Link className="dashboard-nav-link" to="/health-records">
-            View Health Records
+            {t("View Health Records")}
           </Link>
         </div>
 
@@ -1727,11 +1732,11 @@ function Dashboard() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h2>Withdrawal Locks</h2>
-            <p>Active, expiring, and overdue withdrawal periods</p>
+            <h2>{t("Withdrawal Locks")}</h2>
+            <p>{t("Active, expiring, and overdue withdrawal periods")}</p>
           </div>
           <Link className="dashboard-nav-link" to="/withdrawal-locks">
-            View Withdrawal Locks
+            {t("View Withdrawal Locks")}
           </Link>
         </div>
 
@@ -1759,8 +1764,8 @@ function Dashboard() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h2>Alarms</h2>
-            <p>Open, upcoming, and overdue manual alarms</p>
+            <h2>{t("Alarms")}</h2>
+            <p>{t("Open, upcoming, and overdue manual alarms")}</p>
           </div>
           <Link className="dashboard-nav-link" to="/alarms">
             View Alarms
@@ -1777,8 +1782,8 @@ function Dashboard() {
       <section className="dashboard-section reporting-workspace">
         <div className="dashboard-section-header">
           <div>
-            <h2>Operational Reports</h2>
-            <p>Review trends, totals, and detailed records by date range.</p>
+            <h2>{t("Operational Reports")}</h2>
+            <p>{t("Review trends, totals, and detailed records by date range.")}</p>
           </div>
         </div>
 
@@ -1833,7 +1838,7 @@ function Dashboard() {
         </form>
 
         <p className="report-period-banner">
-          <strong>Applied period:</strong> {reportPeriod}
+          <strong>{t("Applied period")}:</strong> {reportPeriod}
           <br />
           Milk, health, weight, and finance use record dates; lifecycle uses
           exit dates; reproduction uses event dates; withdrawal locks use start
@@ -1850,8 +1855,8 @@ function Dashboard() {
           <>
             <div className="report-kpi-group">
               <div className="report-section-header">
-                <h3>Production</h3>
-                <p>Milk record dates and current lactation status.</p>
+                <h3>{t("Production")}</h3>
+                <p>{t("Milk record dates and current lactation status.")}</p>
               </div>
               <div className="dashboard-kpi-grid report-kpi-grid">
                 <KpiCard
@@ -1883,7 +1888,7 @@ function Dashboard() {
                   }
                 />
                 <div className="dashboard-kpi-card report-trend-card">
-                  <h2>Latest Daily Milk Trend</h2>
+                  <h2>{t("Latest Daily Milk Trend")}</h2>
                   <p>{milkTrend.value}</p>
                   <small>{milkTrend.detail}</small>
                 </div>
@@ -1892,8 +1897,8 @@ function Dashboard() {
 
             <div className="report-kpi-group">
               <div className="report-section-header">
-                <h3>Weight Analytics</h3>
-                <p>Weight record facts within the applied period.</p>
+                <h3>{t("Weight Analytics")}</h3>
+                <p>{t("Weight record facts within the applied period.")}</p>
               </div>
               <div className="dashboard-kpi-grid report-kpi-grid">
                 <KpiCard
@@ -1929,8 +1934,8 @@ function Dashboard() {
 
             <div className="report-kpi-group">
               <div className="report-section-header">
-                <h3>Lifecycle</h3>
-                <p>Animal exits by exit date in the applied period.</p>
+                <h3>{t("Lifecycle")}</h3>
+                <p>{t("Animal exits by exit date in the applied period.")}</p>
               </div>
               <div className="dashboard-kpi-grid report-kpi-grid">
                 <KpiCard
@@ -1946,11 +1951,11 @@ function Dashboard() {
                   value={reportSummary.sold_exits}
                 />
                 <div className="dashboard-kpi-card report-trend-card">
-                  <h2>Exits by Reason</h2>
+                  <h2>{t("Exits by Reason")}</h2>
                   <p>{reportSummary.exits_by_reason.length}</p>
                   <small>
                     {reportSummary.exits_by_reason.length === 0
-                      ? "No exits in this period."
+                      ? t("No exits in this period.")
                       : reportSummary.exits_by_reason
                           .map((item) => `${item.exit_reason}: ${item.count}`)
                           .join(", ")}
@@ -1961,8 +1966,8 @@ function Dashboard() {
 
             <div className="report-kpi-group">
               <div className="report-section-header">
-                <h3>Reproduction Analytics</h3>
-                <p>Reproduction event facts within the applied period.</p>
+                <h3>{t("Reproduction Analytics")}</h3>
+                <p>{t("Reproduction event facts within the applied period.")}</p>
               </div>
               <div className="dashboard-kpi-grid report-kpi-grid">
                 <KpiCard
@@ -2024,16 +2029,16 @@ function Dashboard() {
             >
               <div className="dashboard-records-table">
                 <table className="data-table report-data-table">
-                  <thead><tr><th>Exit Date</th><th>Animal</th><th>Reason</th><th>Status</th></tr></thead>
-                  <tbody>{reportExitedAnimals.map((animal) => <tr key={animal.id}><td>{animal.exit_date}</td><td><Link to={`/animals/${animal.id}`}>{getAnimalLabel(animal.id)}</Link></td><td>{animal.exit_reason}</td><td>Exited</td></tr>)}</tbody>
+                  <thead><tr><th>{t("Exit Date")}</th><th>{t("Animal")}</th><th>{t("Reason")}</th><th>{t("Status")}</th></tr></thead>
+                  <tbody>{reportExitedAnimals.map((animal) => <tr key={animal.id}><td>{animal.exit_date}</td><td><Link to={`/animals/${animal.id}`}>{getAnimalLabel(animal.id)}</Link></td><td>{animal.exit_reason}</td><td>{t("Exited")}</td></tr>)}</tbody>
                 </table>
               </div>
             </ReportSection>
 
             <div className="report-kpi-group">
               <div className="report-section-header">
-                <h3>Operations</h3>
-                <p>Current herd count and date-based operational activity.</p>
+                <h3>{t("Operations")}</h3>
+                <p>{t("Current herd count and date-based operational activity.")}</p>
               </div>
               <div className="dashboard-kpi-grid report-kpi-grid">
                 <KpiCard
@@ -2065,8 +2070,8 @@ function Dashboard() {
 
             <div className="report-kpi-group">
               <div className="report-section-header">
-                <h3>Finance</h3>
-                <p>Active finance records by record date in the applied period.</p>
+                <h3>{t("Finance")}</h3>
+                <p>{t("Active finance records by record date in the applied period.")}</p>
               </div>
               <div className="dashboard-kpi-grid report-kpi-grid">
                 <KpiCard
@@ -2096,13 +2101,13 @@ function Dashboard() {
                 <table className="data-table report-data-table">
                   <thead>
                     <tr>
-                      <th>Animal</th>
-                      <th>Milk Liters</th>
-                      <th>Milk Records</th>
-                      <th>Average / Record</th>
-                      <th>Production Days</th>
-                      <th>Health Events</th>
-                      <th>Withdrawal Locks</th>
+                      <th>{t("Animal")}</th>
+                      <th>{t("Milk Liters")}</th>
+                      <th>{t("Milk Records")}</th>
+                      <th>{t("Average / Record")}</th>
+                      <th>{t("Production Days")}</th>
+                      <th>{t("Health Events")}</th>
+                      <th>{t("Withdrawal Locks")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2128,8 +2133,8 @@ function Dashboard() {
 
             <div className="report-detail-section report-export-section">
               <div className="report-section-header">
-                <h3>CSV Export</h3>
-                <p>Date-based exports use the applied period shown above.</p>
+                <h3>{t("CSV Export")}</h3>
+                <p>{t("Date-based exports use the applied period shown above.")}</p>
               </div>
               <div className="dashboard-export-links">
                 <button
@@ -2143,7 +2148,7 @@ function Dashboard() {
                     )
                   }
                 >
-                  Export Animals CSV
+                  {t("Export Animals CSV")}
                 </button>
                 <button
                   type="button"
@@ -2155,7 +2160,7 @@ function Dashboard() {
                     )
                   }
                 >
-                  Export Health Records CSV
+                  {t("Export Health Records CSV")}
                 </button>
                 <button
                   type="button"
@@ -2167,7 +2172,7 @@ function Dashboard() {
                     )
                   }
                 >
-                  Export Withdrawal Locks CSV
+                  {t("Export Withdrawal Locks CSV")}
                 </button>
                 <button
                   type="button"
@@ -2179,7 +2184,7 @@ function Dashboard() {
                     )
                   }
                 >
-                  Export Milk Records CSV
+                  {t("Export Milk Records CSV")}
                 </button>
                 <button
                   type="button"
@@ -2191,7 +2196,7 @@ function Dashboard() {
                     )
                   }
                 >
-                  Export Weight Records CSV
+                  {t("Export Weight Records CSV")}
                 </button>
               </div>
             </div>
@@ -2204,7 +2209,7 @@ function Dashboard() {
             >
               <div className="dashboard-records-table">
                 <table className="data-table report-data-table">
-                  <thead><tr><th>Date</th><th>Animal</th><th>Liters</th><th>Session</th></tr></thead>
+                  <thead><tr><th>{t("Date")}</th><th>{t("Animal")}</th><th>{t("Liters")}</th><th>{t("Session")}</th></tr></thead>
                   <tbody>{reportMilkRecords.map((record) => <tr key={record.id}><td>{record.record_date}</td><td><Link to={`/animals/${record.animal_id}`}>{getAnimalLabel(record.animal_id)}</Link></td><td>{record.milk_liters}</td><td>{record.session || "-"}</td></tr>)}</tbody>
                 </table>
               </div>
@@ -2218,7 +2223,7 @@ function Dashboard() {
             >
               <div className="dashboard-records-table">
                 <table className="data-table report-data-table">
-                  <thead><tr><th>Date</th><th>Animal</th><th>Weight</th><th>Notes</th></tr></thead>
+                  <thead><tr><th>{t("Date")}</th><th>{t("Animal")}</th><th>{t("Weight")}</th><th>{t("Notes")}</th></tr></thead>
                   <tbody>{reportWeightRecords.map((record) => <tr key={record.id}><td><Link to={`/weight-records/${record.id}`}>{record.record_date}</Link></td><td><Link to={`/animals/${record.animal_id}`}>{getAnimalLabel(record.animal_id)}</Link></td><td>{record.weight_kg} kg</td><td>{record.notes || "-"}</td></tr>)}</tbody>
                 </table>
               </div>
@@ -2234,11 +2239,11 @@ function Dashboard() {
                 <table className="data-table report-data-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Animal</th>
-                      <th>Event</th>
-                      <th>Status</th>
-                      <th>Outcome</th>
+                      <th>{t("Date")}</th>
+                      <th>{t("Animal")}</th>
+                      <th>{t("Event")}</th>
+                      <th>{t("Status")}</th>
+                      <th>{t("Outcome")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2258,11 +2263,11 @@ function Dashboard() {
                         <td>
                           {event.event_type === "pregnancy"
                             ? event.pregnancy_status
-                              ? "Pregnancy confirmed"
-                              : "Not pregnant"
+                              ? t("Pregnancy confirmed")
+                              : t("Not pregnant")
                             : event.event_type === "birth"
-                              ? `${event.offspring_count} offspring${event.is_twin_birth ? " (twins)" : ""}`
-                              : "Mating recorded"}
+                              ? `${event.offspring_count} ${t("offspring")}${event.is_twin_birth ? ` (${t("twins")})` : ""}`
+                              : t("Mating recorded")}
                         </td>
                         <td>{formatPregnancyOutcome(event.pregnancy_outcome)}</td>
                       </tr>
@@ -2280,7 +2285,7 @@ function Dashboard() {
             >
               <div className="dashboard-records-table">
                 <table className="data-table report-data-table">
-                  <thead><tr><th>Date</th><th>Animal</th><th>Type</th><th>Diagnosis</th></tr></thead>
+                  <thead><tr><th>{t("Date")}</th><th>{t("Animal")}</th><th>{t("Type")}</th><th>{t("Diagnosis")}</th></tr></thead>
                   <tbody>{reportHealthRecords.map((record) => <tr key={record.id}><td>{record.record_date}</td><td><Link to={`/animals/${record.animal_id}`}>{getAnimalLabel(record.animal_id)}</Link></td><td>{record.record_type}</td><td>{record.diagnosis || "-"}</td></tr>)}</tbody>
                 </table>
               </div>
@@ -2294,7 +2299,7 @@ function Dashboard() {
             >
               <div className="dashboard-records-table">
                 <table className="data-table report-data-table">
-                  <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th></tr></thead>
+                  <thead><tr><th>{t("Date")}</th><th>{t("Type")}</th><th>{t("Category")}</th><th>{t("Amount")}</th></tr></thead>
                   <tbody>{reportFinancialRecords.map((record) => <tr key={record.id}><td>{record.record_date}</td><td>{record.record_type}</td><td>{record.category}</td><td>{record.amount}</td></tr>)}</tbody>
                 </table>
               </div>
@@ -2308,8 +2313,8 @@ function Dashboard() {
             >
               <div className="dashboard-records-table">
                 <table className="data-table report-data-table">
-                  <thead><tr><th>Start Date</th><th>Animal</th><th>End Date</th><th>Status</th></tr></thead>
-                  <tbody>{reportWithdrawalLocks.map((lock) => <tr key={lock.id}><td>{lock.start_date}</td><td><Link to={`/animals/${lock.animal_id}`}>{getAnimalLabel(lock.animal_id)}</Link></td><td>{lock.end_date}</td><td>{!lock.is_active ? "Released" : lock.end_date < today ? "Expired" : "Active"}</td></tr>)}</tbody>
+                  <thead><tr><th>{t("Start Date")}</th><th>{t("Animal")}</th><th>{t("End Date")}</th><th>{t("Status")}</th></tr></thead>
+                  <tbody>{reportWithdrawalLocks.map((lock) => <tr key={lock.id}><td>{lock.start_date}</td><td><Link to={`/animals/${lock.animal_id}`}>{getAnimalLabel(lock.animal_id)}</Link></td><td>{lock.end_date}</td><td>{!lock.is_active ? t("Released") : lock.end_date < today ? t("Expired") : t("Active")}</td></tr>)}</tbody>
                 </table>
               </div>
             </ReportSection>
@@ -2322,14 +2327,14 @@ function Dashboard() {
             >
               <div className="dashboard-records-table">
                 <table className="data-table report-data-table">
-                  <thead><tr><th>Due Date</th><th>Title</th><th>Priority</th><th>Status</th></tr></thead>
-                  <tbody>{reportAlarms.map((alarm) => <tr key={alarm.id}><td>{alarm.due_date}</td><td>{alarm.title}</td><td>{alarm.priority}</td><td>{alarm.is_completed ? "Completed" : "Open"}</td></tr>)}</tbody>
+                  <thead><tr><th>{t("Due Date")}</th><th>{t("Title")}</th><th>{t("Priority")}</th><th>{t("Status")}</th></tr></thead>
+                  <tbody>{reportAlarms.map((alarm) => <tr key={alarm.id}><td>{alarm.due_date}</td><td>{alarm.title}</td><td>{alarm.priority}</td><td>{alarm.is_completed ? t("Completed") : t("Open")}</td></tr>)}</tbody>
                 </table>
               </div>
             </ReportSection>
           </>
         ) : (
-          <p className="empty-text">Report data is not available.</p>
+          <p className="empty-text">{t("Report data is not available.")}</p>
         )}
       </section>
         </>
