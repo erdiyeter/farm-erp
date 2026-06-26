@@ -8,6 +8,7 @@ import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import useAnimals from "../hooks/useAnimals";
+import { tOperation as t } from "../i18n";
 
 function WithdrawalLockDetail() {
   const { id } = useParams();
@@ -36,7 +37,7 @@ function WithdrawalLockDetail() {
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this withdrawal lock?"
+      t("Are you sure you want to delete this withdrawal lock?")
     );
 
     if (!confirmed) {
@@ -58,7 +59,7 @@ function WithdrawalLockDetail() {
   if (loading) {
     return (
       <Loading
-        text="Loading withdrawal lock..."
+        text={t("Loading withdrawal lock...")}
         className="status-text"
       />
     );
@@ -70,62 +71,62 @@ function WithdrawalLockDetail() {
 
   return (
     <div className="page-card">
-      <h1>Withdrawal Lock Detail</h1>
+      <h1>{t("Withdrawal Lock Detail")}</h1>
 
       {error && <ErrorMessage message={error} className="error-text" />}
 
       <p>
-        <strong>ID:</strong> {lock.id}
+        <strong>{t("ID")}:</strong> {lock.id}
       </p>
 
       <p>
-        <strong>Animal:</strong>{" "}
+        <strong>{t("Animal")}:</strong>{" "}
         <ButtonLink to={`/animals/${lock.animal_id}`} variant="secondary">
           {getAnimalLabel(lock.animal_id)}
         </ButtonLink>
       </p>
 
       <p>
-        <strong>Health Record ID:</strong> {lock.health_record_id || "-"}
+        <strong>{t("Health Record ID")}:</strong> {lock.health_record_id || "-"}
       </p>
 
       <p>
-        <strong>Start Date:</strong> {lock.start_date}
+        <strong>{t("Start Date")}:</strong> {lock.start_date}
       </p>
 
       <p>
-        <strong>End Date:</strong> {lock.end_date}
+        <strong>{t("End Date")}:</strong> {lock.end_date}
       </p>
 
       <p>
-        <strong>Reason:</strong> {lock.reason || "-"}
+        <strong>{t("Reason")}:</strong> {lock.reason || "-"}
       </p>
 
       <p>
-        <strong>Active:</strong> {lock.is_active ? "Yes" : "No"}
+        <strong>{t("Active")}:</strong> {lock.is_active ? t("Yes") : t("No")}
       </p>
 
       <p>
-        <strong>Created At:</strong> {lock.created_at || "-"}
+        <strong>{t("Created At")}:</strong> {lock.created_at || "-"}
       </p>
 
       <p>
-        <strong>Updated At:</strong> {lock.updated_at || "-"}
+        <strong>{t("Updated At")}:</strong> {lock.updated_at || "-"}
       </p>
 
       <ButtonLink to="/withdrawal-locks" variant="secondary">
-        Back
+        {t("Back")}
       </ButtonLink>
 
       <ButtonLink
         to={`/withdrawal-locks/${lock.id}/edit`}
         variant="secondary"
       >
-        Edit
+        {t("Edit")}
       </ButtonLink>
 
       <button onClick={handleDelete} disabled={deleting}>
-        {deleting ? "Deleting..." : "Delete"}
+        {deleting ? t("Deleting...") : t("Delete")}
       </button>
     </div>
   );

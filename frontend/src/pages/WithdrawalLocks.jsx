@@ -9,6 +9,7 @@ import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
 import useAnimals from "../hooks/useAnimals";
+import { tOperation as t } from "../i18n";
 
 const initialFormData = {
   animal_id: "",
@@ -98,7 +99,7 @@ function WithdrawalLocks() {
       const data = await getWithdrawalLocks();
       setLocks(data);
       setFormData(initialFormData);
-      setSuccessMessage("Withdrawal lock created successfully.");
+      setSuccessMessage(t("Withdrawal lock created successfully."));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -109,8 +110,8 @@ function WithdrawalLocks() {
   return (
     <div className="page-card">
       <PageHeader
-        title="Withdrawal Locks"
-        subtitle="Create and review manual withdrawal periods"
+        title={t("Withdrawal Locks")}
+        subtitle={t("Create and review manual withdrawal periods")}
       />
 
       {error && <ErrorMessage message={error} className="error-text" />}
@@ -122,7 +123,7 @@ function WithdrawalLocks() {
       <form onSubmit={handleSubmit}>
         <div>
           <label>
-            Animal:
+            {t("Animal")}:
             <select
               className="animal-select"
               name="animal_id"
@@ -132,7 +133,7 @@ function WithdrawalLocks() {
               required
             >
               <option value="">
-                {animalsLoading ? "Loading animals..." : "Select animal"}
+                {animalsLoading ? t("Loading animals...") : t("Select animal")}
               </option>
               {animals.map((animal) => (
                 <option key={animal.id} value={animal.id}>
@@ -145,7 +146,7 @@ function WithdrawalLocks() {
 
         <div>
           <label>
-            Health Record ID:
+            {t("Health Record ID")}:
             <input
               type="number"
               name="health_record_id"
@@ -157,7 +158,7 @@ function WithdrawalLocks() {
 
         <div>
           <label>
-            Start Date:
+            {t("Start Date")}:
             <input
               type="date"
               name="start_date"
@@ -170,7 +171,7 @@ function WithdrawalLocks() {
 
         <div>
           <label>
-            End Date:
+            {t("End Date")}:
             <input
               type="date"
               name="end_date"
@@ -183,7 +184,7 @@ function WithdrawalLocks() {
 
         <div>
           <label>
-            Reason:
+            {t("Reason")}:
             <textarea
               name="reason"
               value={formData.reason}
@@ -193,49 +194,49 @@ function WithdrawalLocks() {
         </div>
 
         <button type="submit" disabled={saving || animalsLoading}>
-          {saving ? "Saving..." : "Create Withdrawal Lock"}
+          {saving ? t("Saving...") : t("Create Withdrawal Lock")}
         </button>
       </form>
 
       <div className="filter-bar">
         <label>
-          Filter:
+          {t("Filter")}:
           <select
             value={activeFilter}
             onChange={(event) => setActiveFilter(event.target.value)}
           >
-            <option value="all">All</option>
-            <option value="active">Active</option>
-            <option value="expired">Expired</option>
-            <option value="released">Released</option>
+            <option value="all">{t("All")}</option>
+            <option value="active">{t("Active")}</option>
+            <option value="expired">{t("Expired")}</option>
+            <option value="released">{t("Released")}</option>
           </select>
         </label>
       </div>
 
       {loading ? (
         <Loading
-          text="Loading withdrawal locks..."
+          text={t("Loading withdrawal locks...")}
           className="status-text"
         />
       ) : locks.length === 0 ? (
-        <p className="empty-text">No withdrawal locks found.</p>
+        <p className="empty-text">{t("No withdrawal locks found.")}</p>
       ) : filteredLocks.length === 0 ? (
-        <p className="empty-text">No withdrawal locks match this filter.</p>
+        <p className="empty-text">{t("No withdrawal locks match this filter.")}</p>
       ) : (
         <div className="dashboard-records-table">
           <table className="data-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Animal</th>
-                <th>Health Record ID</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Reason</th>
-                <th>Active</th>
-                <th>Created At</th>
-                <th>Updated At</th>
-                <th>Actions</th>
+                <th>{t("ID")}</th>
+                <th>{t("Animal")}</th>
+                <th>{t("Health Record ID")}</th>
+                <th>{t("Start Date")}</th>
+                <th>{t("End Date")}</th>
+                <th>{t("Reason")}</th>
+                <th>{t("Active")}</th>
+                <th>{t("Created At")}</th>
+                <th>{t("Updated At")}</th>
+                <th>{t("Actions")}</th>
               </tr>
             </thead>
 
@@ -252,7 +253,7 @@ function WithdrawalLocks() {
                   <td>{lock.start_date}</td>
                   <td>{lock.end_date}</td>
                   <td>{lock.reason || "-"}</td>
-                  <td>{lock.is_active ? "Yes" : "No"}</td>
+                  <td>{lock.is_active ? t("Yes") : t("No")}</td>
                   <td>{lock.created_at || "-"}</td>
                   <td>{lock.updated_at || "-"}</td>
                   <td>
@@ -260,7 +261,7 @@ function WithdrawalLocks() {
                       to={`/withdrawal-locks/${lock.id}`}
                       variant="secondary"
                     >
-                      View
+                      {t("View")}
                     </ButtonLink>
                   </td>
                 </tr>

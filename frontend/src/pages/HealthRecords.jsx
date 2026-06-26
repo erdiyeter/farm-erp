@@ -12,6 +12,7 @@ import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/authContext";
 import useAnimals from "../hooks/useAnimals";
+import { tOperation as t, tOperationValue as tv } from "../i18n";
 
 const initialFormData = {
   animal_id: "",
@@ -143,7 +144,7 @@ function HealthRecords() {
     };
 
     try {
-      await createHealthRecord(payload);
+    await createHealthRecord(payload);
       const [recordData, itemData] = await Promise.all([
         getHealthRecords(),
         canUseInventory ? getInventoryItems() : Promise.resolve([]),
@@ -151,7 +152,7 @@ function HealthRecords() {
       setRecords(recordData);
       setInventoryItems(itemData);
       setFormData(initialFormData);
-      setSuccessMessage("Health record created successfully.");
+      setSuccessMessage(t("Health record created successfully."));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -162,8 +163,8 @@ function HealthRecords() {
   return (
     <div className="page-card">
       <PageHeader
-        title="Health Records"
-        subtitle="Create and review animal health records"
+        title={t("Health Records")}
+        subtitle={t("Create and review animal health records")}
       />
 
       {error && <ErrorMessage message={error} className="error-text" />}
@@ -175,7 +176,7 @@ function HealthRecords() {
       <form className="health-record-form" onSubmit={handleSubmit}>
         <div>
           <label>
-            Animal:
+            {t("Animal")}:
             <select
               className="animal-select"
               name="animal_id"
@@ -185,7 +186,7 @@ function HealthRecords() {
               required
             >
               <option value="">
-                {animalsLoading ? "Loading animals..." : "Select animal"}
+                {animalsLoading ? t("Loading animals...") : t("Select animal")}
               </option>
               {animals.map((animal) => (
                 <option key={animal.id} value={animal.id}>
@@ -198,17 +199,17 @@ function HealthRecords() {
 
         <div>
           <label>
-            Record Type:
+            {t("Record Type")}:
             <select
               name="record_type"
               value={formData.record_type}
               onChange={handleChange}
               required
             >
-              <option value="treatment">treatment</option>
-              <option value="illness">illness</option>
-              <option value="checkup">checkup</option>
-              <option value="vaccination">vaccination</option>
+              <option value="treatment">{tv("treatment")}</option>
+              <option value="illness">{tv("illness")}</option>
+              <option value="checkup">{tv("checkup")}</option>
+              <option value="vaccination">{tv("vaccination")}</option>
             </select>
           </label>
         </div>
@@ -217,13 +218,13 @@ function HealthRecords() {
           <>
             <div>
               <label>
-                Dosage:
+                {t("Dosage")}:
                 <input
                   name="dosage"
                   value={formData.dosage}
                   onChange={handleChange}
                   required={Boolean(formData.inventory_item_id)}
-                  placeholder="Numeric when consuming inventory"
+                  placeholder={t("Numeric when consuming inventory")}
                 />
               </label>
             </div>
@@ -231,13 +232,13 @@ function HealthRecords() {
             {canUseInventory ? (
               <div>
                 <label>
-                  Inventory Item:
+                  {t("Inventory Item")}:
                   <select
                     name="inventory_item_id"
                     value={formData.inventory_item_id}
                     onChange={handleChange}
                   >
-                    <option value="">No inventory consumption</option>
+                    <option value="">{t("No inventory consumption")}</option>
                     {inventoryItems.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.name} ({item.current_quantity} {item.unit})
@@ -245,13 +246,13 @@ function HealthRecords() {
                     ))}
                   </select>
                   <small>
-                    Selecting an item records the numeric dosage as inventory use.
+                    {t("Selecting an item records the numeric dosage as inventory use.")}
                   </small>
                 </label>
               </div>
             ) : (
               <p className="health-form-note">
-                Inventory consumption selection is available to administrators.
+                {t("Inventory consumption selection is available to administrators.")}
               </p>
             )}
           </>
@@ -259,7 +260,7 @@ function HealthRecords() {
 
         <div>
           <label>
-            Record Date:
+            {t("Record Date")}:
             <input
               type="date"
               name="record_date"
@@ -272,7 +273,7 @@ function HealthRecords() {
 
         <div>
           <label>
-            Diagnosis:
+            {t("Diagnosis")}:
             <input
               name="diagnosis"
               value={formData.diagnosis}
@@ -283,7 +284,7 @@ function HealthRecords() {
 
         <div>
           <label>
-            Treatment:
+            {t("Treatment")}:
             <textarea
               name="treatment"
               value={formData.treatment}
@@ -294,7 +295,7 @@ function HealthRecords() {
 
         <div>
           <label>
-            Medication:
+            {t("Medication")}:
             <input
               name="medication"
               value={formData.medication}
@@ -305,7 +306,7 @@ function HealthRecords() {
 
         <div>
           <label>
-            Notes:
+            {t("Notes")}:
             <textarea
               name="notes"
               value={formData.notes}
@@ -315,57 +316,57 @@ function HealthRecords() {
         </div>
 
         <button type="submit" disabled={saving || animalsLoading}>
-          {saving ? "Saving..." : "Create Health Record"}
+          {saving ? t("Saving...") : t("Create Health Record")}
         </button>
       </form>
 
       <div className="dashboard-kpi-grid health-kpi-grid">
-        <KpiCard title="Total Records" value={records.length} />
-        <KpiCard title="Treatments" value={treatmentCount} />
-        <KpiCard title="Illnesses" value={illnessCount} />
-        <KpiCard title="Vaccinations" value={vaccinationCount} />
-        <KpiCard title="Checkups" value={checkupCount} />
+        <KpiCard title={t("Total Records")} value={records.length} />
+        <KpiCard title={t("Treatments")} value={treatmentCount} />
+        <KpiCard title={t("Illnesses")} value={illnessCount} />
+        <KpiCard title={t("Vaccinations")} value={vaccinationCount} />
+        <KpiCard title={t("Checkups")} value={checkupCount} />
         <KpiCard
-          title="Active Withdrawals"
+          title={t("Active Withdrawal Locks")}
           value={activeWithdrawalCount}
         />
       </div>
 
       <div className="filter-bar">
         <label>
-          Filter:
+          {t("Filter")}:
           <select
             value={activeFilter}
             onChange={(event) => setActiveFilter(event.target.value)}
           >
-            <option value="all">All Records</option>
-            <option value="checkup">Checkups</option>
-            <option value="treatment">Treatments</option>
-            <option value="illness">Illnesses</option>
-            <option value="vaccination">Vaccinations</option>
+            <option value="all">{t("All Records")}</option>
+            <option value="checkup">{t("Checkups")}</option>
+            <option value="treatment">{t("Treatments")}</option>
+            <option value="illness">{t("Illnesses")}</option>
+            <option value="vaccination">{t("Vaccinations")}</option>
           </select>
         </label>
       </div>
 
       {loading ? (
-        <Loading text="Loading health records..." className="status-text" />
+        <Loading text={t("Loading health records...")} className="status-text" />
       ) : records.length === 0 ? (
-        <p className="empty-text">No health records found.</p>
+        <p className="empty-text">{t("No health records found.")}</p>
       ) : filteredRecords.length === 0 ? (
-        <p className="empty-text">No health records match this filter.</p>
+        <p className="empty-text">{t("No health records match this filter.")}</p>
       ) : (
         <div className="dashboard-records-table">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Animal</th>
-                <th>Type</th>
-                <th>Diagnosis</th>
-                <th>Treatment</th>
-                <th>Medicine Usage</th>
-                <th>Withdrawal</th>
-                <th>Actions</th>
+                <th>{t("Date")}</th>
+                <th>{t("Animal")}</th>
+                <th>{t("Type")}</th>
+                <th>{t("Diagnosis")}</th>
+                <th>{t("Treatment")}</th>
+                <th>{t("Medicine Usage")}</th>
+                <th>{t("Withdrawal")}</th>
+                <th>{t("Actions")}</th>
               </tr>
             </thead>
 
@@ -380,21 +381,21 @@ function HealthRecords() {
                   </td>
                   <td>
                     <span className="health-type-label">
-                      {record.record_type}
+                      {tv(record.record_type)}
                     </span>
                   </td>
                   <td>{record.diagnosis || "-"}</td>
                   <td>{record.treatment || "-"}</td>
                   <td className="health-medicine-cell">
                     <strong>{record.medicine_name || "-"}</strong>
-                    {record.dosage && <small>Dosage: {record.dosage}</small>}
+                    {record.dosage && <small>{t("Dosage")}: {record.dosage}</small>}
                   </td>
                   <td>
                     <span className="health-withdrawal-label">
-                      {getWithdrawalStatus(record, today)}
+                      {tv(getWithdrawalStatus(record, today))}
                     </span>
                     {record.withdrawal_end_date && (
-                      <small>Until {record.withdrawal_end_date}</small>
+                      <small>{t("End")}: {record.withdrawal_end_date}</small>
                     )}
                   </td>
                   <td>
@@ -402,7 +403,7 @@ function HealthRecords() {
                       to={`/health-records/${record.id}`}
                       variant="secondary"
                     >
-                      View
+                      {t("View")}
                     </ButtonLink>
                   </td>
                 </tr>

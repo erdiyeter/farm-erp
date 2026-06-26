@@ -7,3 +7,8 @@ export {
   tAnimal,
   tAnimalValue,
 } from "./tr/animals";
+
+export {
+  tOperation,
+  tOperationValue,
+} from "./tr/operations";

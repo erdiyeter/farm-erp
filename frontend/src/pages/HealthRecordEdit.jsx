@@ -9,6 +9,7 @@ import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import { useAuth } from "../context/authContext";
 import useAnimals from "../hooks/useAnimals";
+import { tOperation as t, tOperationValue as tv } from "../i18n";
 
 const initialFormData = {
   animal_id: "",
@@ -120,7 +121,7 @@ function HealthRecordEdit() {
   }
 
   if (loading) {
-    return <Loading text="Loading health record..." className="status-text" />;
+    return <Loading text={t("Loading health record...")} className="status-text" />;
   }
 
   if (error && !saving) {
@@ -129,7 +130,7 @@ function HealthRecordEdit() {
 
   return (
     <div className="page-card">
-      <h1>Edit Health Record</h1>
+      <h1>{t("Edit Health Record")}</h1>
 
       {error && <ErrorMessage message={error} className="error-text" />}
       {animalsError && (
@@ -139,7 +140,7 @@ function HealthRecordEdit() {
       <form className="health-record-form" onSubmit={handleSubmit}>
         <div>
           <label>
-            Animal:
+            {t("Animal")}:
             <select
               className="animal-select"
               name="animal_id"
@@ -149,7 +150,7 @@ function HealthRecordEdit() {
               required
             >
               <option value="">
-                {animalsLoading ? "Loading animals..." : "Select animal"}
+                {animalsLoading ? t("Loading animals...") : t("Select animal")}
               </option>
               {formData.animal_id &&
                 !animals.some(
@@ -170,7 +171,7 @@ function HealthRecordEdit() {
 
         <div>
           <label>
-            Record Type:
+            {t("Record Type")}:
             <select
               name="record_type"
               value={formData.record_type}
@@ -178,17 +179,17 @@ function HealthRecordEdit() {
               disabled={hasInventoryConsumption}
               required
             >
-              <option value="treatment">treatment</option>
-              <option value="illness">illness</option>
-              <option value="checkup">checkup</option>
-              <option value="vaccination">vaccination</option>
+              <option value="treatment">{tv("treatment")}</option>
+              <option value="illness">{tv("illness")}</option>
+              <option value="checkup">{tv("checkup")}</option>
+              <option value="vaccination">{tv("vaccination")}</option>
             </select>
           </label>
         </div>
 
         <div>
           <label>
-            Record Date:
+            {t("Record Date")}:
             <input
               type="date"
               name="record_date"
@@ -202,7 +203,7 @@ function HealthRecordEdit() {
 
         <div>
           <label>
-            Diagnosis:
+            {t("Diagnosis")}:
             <input
               name="diagnosis"
               value={formData.diagnosis}
@@ -213,7 +214,7 @@ function HealthRecordEdit() {
 
         <div>
           <label>
-            Treatment:
+            {t("Treatment")}:
             <textarea
               name="treatment"
               value={formData.treatment}
@@ -224,7 +225,7 @@ function HealthRecordEdit() {
 
         <div>
           <label>
-            Medication:
+            {t("Medication")}:
             <input
               name="medicine_name"
               value={formData.medicine_name}
@@ -237,14 +238,14 @@ function HealthRecordEdit() {
           <>
             <div>
               <label>
-                Dosage:
+                {t("Dosage")}:
                 <input
                   name="dosage"
                   value={formData.dosage}
                   onChange={handleChange}
                   disabled={hasInventoryConsumption}
                   required={Boolean(formData.inventory_item_id)}
-                  placeholder="Numeric when consuming inventory"
+                  placeholder={t("Numeric when consuming inventory")}
                 />
               </label>
             </div>
@@ -252,14 +253,14 @@ function HealthRecordEdit() {
             {canUseInventory && (
               <div>
                 <label>
-                  Inventory Item:
+                  {t("Inventory Item")}:
                   <select
                     name="inventory_item_id"
                     value={formData.inventory_item_id}
                     onChange={handleChange}
                     disabled={hasInventoryConsumption}
                   >
-                    <option value="">No inventory consumption</option>
+                    <option value="">{t("No inventory consumption")}</option>
                     {inventoryItems.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.name} ({item.current_quantity} {item.unit})
@@ -269,8 +270,7 @@ function HealthRecordEdit() {
                 </label>
                 {hasInventoryConsumption && (
                   <small className="health-form-note">
-                    Inventory consumption has already been recorded and cannot
-                    be changed here.
+                    {t("Inventory consumption has already been recorded and cannot be changed here.")}
                   </small>
                 )}
               </div>
@@ -280,7 +280,7 @@ function HealthRecordEdit() {
 
         <div>
           <label>
-            Withdrawal End Date:
+            {t("End Date")}:
             <input
               type="date"
               name="withdrawal_end_date"
@@ -292,7 +292,7 @@ function HealthRecordEdit() {
 
         <div>
           <label>
-            Notes:
+            {t("Notes")}:
             <textarea
               name="notes"
               value={formData.notes}
@@ -302,11 +302,11 @@ function HealthRecordEdit() {
         </div>
 
         <button type="submit" disabled={saving || animalsLoading}>
-          {saving ? "Saving..." : "Save"}
+          {saving ? t("Saving...") : t("Save")}
         </button>
 
         <Link to={`/health-records/${id}`}>
-          <button type="button">Cancel</button>
+          <button type="button">{t("Cancel")}</button>
         </Link>
       </form>
     </div>

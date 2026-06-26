@@ -7,6 +7,7 @@ import {
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import useAnimals from "../hooks/useAnimals";
+import { tOperation as t } from "../i18n";
 
 const initialFormData = {
   animal_id: "",
@@ -93,7 +94,7 @@ function WithdrawalLockEdit() {
   if (loading) {
     return (
       <Loading
-        text="Loading withdrawal lock..."
+        text={t("Loading withdrawal lock...")}
         className="status-text"
       />
     );
@@ -105,7 +106,7 @@ function WithdrawalLockEdit() {
 
   return (
     <div className="page-card">
-      <h1>Edit Withdrawal Lock</h1>
+      <h1>{t("Edit Withdrawal Lock")}</h1>
 
       {error && <ErrorMessage message={error} className="error-text" />}
       {animalsError && (
@@ -115,7 +116,7 @@ function WithdrawalLockEdit() {
       <form onSubmit={handleSubmit}>
         <div>
           <label>
-            Animal:
+            {t("Animal")}:
             <select
               className="animal-select"
               name="animal_id"
@@ -125,7 +126,7 @@ function WithdrawalLockEdit() {
               required
             >
               <option value="">
-                {animalsLoading ? "Loading animals..." : "Select animal"}
+                {animalsLoading ? t("Loading animals...") : t("Select animal")}
               </option>
               {formData.animal_id &&
                 !animals.some(
@@ -146,7 +147,7 @@ function WithdrawalLockEdit() {
 
         <div>
           <label>
-            Health Record ID:
+            {t("Health Record ID")}:
             <input
               type="number"
               name="health_record_id"
@@ -158,7 +159,7 @@ function WithdrawalLockEdit() {
 
         <div>
           <label>
-            Start Date:
+            {t("Start Date")}:
             <input
               type="date"
               name="start_date"
@@ -171,7 +172,7 @@ function WithdrawalLockEdit() {
 
         <div>
           <label>
-            End Date:
+            {t("End Date")}:
             <input
               type="date"
               name="end_date"
@@ -184,7 +185,7 @@ function WithdrawalLockEdit() {
 
         <div>
           <label>
-            Reason:
+            {t("Reason")}:
             <textarea
               name="reason"
               value={formData.reason}
@@ -195,7 +196,7 @@ function WithdrawalLockEdit() {
 
         <div>
           <label>
-            Active:
+            {t("Active")}:
             <input
               type="checkbox"
               name="is_active"
@@ -206,11 +207,11 @@ function WithdrawalLockEdit() {
         </div>
 
         <button type="submit" disabled={saving || animalsLoading}>
-          {saving ? "Saving..." : "Save"}
+          {saving ? t("Saving...") : t("Save")}
         </button>
 
         <Link to={`/withdrawal-locks/${id}`}>
-          <button type="button">Cancel</button>
+          <button type="button">{t("Cancel")}</button>
         </Link>
       </form>
     </div>

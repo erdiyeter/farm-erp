@@ -4,6 +4,7 @@ import { deleteAlarm, getAlarmById } from "../api/alarmApi";
 import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
+import { tOperation as t, tOperationValue as tv } from "../i18n";
 
 function AlarmDetail() {
   const { id } = useParams();
@@ -31,7 +32,7 @@ function AlarmDetail() {
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this alarm?"
+      t("Are you sure you want to delete this alarm?")
     );
 
     if (!confirmed) {
@@ -51,7 +52,7 @@ function AlarmDetail() {
   }
 
   if (loading) {
-    return <Loading text="Loading alarm..." className="status-text" />;
+    return <Loading text={t("Loading alarm...")} className="status-text" />;
   }
 
   if (!alarm && error) {
@@ -60,52 +61,52 @@ function AlarmDetail() {
 
   return (
     <div className="page-card">
-      <h1>Alarm Detail</h1>
+      <h1>{t("Alarm Detail")}</h1>
 
       {error && <ErrorMessage message={error} className="error-text" />}
 
       <p>
-        <strong>ID:</strong> {alarm.id}
+        <strong>{t("ID")}:</strong> {alarm.id}
       </p>
 
       <p>
-        <strong>Title:</strong> {alarm.title}
+        <strong>{t("Title")}:</strong> {alarm.title}
       </p>
 
       <p>
-        <strong>Description:</strong> {alarm.description || "-"}
+        <strong>{t("Description")}:</strong> {alarm.description || "-"}
       </p>
 
       <p>
-        <strong>Type:</strong> {alarm.alarm_type}
+        <strong>{t("Type")}:</strong> {tv(alarm.alarm_type)}
       </p>
 
       <p>
-        <strong>Priority:</strong> {alarm.priority}
+        <strong>{t("Priority")}:</strong> {tv(alarm.priority)}
       </p>
 
       <p>
-        <strong>Due Date:</strong> {alarm.due_date}
+        <strong>{t("Due Date")}:</strong> {alarm.due_date}
       </p>
 
       <p>
-        <strong>Completed:</strong> {alarm.is_completed ? "Yes" : "No"}
+        <strong>{t("Completed")}:</strong> {alarm.is_completed ? t("Yes") : t("No")}
       </p>
 
       <p>
-        <strong>Created At:</strong> {alarm.created_at || "-"}
+        <strong>{t("Created At")}:</strong> {alarm.created_at || "-"}
       </p>
 
       <ButtonLink to="/alarms" variant="secondary">
-        Back
+        {t("Back")}
       </ButtonLink>
 
       <ButtonLink to={`/alarms/${alarm.id}/edit`} variant="secondary">
-        Edit
+        {t("Edit")}
       </ButtonLink>
 
       <button onClick={handleDelete} disabled={deleting}>
-        {deleting ? "Deleting..." : "Delete"}
+        {deleting ? t("Deleting...") : t("Delete")}
       </button>
     </div>
   );

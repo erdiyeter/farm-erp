@@ -11,30 +11,31 @@ import ErrorMessage from "../components/ErrorMessage";
 import KpiCard from "../components/KpiCard";
 import Loading from "../components/Loading";
 import useAnimals from "../hooks/useAnimals";
+import { tOperation as t, tOperationValue as tv } from "../i18n";
 
 function buildHealthTimeline(record, locks, alarms) {
   const items = [
     {
       key: `health-${record.id}`,
       date: record.record_date,
-      type: "Health Record",
-      event: record.record_type,
-      details: record.diagnosis || record.treatment || "Record created",
+      type: t("Health Record"),
+      event: tv(record.record_type),
+      details: record.diagnosis || record.treatment || t("Record created"),
     },
     ...locks.map((lock) => ({
       key: `lock-${lock.id}`,
       date: lock.start_date,
-      type: "Withdrawal",
-      event: lock.is_active ? "Lock activated" : "Lock released",
-      details: `${lock.reason || "No reason provided"}; ends ${lock.end_date}`,
+      type: t("Withdrawal"),
+      event: lock.is_active ? t("Lock activated") : t("Lock released"),
+      details: `${lock.reason || t("No reason provided")}; ${t("End")} ${lock.end_date}`,
     })),
     ...alarms.map((alarm) => ({
       key: `alarm-${alarm.id}`,
       date: alarm.due_date,
-      type: "Alarm",
+      type: t("Alarm"),
       event: alarm.title,
-      details: `${alarm.priority} priority; ${
-        alarm.is_completed ? "completed" : "open"
+      details: `${tv(alarm.priority)} ${t("Priority")}; ${
+        alarm.is_completed ? tv("completed") : tv("open")
       }`,
     })),
   ];
@@ -43,9 +44,9 @@ function buildHealthTimeline(record, locks, alarms) {
     items.push({
       key: `inventory-${record.id}`,
       date: record.inventory_consumption.movement_date,
-      type: "Inventory",
+      type: t("Inventory Item"),
       event: record.inventory_consumption.item_name,
-      details: `${record.inventory_consumption.quantity} consumed`,
+      details: `${record.inventory_consumption.quantity} ${tv("consumed")}`,
     });
   }
 
@@ -104,7 +105,7 @@ function HealthRecordDetail() {
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this health record?"
+      t("Are you sure you want to delete this health record?")
     );
 
     if (!confirmed) {
@@ -124,7 +125,7 @@ function HealthRecordDetail() {
   }
 
   if (loading) {
-    return <Loading text="Loading health record..." className="status-text" />;
+    return <Loading text={t("Loading health record...")} className="status-text" />;
   }
 
   if (!record && error) {
@@ -153,26 +154,26 @@ function HealthRecordDetail() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h1>Health Record</h1>
+            <h1>{t("Health Record")}</h1>
             <p>
               {record.record_date} - {getAnimalLabel(record.animal_id)}
             </p>
           </div>
           <div className="dashboard-export-links health-detail-actions">
             <ButtonLink to="/health-records" variant="secondary">
-              Back
+              {t("Back")}
             </ButtonLink>
             <ButtonLink
               to={`/animals/${record.animal_id}`}
               variant="secondary"
             >
-              View Animal
+              {t("View Animal")}
             </ButtonLink>
             <ButtonLink
               to={`/health-records/${record.id}/edit`}
               variant="secondary"
             >
-              Edit
+              {t("Edit")}
             </ButtonLink>
             <button
               className="secondary-button"
@@ -180,7 +181,7 @@ function HealthRecordDetail() {
               onClick={handleDelete}
               disabled={deleting}
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting ? t("Deleting...") : t("Delete")}
             </button>
           </div>
         </div>
@@ -188,30 +189,30 @@ function HealthRecordDetail() {
         {error && <ErrorMessage message={error} className="error-text" />}
 
         <div className="dashboard-kpi-grid health-detail-kpis">
-          <KpiCard title="Record Type" value={record.record_type} />
-          <KpiCard title="Withdrawal" value={withdrawalStatus} />
+          <KpiCard title={t("Record Type")} value={tv(record.record_type)} />
+          <KpiCard title={t("Withdrawal")} value={tv(withdrawalStatus)} />
           <KpiCard
-            title="Inventory Consumption"
-            value={record.inventory_consumption ? "Recorded" : "None"}
+            title={t("Inventory Consumption")}
+            value={record.inventory_consumption ? t("Recorded") : t("None")}
           />
-          <KpiCard title="Open Alarms" value={openAlarms.length} />
+          <KpiCard title={t("Open alarms")} value={openAlarms.length} />
         </div>
       </section>
 
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h2>Clinical Summary</h2>
-            <p>Diagnosis and record context</p>
+            <h2>{t("Clinical Summary")}</h2>
+            <p>{t("Diagnosis and record context")}</p>
           </div>
         </div>
         <dl className="health-detail-grid">
-          <div><dt>Record ID</dt><dd>{record.id}</dd></div>
-          <div><dt>Animal</dt><dd>{getAnimalLabel(record.animal_id)}</dd></div>
-          <div><dt>Diagnosis</dt><dd>{record.diagnosis || "-"}</dd></div>
-          <div><dt>Created At</dt><dd>{record.created_at || "-"}</dd></div>
+          <div><dt>{t("Record ID")}</dt><dd>{record.id}</dd></div>
+          <div><dt>{t("Animal")}</dt><dd>{getAnimalLabel(record.animal_id)}</dd></div>
+          <div><dt>{t("Diagnosis")}</dt><dd>{record.diagnosis || "-"}</dd></div>
+          <div><dt>{t("Created At")}</dt><dd>{record.created_at || "-"}</dd></div>
           <div className="health-detail-wide">
-            <dt>Notes</dt><dd>{record.notes || "-"}</dd>
+            <dt>{t("Notes")}</dt><dd>{record.notes || "-"}</dd>
           </div>
         </dl>
       </section>
@@ -219,28 +220,28 @@ function HealthRecordDetail() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h2>Treatment and Medicine</h2>
-            <p>Recorded treatment plan and medicine usage</p>
+            <h2>{t("Treatment and Medicine")}</h2>
+            <p>{t("Recorded treatment plan and medicine usage")}</p>
           </div>
         </div>
         <dl className="health-detail-grid">
           <div className="health-detail-wide">
-            <dt>Treatment</dt><dd>{record.treatment || "-"}</dd>
+            <dt>{t("Treatment")}</dt><dd>{record.treatment || "-"}</dd>
           </div>
-          <div><dt>Medication</dt><dd>{record.medicine_name || "-"}</dd></div>
-          <div><dt>Dosage</dt><dd>{record.dosage || "-"}</dd></div>
+          <div><dt>{t("Medication")}</dt><dd>{record.medicine_name || "-"}</dd></div>
+          <div><dt>{t("Dosage")}</dt><dd>{record.dosage || "-"}</dd></div>
           {record.inventory_consumption && (
             <>
               <div>
-                <dt>Inventory Item</dt>
+                <dt>{t("Inventory Item")}</dt>
                 <dd>{record.inventory_consumption.item_name}</dd>
               </div>
               <div>
-                <dt>Consumed Quantity</dt>
+                <dt>{t("Consumed Quantity")}</dt>
                 <dd>{record.inventory_consumption.quantity}</dd>
               </div>
               <div>
-                <dt>Movement Date</dt>
+                <dt>{t("Movement Date")}</dt>
                 <dd>{record.inventory_consumption.movement_date}</dd>
               </div>
             </>
@@ -251,33 +252,33 @@ function HealthRecordDetail() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h2>Withdrawal Context</h2>
-            <p>Withdrawal period and linked operational alerts</p>
+            <h2>{t("Withdrawal Context")}</h2>
+            <p>{t("Withdrawal period and linked operational alerts")}</p>
           </div>
         </div>
         <p className="health-withdrawal-summary">
-          <strong>Status:</strong> {withdrawalStatus} | <strong>Record end date:</strong>{" "}
-          {record.withdrawal_end_date || "Not set"}
+          <strong>{t("Status")}:</strong> {tv(withdrawalStatus)} | <strong>{t("Record end date")}:</strong>{" "}
+          {record.withdrawal_end_date || t("None")}
         </p>
 
         {withdrawalLocks.length === 0 ? (
-          <p className="empty-text">No withdrawal locks linked to this record.</p>
+          <p className="empty-text">{t("No withdrawal locks linked to this record.")}</p>
         ) : (
           <div className="dashboard-records-table">
             <table className="data-table">
-              <thead><tr><th>Start</th><th>End</th><th>Reason</th><th>Status</th></tr></thead>
-              <tbody>{withdrawalLocks.map((lock) => <tr key={lock.id}><td>{lock.start_date}</td><td>{lock.end_date}</td><td>{lock.reason || "-"}</td><td>{lock.is_active && lock.end_date >= today ? "Active" : "Ended"}</td></tr>)}</tbody>
+              <thead><tr><th>{t("Start")}</th><th>{t("End")}</th><th>{t("Reason")}</th><th>{t("Status")}</th></tr></thead>
+              <tbody>{withdrawalLocks.map((lock) => <tr key={lock.id}><td>{lock.start_date}</td><td>{lock.end_date}</td><td>{lock.reason || "-"}</td><td>{tv(lock.is_active && lock.end_date >= today ? "Active" : "Ended")}</td></tr>)}</tbody>
             </table>
           </div>
         )}
 
         {alarms.length > 0 && (
           <div className="health-linked-alarms">
-            <h3>Linked Alarms</h3>
+            <h3>{t("Linked Alarms")}</h3>
             <div className="dashboard-records-table">
               <table className="data-table">
-                <thead><tr><th>Due Date</th><th>Priority</th><th>Status</th></tr></thead>
-                <tbody>{alarms.map((alarm) => <tr key={alarm.id}><td>{alarm.due_date}</td><td>{alarm.priority}</td><td>{alarm.is_completed ? "Completed" : "Open"}</td></tr>)}</tbody>
+                <thead><tr><th>{t("Due Date")}</th><th>{t("Priority")}</th><th>{t("Status")}</th></tr></thead>
+                <tbody>{alarms.map((alarm) => <tr key={alarm.id}><td>{alarm.due_date}</td><td>{tv(alarm.priority)}</td><td>{tv(alarm.is_completed ? "Completed" : "Open")}</td></tr>)}</tbody>
               </table>
             </div>
           </div>
@@ -287,13 +288,13 @@ function HealthRecordDetail() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h2>Health Workflow Timeline</h2>
-            <p>Health, medicine, withdrawal, and alert events</p>
+            <h2>{t("Health Workflow Timeline")}</h2>
+            <p>{t("Health, medicine, withdrawal, and alert events")}</p>
           </div>
         </div>
         <div className="dashboard-records-table">
           <table className="data-table health-timeline-table">
-            <thead><tr><th>Date</th><th>Type</th><th>Event</th><th>Details</th></tr></thead>
+            <thead><tr><th>{t("Date")}</th><th>{t("Type")}</th><th>{t("Event")}</th><th>{t("Details")}</th></tr></thead>
             <tbody>{timelineItems.map((item) => <tr key={item.key}><td>{item.date}</td><td><span className="health-type-label">{item.type}</span></td><td>{item.event}</td><td>{item.details}</td></tr>)}</tbody>
           </table>
         </div>

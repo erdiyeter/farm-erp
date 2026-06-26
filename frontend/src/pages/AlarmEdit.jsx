@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAlarmById, updateAlarm } from "../api/alarmApi";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
+import { tOperation as t, tOperationValue as tv } from "../i18n";
 
 const initialFormData = {
   title: "",
@@ -79,7 +80,7 @@ function AlarmEdit() {
   }
 
   if (loading) {
-    return <Loading text="Loading alarm..." className="status-text" />;
+    return <Loading text={t("Loading alarm...")} className="status-text" />;
   }
 
   if (error && !saving) {
@@ -88,14 +89,14 @@ function AlarmEdit() {
 
   return (
     <div className="page-card">
-      <h1>Edit Alarm</h1>
+      <h1>{t("Edit Alarm")}</h1>
 
       {error && <ErrorMessage message={error} className="error-text" />}
 
       <form onSubmit={handleSubmit}>
         <div>
           <label>
-            Title:
+            {t("Title")}:
             <input
               name="title"
               value={formData.title}
@@ -107,40 +108,40 @@ function AlarmEdit() {
 
         <div>
           <label>
-            Type:
+            {t("Type")}:
             <select
               name="alarm_type"
               value={formData.alarm_type}
               onChange={handleChange}
               required
             >
-              <option value="vaccination">vaccination</option>
-              <option value="withdrawal">withdrawal</option>
-              <option value="health">health</option>
-              <option value="reminder">reminder</option>
+              <option value="vaccination">{tv("vaccination")}</option>
+              <option value="withdrawal">{tv("withdrawal")}</option>
+              <option value="health">{tv("health")}</option>
+              <option value="reminder">{tv("reminder")}</option>
             </select>
           </label>
         </div>
 
         <div>
           <label>
-            Priority:
+            {t("Priority")}:
             <select
               name="priority"
               value={formData.priority}
               onChange={handleChange}
               required
             >
-              <option value="low">low</option>
-              <option value="medium">medium</option>
-              <option value="high">high</option>
+              <option value="low">{tv("low")}</option>
+              <option value="medium">{tv("medium")}</option>
+              <option value="high">{tv("high")}</option>
             </select>
           </label>
         </div>
 
         <div>
           <label>
-            Due Date:
+            {t("Due Date")}:
             <input
               type="date"
               name="due_date"
@@ -153,7 +154,7 @@ function AlarmEdit() {
 
         <div>
           <label>
-            Description:
+            {t("Description")}:
             <textarea
               name="description"
               value={formData.description}
@@ -164,7 +165,7 @@ function AlarmEdit() {
 
         <div>
           <label>
-            Completed:
+            {t("Completed")}:
             <input
               type="checkbox"
               name="is_completed"
@@ -175,11 +176,11 @@ function AlarmEdit() {
         </div>
 
         <button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save"}
+          {saving ? t("Saving...") : t("Save")}
         </button>
 
         <Link to={`/alarms/${id}`}>
-          <button type="button">Cancel</button>
+          <button type="button">{t("Cancel")}</button>
         </Link>
       </form>
     </div>
