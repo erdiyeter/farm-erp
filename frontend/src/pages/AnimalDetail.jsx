@@ -159,7 +159,7 @@ function buildTimeline(operationalData) {
       date: record.record_date,
       type: t("Weight"),
       event: `${record.weight_kg} kg`,
-      details: record.notes || "Weight recorded",
+      details: record.notes || t("Weight recorded"),
       to: `/weight-records/${record.id}`,
     })),
     ...operationalData.reproductionEvents.map((event) => ({
@@ -899,7 +899,7 @@ function AnimalDetail() {
                     value={
                       averageDailyGain === null
                         ? "-"
-                        : `${averageDailyGain.toFixed(3)} kg/day`
+                        : `${averageDailyGain.toFixed(3)} kg/${t("day")}`
                     }
                   />
                 </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createAnimal } from "../api/animalApi";
+import { tAnimal as t } from "../i18n";
 
 function AnimalCreateForm() {
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ function AnimalCreateForm() {
       navigate("/animals");
     } catch (err) {
       if (err.message.includes("already exists")) {
-        setError("Ear tag already exists. Please enter a different ear tag.");
+        setError(t("Ear tag already exists. Please enter a different ear tag."));
       } else {
         setError(err.message);
       }
@@ -74,10 +75,10 @@ function AnimalCreateForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      {error && <p>Error: {error}</p>}
+      {error && <p>{t("Error")}: {error}</p>}
 
       <div>
-        <label>Ear Tag:</label>
+        <label>{t("Ear Tag")}:</label>
         <input
           name="ear_tag"
           value={formData.ear_tag}
@@ -87,12 +88,12 @@ function AnimalCreateForm() {
       </div>
 
       <div>
-        <label>Name:</label>
+        <label>{t("Name")}:</label>
         <input name="name" value={formData.name} onChange={handleChange} />
       </div>
 
       <div>
-        <label>Species:</label>
+        <label>{t("Species")}:</label>
         <input
           name="species"
           value={formData.species}
@@ -101,17 +102,17 @@ function AnimalCreateForm() {
       </div>
 
       <div>
-        <label>Breed:</label>
+        <label>{t("Breed")}:</label>
         <input name="breed" value={formData.breed} onChange={handleChange} />
       </div>
 
       <div>
-        <label>Sex:</label>
+        <label>{t("Sex")}:</label>
         <input name="sex" value={formData.sex} onChange={handleChange} />
       </div>
 
       <div>
-        <label>Birth Date:</label>
+        <label>{t("Birth Date")}:</label>
         <input
           type="date"
           name="birth_date"
@@ -121,7 +122,7 @@ function AnimalCreateForm() {
       </div>
 
       <div>
-        <label>Purchase Date:</label>
+        <label>{t("Purchase Date")}:</label>
         <input
           type="date"
           name="purchase_date"
@@ -131,7 +132,7 @@ function AnimalCreateForm() {
       </div>
 
       <div>
-        <label>Purchase Price:</label>
+        <label>{t("Purchase Price")}:</label>
         <input
           type="number"
           name="purchase_price"
@@ -143,7 +144,7 @@ function AnimalCreateForm() {
       </div>
 
       <div>
-        <label>Sale Price:</label>
+        <label>{t("Sale Price")}:</label>
         <input
           type="number"
           name="sale_price"
@@ -155,7 +156,7 @@ function AnimalCreateForm() {
       </div>
 
       <div>
-        <label>Lactation Number:</label>
+        <label>{t("Lactation Number")}:</label>
         <input
           type="number"
           name="lactation_number"
@@ -167,7 +168,7 @@ function AnimalCreateForm() {
       </div>
 
       <div>
-        <label>Lactation Start Date:</label>
+        <label>{t("Lactation Start Date")}:</label>
         <input
           type="date"
           name="lactation_start_date"
@@ -177,7 +178,7 @@ function AnimalCreateForm() {
       </div>
 
       <div>
-        <label>Lactation End Date:</label>
+        <label>{t("Lactation End Date")}:</label>
         <input
           type="date"
           name="lactation_end_date"
@@ -187,16 +188,16 @@ function AnimalCreateForm() {
       </div>
 
       <div>
-        <label>Notes:</label>
+        <label>{t("Notes")}:</label>
         <textarea name="notes" value={formData.notes} onChange={handleChange} />
       </div>
 
       <button type="submit" disabled={saving}>
-        {saving ? "Saving..." : "Save"}
+        {saving ? t("Saving...") : t("Save")}
       </button>
 
       <button type="button" onClick={() => navigate("/animals")}>
-        Cancel
+        {t("Cancel")}
       </button>
     </form>
   );

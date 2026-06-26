@@ -3,12 +3,13 @@ import ErrorMessage from "../components/ErrorMessage";
 import ButtonLink from "../components/ButtonLink";
 import PageHeader from "../components/PageHeader";
 import useAnimals from "../hooks/useAnimals";
+import { tAnimal as t } from "../i18n";
 
 function AnimalList() {
   const { animals, loading, error } = useAnimals();
 
   if (loading) {
-    return <Loading text="Loading animals..." className="status-text" />;
+    return <Loading text={t("Loading animals...")} className="status-text" />;
   }
 
   if (error) {
@@ -18,23 +19,23 @@ function AnimalList() {
   return (
     <div className="page-card">
       <PageHeader
-        title="Animals"
-        subtitle="Active animal records"
-        action={<ButtonLink to="/animals/new">Create Animal</ButtonLink>}
+        title={t("Animals")}
+        subtitle={t("Active animal records")}
+        action={<ButtonLink to="/animals/new">{t("Create Animal")}</ButtonLink>}
       />
 
       {animals.length === 0 ? (
-        <p className="empty-text">No animals found.</p>
+        <p className="empty-text">{t("No animals found.")}</p>
       ) : (
         <table className="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Ear Tag</th>
-              <th>Name</th>
-              <th>Breed</th>
-              <th>Sex</th>
-              <th>Actions</th>
+              <th>{t("ID")}</th>
+              <th>{t("Ear Tag")}</th>
+              <th>{t("Name")}</th>
+              <th>{t("Breed")}</th>
+              <th>{t("Sex")}</th>
+              <th>{t("Actions")}</th>
             </tr>
           </thead>
 
@@ -48,7 +49,7 @@ function AnimalList() {
                 <td>{animal.sex || "-"}</td>
                 <td>
                   <ButtonLink to={`/animals/${animal.id}`} variant="secondary">
-                    View
+                    {t("View")}
                   </ButtonLink>
                 </td>
               </tr>

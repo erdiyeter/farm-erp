@@ -43,6 +43,7 @@ import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import AuthProvider from "./context/AuthProvider";
 import { useAuth } from "./context/authContext";
+import { tAnimal as t, tAnimalValue as tv } from "./i18n";
 import "./App.css";
 
 function ProtectedRoute() {
@@ -50,7 +51,7 @@ function ProtectedRoute() {
   const location = useLocation();
 
   if (loading) {
-    return <p className="status-text">Restoring session...</p>;
+    return <p className="status-text">{t("Restoring session...")}</p>;
   }
   if (!token) {
     return (
@@ -86,69 +87,69 @@ function AppContent() {
           {token ? (
             <>
               <NavLink className={navClassName} to="/dashboard">
-                {role === "veterinarian" ? "Reports" : "Dashboard"}
+                {role === "veterinarian" ? t("Reports") : t("Dashboard")}
               </NavLink>
               <NavLink className={navClassName} to="/animals">
-                Animals
+                {t("Animals")}
               </NavLink>
               <NavLink className={navClassName} to="/weight-records">
-                Weight Records
+                {t("Weight Records")}
               </NavLink>
               {isAdmin && (
                 <NavLink className={navClassName} to="/vaccinations">
-                  Vaccinations
+                  {t("Vaccinations")}
                 </NavLink>
               )}
               {canUseOperations && (
                 <>
                   <NavLink className={navClassName} to="/milk-records">
-                    Milk Records
+                    {t("Milk Records")}
                   </NavLink>
                   <NavLink className={navClassName} to="/reproduction-events">
-                    Reproduction
+                    {t("Reproduction")}
                   </NavLink>
                   <NavLink className={navClassName} to="/inventory">
-                    Inventory
+                    {t("Inventory")}
                   </NavLink>
                 </>
               )}
               {isAdmin && (
                 <NavLink className={navClassName} to="/finance">
-                  Finance
+                  {t("Finance")}
                 </NavLink>
               )}
               {canUseCare && (
                 <>
                   <NavLink className={navClassName} to="/health-records">
-                    Health Records
+                    {t("Health Records")}
                   </NavLink>
                   <NavLink className={navClassName} to="/withdrawal-locks">
-                    Withdrawal Locks
+                    {t("Withdrawal Locks")}
                   </NavLink>
                   <NavLink className={navClassName} to="/alarms">
-                    Alarms
+                    {t("Alarms")}
                   </NavLink>
                 </>
               )}
               {isAdmin && (
                 <NavLink className={navClassName} to="/settings">
-                  Settings
+                  {t("Settings")}
                 </NavLink>
               )}
               <span className="nav-user">
                 {user?.full_name}
-                {role && <span className="nav-role">{role}</span>}
+                {role && <span className="nav-role">{tv(role)}</span>}
               </span>
               <button
                 className="secondary-button nav-logout"
                 type="button"
                 onClick={handleLogout}
               >
-                Logout
+                {t("Logout")}
               </button>
             </>
           ) : (
-            <Link to="/login">Login</Link>
+            <Link to="/login">{t("Login")}</Link>
           )}
         </div>
       </nav>
