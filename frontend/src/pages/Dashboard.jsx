@@ -142,6 +142,22 @@ function formatOptionalScore(value) {
   return value === null || value === undefined ? "-" : Number(value).toFixed(2);
 }
 
+function formatAttentionReasons(animal) {
+  return animal.attention_reasons.length
+    ? animal.attention_reasons.join(", ")
+    : "-";
+}
+
+function formatRecommendedActions(animal) {
+  return animal.recommended_actions?.length
+    ? animal.recommended_actions.join(", ")
+    : "-";
+}
+
+function getPriorityBadgeClass(priority) {
+  return `priority-badge priority-badge-${String(priority || "medium").toLowerCase()}`;
+}
+
 function formatPregnancyOutcome(outcome) {
   const labels = {
     pregnant: "Pregnant",
@@ -513,6 +529,9 @@ function Dashboard() {
   const keyHerdWarnings = decisionSupport?.key_herd_warnings || [];
   const keyHerdOpportunities =
     decisionSupport?.key_herd_opportunities || [];
+  const attentionReviewAnimals = decisionSupport?.black_list_animals ||
+    decisionSupport?.priority_review_animals ||
+    [];
   const emptyReportMessage = (recordType) =>
     `No ${recordType} found for ${reportPeriod}. Adjust or clear the filters.`;
 
@@ -759,6 +778,42 @@ function Dashboard() {
         <section className="dashboard-section">
           <div className="dashboard-section-header">
             <div>
+              <h2>Decision Support Summary</h2>
+              <p>Today&apos;s most important herd priorities from current attention data</p>
+            </div>
+          </div>
+
+          {decisionSupport.todays_focus.length === 0 ? (
+            <p className="empty-text">No decision-support priorities for today.</p>
+          ) : (
+            <div className="dashboard-records-table">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Focus Area</th>
+                    <th>Animals</th>
+                    <th>Recommended Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {decisionSupport.todays_focus.map((item) => (
+                    <tr key={item.reason}>
+                      <td>{item.reason}</td>
+                      <td>{item.animal_count}</td>
+                      <td>{item.recommended_action}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      {decisionSupport && (
+        <section className="dashboard-section">
+          <div className="dashboard-section-header">
+            <div>
               <h2>Decision Support</h2>
               <p>Rule-based attention indicators from current animal data</p>
             </div>
@@ -770,7 +825,7 @@ function Dashboard() {
               value={decisionSupport.animals_requiring_attention}
             />
             <KpiCard
-              title="Negative Economic Value"
+              title="Economic Attention"
               value={decisionSupport.animals_with_negative_economic_value}
             />
             <KpiCard
@@ -870,10 +925,10 @@ function Dashboard() {
 
             <div>
               <div className="report-section-header">
-                <h3>Negative Economic Value Animals</h3>
+                <h3>Economic Attention Animals</h3>
               </div>
               {decisionSupport.negative_economic_value_animals.length === 0 ? (
-                <p className="empty-text">No negative economic values found.</p>
+                <p className="empty-text">No animals currently require economic attention.</p>
               ) : (
                 <div className="dashboard-records-table">
                   <table className="data-table">
@@ -954,6 +1009,7 @@ function Dashboard() {
                   <tr>
                     <th>Animal</th>
                     <th>Key Strengths</th>
+                    <th>Recommended Actions</th>
                     <th>Net Economic Value</th>
                     <th>Lifetime Milk</th>
                     <th>Treatments</th>
@@ -968,6 +1024,7 @@ function Dashboard() {
                         </Link>
                       </td>
                       <td>{animal.strengths.join(", ")}</td>
+                      <td>{animal.recommended_actions.join(", ")}</td>
                       <td>{animal.net_economic_value.toFixed(2)}</td>
                       <td>{animal.lifetime_milk_production.toFixed(2)} L</td>
                       <td>{animal.treatment_count}</td>
@@ -985,11 +1042,11 @@ function Dashboard() {
           <div className="dashboard-section-header">
             <div>
               <h2>Priority Review</h2>
-              <p>Neutral review aid showing animals with rule-based attention reasons</p>
+              <p>Rule-based attention queue with reasons, actions, and operational context</p>
             </div>
           </div>
 
-          {decisionSupport.priority_review_animals.length === 0 ? (
+          {attentionReviewAnimals.length === 0 ? (
             <p className="empty-text">No animals currently require priority review.</p>
           ) : (
             <div className="dashboard-records-table">
@@ -997,7 +1054,10 @@ function Dashboard() {
                 <thead>
                   <tr>
                     <th>Animal</th>
+                    <th>Priority</th>
                     <th>Attention Reasons</th>
+                    <th>Priority Explanation</th>
+                    <th>Recommended Actions</th>
                     <th>Net Economic Value</th>
                     <th>Treatments</th>
                     <th>Health Events</th>
@@ -1005,14 +1065,21 @@ function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {decisionSupport.priority_review_animals.map((animal) => (
+                  {attentionReviewAnimals.map((animal) => (
                     <tr key={animal.animal_id}>
                       <td>
                         <Link to={`/animals/${animal.animal_id}`}>
                           {formatDecisionSupportAnimal(animal)}
                         </Link>
                       </td>
-                      <td>{animal.attention_reasons.join(", ")}</td>
+                      <td>
+                        <span className={getPriorityBadgeClass(animal.priority_level)}>
+                          {animal.priority_level}
+                        </span>
+                      </td>
+                      <td>{formatAttentionReasons(animal)}</td>
+                      <td>{animal.priority_explanation || "-"}</td>
+                      <td>{formatRecommendedActions(animal)}</td>
                       <td>
                         {animal.net_economic_value === null
                           ? "-"

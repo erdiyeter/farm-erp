@@ -7,6 +7,7 @@ from app.services import animal as animal_service
 from app.services import report as report_service
 from app.schemas.dashboard import (
     DashboardDecisionSupportAnimal,
+    DashboardDecisionSupportFocusItem,
     DashboardDecisionSupportRankingAnimal,
     DashboardDecisionSupportSummary,
     DashboardGoldenListAnimal,
@@ -65,6 +66,17 @@ def get_economic_value_explanations(economic_summary) -> list[str]:
     return ["Net economic value is zero"]
 
 
+def has_meaningful_economic_attention(economic_summary) -> bool:
+    net_economic_value = economic_summary.net_economic_value
+    if net_economic_value is None or net_economic_value >= 0:
+        return False
+
+    return (
+        economic_summary.treatment_count >= 3
+        or economic_summary.health_event_count >= 5
+    )
+
+
 def get_milk_explanations(economic_summary, is_low: bool = False) -> list[str]:
     liters = economic_summary.lifetime_milk_production
     if is_low:
@@ -101,7 +113,7 @@ def get_herd_decision_support_explanations(
         )
     if negative_economic_count:
         warnings.append(
-            f"{negative_economic_count} animal(s) with negative economic value"
+            f"{negative_economic_count} animal(s) requiring economic attention"
         )
     if herd_kpis.mortality_count:
         warnings.append(f"{herd_kpis.mortality_count} mortality exit(s)")
@@ -122,6 +134,124 @@ def get_herd_decision_support_explanations(
     return warnings[:5], opportunities[:5]
 
 
+def get_golden_list_recommendations(strengths: list[str]) -> list[str]:
+    recommendations = []
+
+    if "Positive Economic Value" in strengths:
+        recommendations.append("Review as a candidate for retention planning.")
+    if "Milk Production Recorded" in strengths:
+        recommendations.append("Continue monitoring production performance.")
+    if "Low Treatment Frequency" in strengths:
+        recommendations.append("Maintain current health management routine.")
+    if "Low Health Activity" in strengths:
+        recommendations.append("Keep routine preventive care schedule.")
+
+    return recommendations
+
+
+def get_attention_recommendations(attention_reasons: list[str]) -> list[str]:
+    recommendation_by_reason = {
+        "Economic Attention": "Evaluate long-term economic viability.",
+        "Health Attention: Repeated Treatments": (
+            "Review recent health records and treatment history."
+        ),
+        "Health Attention: High Health Activity": (
+            "Review recent health records and treatment history."
+        ),
+        "Withdrawal Lock": (
+            "Verify withdrawal end date before sale or use."
+        ),
+        "Production Attention": (
+            "Review recent milk production performance."
+        ),
+        "Growth Attention": "Review recent weight gain records.",
+        "Recently Exited": "Review exit reason and herd impact.",
+    }
+    recommendations = []
+    for reason in attention_reasons:
+        recommendation = recommendation_by_reason.get(reason)
+        if recommendation and recommendation not in recommendations:
+            recommendations.append(recommendation)
+
+    return recommendations
+
+
+def get_recommendation_for_attention_reason(reason: str) -> str:
+    recommendations = get_attention_recommendations([reason])
+    return recommendations[0] if recommendations else "Review animal record."
+
+
+def get_attention_priority(
+    attention_reasons: list[str],
+) -> tuple[str, int, str]:
+    has_health = any(
+        reason.startswith("Health Attention")
+        for reason in attention_reasons
+    )
+    has_withdrawal = "Withdrawal Lock" in attention_reasons
+    has_economic = "Economic Attention" in attention_reasons
+    has_production = "Production Attention" in attention_reasons
+    has_growth = "Growth Attention" in attention_reasons
+
+    if has_health and (has_withdrawal or len(attention_reasons) > 1):
+        return (
+            "Critical",
+            1,
+            "Health attention combined with another attention reason.",
+        )
+
+    if has_economic and (has_production or has_growth):
+        return (
+            "High",
+            2,
+            "Economic attention combined with production or growth attention.",
+        )
+
+    if has_health or has_production or has_growth or has_economic or has_withdrawal:
+        return (
+            "Medium",
+            3,
+            "Single operational attention reason.",
+        )
+
+    return (
+        "Low",
+        4,
+        "Informational review item.",
+    )
+
+
+def build_decision_support_focus(
+    priority_review_animals: list[DashboardPriorityReviewAnimal],
+) -> list[DashboardDecisionSupportFocusItem]:
+    reason_counts = {}
+    for animal in priority_review_animals:
+        for reason in animal.attention_reasons:
+            reason_counts[reason] = reason_counts.get(reason, 0) + 1
+
+    reason_order = {
+        "Health Attention: Repeated Treatments": 1,
+        "Health Attention: High Health Activity": 2,
+        "Production Attention": 3,
+        "Growth Attention": 4,
+        "Economic Attention": 5,
+        "Withdrawal Lock": 6,
+        "Recently Exited": 7,
+    }
+
+    return [
+        DashboardDecisionSupportFocusItem(
+            reason=reason,
+            animal_count=count,
+            recommended_action=get_recommendation_for_attention_reason(reason),
+        )
+        for reason, count in sorted(
+            reason_counts.items(),
+            key=lambda item: (reason_order.get(item[0], 99), item[0]),
+        )
+    ]
+
+
 def build_golden_list_animal(
     animal,
     economic_summary,
@@ -137,6 +267,7 @@ def build_golden_list_animal(
         ear_tag=animal.ear_tag,
         name=animal.name,
         strengths=strengths,
+        recommended_actions=get_golden_list_recommendations(strengths),
         net_economic_value=float(economic_summary.net_economic_value),
         lifetime_milk_production=float(
             economic_summary.lifetime_milk_production
@@ -153,11 +284,18 @@ def build_priority_review_animal(
     urgency_rank: int,
 ) -> DashboardPriorityReviewAnimal:
     net_economic_value = economic_summary.net_economic_value
+    priority_level, priority_rank, priority_explanation = (
+        get_attention_priority(attention_reasons)
+    )
     return DashboardPriorityReviewAnimal(
         animal_id=animal.id,
         ear_tag=animal.ear_tag,
         name=animal.name,
         attention_reasons=attention_reasons,
+        recommended_actions=get_attention_recommendations(attention_reasons),
+        priority_level=priority_level,
+        priority_rank=priority_rank,
+        priority_explanation=priority_explanation,
         net_economic_value=(
             float(net_economic_value)
             if net_economic_value is not None
@@ -285,10 +423,14 @@ def get_dashboard_decision_support(
             ):
                 golden_list_animals.append(
                     build_golden_list_animal(animal, economic_summary)
-                )
+        )
 
-        if net_economic_value is not None and net_economic_value < 0:
-            indicators.append("Negative Economic Value")
+        has_economic_attention = has_meaningful_economic_attention(
+            economic_summary
+        )
+
+        if has_economic_attention:
+            indicators.append("Economic Attention")
 
         if animal.id in active_lock_animal_ids:
             indicators.append("Active Withdrawal Lock")
@@ -307,11 +449,11 @@ def get_dashboard_decision_support(
                 animal, indicators, net_economic_value
             )
 
-        if net_economic_value is not None and net_economic_value < 0:
+        if has_economic_attention:
             negative_economic_animals.append(
                 build_decision_support_animal(
                     animal,
-                    ["Negative Economic Value"],
+                    ["Economic Attention"],
                     net_economic_value,
                 )
             )
@@ -438,7 +580,7 @@ def get_dashboard_decision_support(
             reasons.append("Withdrawal Lock")
             urgency_ranks.append(1)
 
-        if net_economic_value is not None and net_economic_value < 0:
+        if has_meaningful_economic_attention(economic_summary):
             reasons.append("Economic Attention")
             urgency_ranks.append(2)
 
@@ -477,7 +619,12 @@ def get_dashboard_decision_support(
             )
 
     priority_review_animals.sort(
-        key=lambda item: (item.urgency_rank, item.ear_tag, item.animal_id)
+        key=lambda item: (
+            item.priority_rank,
+            item.urgency_rank,
+            item.ear_tag,
+            item.animal_id,
+        )
     )
     top_performing_animals, lowest_performing_animals = (
         animal_service.get_active_animal_economic_rankings(db)
@@ -500,6 +647,7 @@ def get_dashboard_decision_support(
         recently_exited_animals=len(recently_exited_animals),
         key_herd_warnings=herd_warnings,
         key_herd_opportunities=herd_opportunities,
+        todays_focus=build_decision_support_focus(priority_review_animals),
         attention_required_animals=attention_animals[:5],
         negative_economic_value_animals=negative_economic_animals[:5],
         recently_exited_animal_list=recently_exited_animals[:5],
@@ -511,6 +659,7 @@ def get_dashboard_decision_support(
         highest_weight_gain_animals=weight_gain_rankings[:5],
         lowest_weight_gain_animals=lowest_weight_gain_animals[:5],
         golden_list_animals=golden_list_animals[:5],
+        black_list_animals=priority_review_animals,
         priority_review_animals=priority_review_animals[:10],
         top_performing_animals=top_performing_animals,
         lowest_performing_animals=lowest_performing_animals,

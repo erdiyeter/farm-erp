@@ -377,6 +377,39 @@
   font-weight: 700;
 }
 
+.priority-badge {
+  display: inline-block;
+  min-width: 64px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef1f4;
+  color: #4d5661;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.priority-badge-critical {
+  background: #fdecec;
+  color: #9f1239;
+}
+
+.priority-badge-high {
+  background: #fff3cd;
+  color: #8a4b00;
+}
+
+.priority-badge-medium {
+  background: #e8f1ff;
+  color: #1d4e89;
+}
+
+.priority-badge-low {
+  background: #eef1f4;
+  color: #4d5661;
+}
+
 .report-export-section .dashboard-nav-link {
   border: 0;
   cursor: pointer;

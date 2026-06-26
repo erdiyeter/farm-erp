@@ -41,6 +41,7 @@ class DashboardGoldenListAnimal(BaseModel):
     ear_tag: str
     name: str | None
     strengths: list[str]
+    recommended_actions: list[str]
     net_economic_value: float
     lifetime_milk_production: float
     treatment_count: int
@@ -51,11 +52,21 @@ class DashboardPriorityReviewAnimal(BaseModel):
     ear_tag: str
     name: str | None
     attention_reasons: list[str]
+    recommended_actions: list[str]
+    priority_level: str
+    priority_rank: int
+    priority_explanation: str
     net_economic_value: float | None
     treatment_count: int
     health_event_count: int
     has_active_withdrawal_lock: bool
     urgency_rank: int
+
+
+class DashboardDecisionSupportFocusItem(BaseModel):
+    reason: str
+    animal_count: int
+    recommended_action: str
 
 
 class DashboardDecisionSupportSummary(BaseModel):
@@ -66,6 +77,7 @@ class DashboardDecisionSupportSummary(BaseModel):
     recently_exited_animals: int
     key_herd_warnings: list[str]
     key_herd_opportunities: list[str]
+    todays_focus: list[DashboardDecisionSupportFocusItem]
     attention_required_animals: list[DashboardDecisionSupportAnimal]
     negative_economic_value_animals: list[DashboardDecisionSupportAnimal]
     recently_exited_animal_list: list[DashboardDecisionSupportAnimal]
@@ -77,6 +89,7 @@ class DashboardDecisionSupportSummary(BaseModel):
     highest_weight_gain_animals: list[DashboardDecisionSupportRankingAnimal]
     lowest_weight_gain_animals: list[DashboardDecisionSupportRankingAnimal]
     golden_list_animals: list[DashboardGoldenListAnimal]
+    black_list_animals: list[DashboardPriorityReviewAnimal]
     priority_review_animals: list[DashboardPriorityReviewAnimal]
     top_performing_animals: list[AnimalEconomicRanking]
     lowest_performing_animals: list[AnimalEconomicRanking]

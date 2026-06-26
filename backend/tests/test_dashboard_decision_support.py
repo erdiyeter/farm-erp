@@ -61,6 +61,13 @@ def seed_milk(db, animal_id: int, liters: str) -> None:
     db.commit()
 
 
+def test_decision_support_focus_empty_state() -> None:
+    assert dashboard_service.build_decision_support_focus([]) == []
+    assert dashboard_service.get_attention_priority(
+        ["Economic Attention", "Production Attention"]
+    )[0] == "High"
+
+
 def test_dashboard_decision_support_indicators_change_with_seeded_records(db):
     settings_service.update_settings(
         db, SettingsUpdate(milk_price=Decimal("1.00"))
@@ -73,7 +80,8 @@ def test_dashboard_decision_support_indicators_change_with_seeded_records(db):
         purchase_price=Decimal("1000.00"),
         sale_price=Decimal("100.00"),
     )
-    seed_costed_treatment(db, negative_animal.id)
+    for _ in range(3):
+        seed_costed_treatment(db, negative_animal.id)
 
     withdrawal_animal = create_dashboard_test_animal(db, "LOCK")
     withdrawal_lock_service.create_withdrawal_lock(
@@ -127,7 +135,7 @@ def test_dashboard_decision_support_indicators_change_with_seeded_records(db):
     )
     assert (
         summary.animals_with_repeated_treatments
-        == baseline.animals_with_repeated_treatments + 1
+        == baseline.animals_with_repeated_treatments + 2
     )
     assert (
         summary.recently_exited_animals
@@ -139,7 +147,7 @@ def test_dashboard_decision_support_indicators_change_with_seeded_records(db):
     )
 
     attention_ids = {
-        animal.animal_id for animal in summary.attention_required_animals
+        animal.animal_id for animal in summary.black_list_animals
     }
     negative_ids = {
         animal.animal_id
@@ -155,6 +163,15 @@ def test_dashboard_decision_support_indicators_change_with_seeded_records(db):
     assert exited_animal.id in attention_ids
     assert negative_animal.id in negative_ids
     assert exited_animal.id in exited_ids
+    negative_entry = next(
+        animal
+        for animal in summary.negative_economic_value_animals
+        if animal.animal_id == negative_animal.id
+    )
+    assert negative_entry.indicators == ["Economic Attention"]
+    assert negative_entry.explanations == [
+        "Triggered by stored rule: Economic Attention"
+    ]
 
     clean_animal = create_dashboard_test_animal(db, "CLEAR")
     updated_summary = dashboard_service.get_dashboard_summary(
@@ -413,6 +430,12 @@ def test_dashboard_golden_list_membership_and_order(db):
     top_entry = golden_list[0]
     assert "Positive Economic Value" in top_entry.strengths
     assert "Low Treatment Frequency" in top_entry.strengths
+    assert "Review as a candidate for retention planning." in (
+        top_entry.recommended_actions
+    )
+    assert "Maintain current health management routine." in (
+        top_entry.recommended_actions
+    )
     assert top_entry.net_economic_value > 0
     assert top_entry.lifetime_milk_production == 10
     assert top_entry.treatment_count == 1
@@ -436,13 +459,49 @@ def test_dashboard_priority_review_membership_reasons_and_order(db):
         ),
     )
 
-    negative_animal = create_dashboard_test_animal(
+    negative_treatments_animal = create_dashboard_test_animal(
         db,
         "000-PRIORITY-02-ECON",
         purchase_price=Decimal("1000.00"),
         sale_price=Decimal("1.00"),
     )
-    seed_costed_treatment(db, negative_animal.id)
+    for _ in range(3):
+        seed_costed_treatment(db, negative_treatments_animal.id)
+
+    negative_health_animal = create_dashboard_test_animal(
+        db,
+        "000-PRIORITY-02-HEALTH-ECON",
+        purchase_price=Decimal("1000.00"),
+        sale_price=Decimal("1.00"),
+    )
+    seed_costed_treatment(db, negative_health_animal.id)
+    db.add_all(
+        [
+            HealthRecord(
+                animal_id=negative_health_animal.id,
+                record_type="checkup",
+                record_date=date.today(),
+            )
+            for _ in range(4)
+        ]
+    )
+
+    purchase_only_animal = create_dashboard_test_animal(
+        db,
+        "000-PRIORITY-02-PURCHASE",
+        purchase_price=Decimal("1000.00"),
+        sale_price=Decimal("1.00"),
+    )
+    seed_costed_treatment(db, purchase_only_animal.id)
+
+    low_production_negative_animal = create_dashboard_test_animal(
+        db,
+        "000-PRIORITY-02-PRODUCTION",
+        purchase_price=Decimal("1000.00"),
+        sale_price=Decimal("1.00"),
+    )
+    seed_costed_treatment(db, low_production_negative_animal.id)
+    seed_milk(db, low_production_negative_animal.id, "1.00")
 
     repeated_treatments = create_dashboard_test_animal(
         db,
@@ -532,24 +591,42 @@ def test_dashboard_priority_review_membership_reasons_and_order(db):
         db, "000-PRIORITY-08-CLEAN"
     )
 
-    priority_review = (
-        dashboard_service.get_dashboard_summary(db)
-        .decision_support
-        .priority_review_animals
-    )
+    decision_support = dashboard_service.get_dashboard_summary(
+        db
+    ).decision_support
+    priority_review = decision_support.priority_review_animals
+    black_list = decision_support.black_list_animals
     priority_ids = [animal.animal_id for animal in priority_review]
+    black_list_ids = [animal.animal_id for animal in black_list]
     reasons_by_id = {
         animal.animal_id: animal.attention_reasons
-        for animal in priority_review
+        for animal in black_list
+    }
+    priority_by_id = {
+        animal.animal_id: animal.priority_level
+        for animal in black_list
+    }
+    expected_focus_counts = {}
+    for animal in black_list:
+        for reason in animal.attention_reasons:
+            expected_focus_counts[reason] = (
+                expected_focus_counts.get(reason, 0) + 1
+            )
+    focus_counts = {
+        item.reason: item.animal_count
+        for item in decision_support.todays_focus
     }
 
     seeded_order = [
         animal_id
-        for animal_id in priority_ids
+        for animal_id in black_list_ids
         if animal_id
         in {
             withdrawal_animal.id,
-            negative_animal.id,
+            negative_treatments_animal.id,
+            negative_health_animal.id,
+            purchase_only_animal.id,
+            low_production_negative_animal.id,
             repeated_treatments.id,
             high_health.id,
             low_weight.id,
@@ -559,16 +636,76 @@ def test_dashboard_priority_review_membership_reasons_and_order(db):
     ]
 
     assert seeded_order == [
+        negative_treatments_animal.id,
+        negative_health_animal.id,
         withdrawal_animal.id,
-        negative_animal.id,
         repeated_treatments.id,
         high_health.id,
         low_weight.id,
+        low_production_negative_animal.id,
         low_milk.id,
         exited_animal.id,
     ]
+    seeded_priorities = [
+        priority_by_id[animal_id]
+        for animal_id in seeded_order
+    ]
+    assert seeded_priorities == [
+        "Critical",
+        "Critical",
+        "Medium",
+        "Medium",
+        "Medium",
+        "Medium",
+        "Medium",
+        "Medium",
+        "Low",
+    ]
+    priority_ranks = [
+        animal.priority_rank
+        for animal in black_list
+    ]
+    assert priority_ranks == sorted(priority_ranks)
+    assert focus_counts == expected_focus_counts
+    assert focus_counts["Health Attention: Repeated Treatments"] >= 2
+    assert focus_counts["Production Attention"] >= 2
+    assert focus_counts["Economic Attention"] == 2
+    assert focus_counts["Withdrawal Lock"] >= 1
+    assert all(
+        item.recommended_action
+        for item in decision_support.todays_focus
+    )
     assert reasons_by_id[withdrawal_animal.id] == ["Withdrawal Lock"]
-    assert reasons_by_id[negative_animal.id] == ["Economic Attention"]
+    recommendations_by_id = {
+        animal.animal_id: animal.recommended_actions
+        for animal in black_list
+    }
+    assert recommendations_by_id[withdrawal_animal.id] == [
+        "Verify withdrawal end date before sale or use."
+    ]
+    assert "Economic Attention" in reasons_by_id[
+        negative_treatments_animal.id
+    ]
+    assert "Evaluate long-term economic viability." in (
+        recommendations_by_id[negative_treatments_animal.id]
+    )
+    assert "Health Attention: Repeated Treatments" in reasons_by_id[
+        negative_treatments_animal.id
+    ]
+    assert "Review recent health records and treatment history." in (
+        recommendations_by_id[negative_treatments_animal.id]
+    )
+    assert "Economic Attention" in reasons_by_id[negative_health_animal.id]
+    assert "Health Attention: High Health Activity" in reasons_by_id[
+        negative_health_animal.id
+    ]
+    assert purchase_only_animal.id not in black_list_ids
+    assert reasons_by_id[low_production_negative_animal.id] == [
+        "Production Attention"
+    ]
+    assert recommendations_by_id[low_production_negative_animal.id] == [
+        "Review recent milk production performance."
+    ]
     assert reasons_by_id[repeated_treatments.id] == [
         "Health Attention: Repeated Treatments"
     ]
@@ -576,14 +713,30 @@ def test_dashboard_priority_review_membership_reasons_and_order(db):
         "Health Attention: High Health Activity"
     ]
     assert reasons_by_id[low_weight.id] == ["Growth Attention"]
+    assert recommendations_by_id[low_weight.id] == [
+        "Review recent weight gain records."
+    ]
     assert reasons_by_id[low_milk.id] == ["Production Attention"]
     assert reasons_by_id[exited_animal.id] == ["Recently Exited"]
-    assert clean_animal.id not in priority_ids
-    assert high_weight.id not in priority_ids
-    assert high_milk.id not in priority_ids
+    assert recommendations_by_id[exited_animal.id] == [
+        "Review exit reason and herd impact."
+    ]
+    assert clean_animal.id not in black_list_ids
+    assert high_weight.id not in black_list_ids
+    assert high_milk.id not in black_list_ids
+    assert set(priority_ids).issubset(set(black_list_ids))
+    assert len(priority_review) <= 10
 
-    withdrawal_entry = priority_review[0]
+    withdrawal_entry = next(
+        animal
+        for animal in priority_review
+        if animal.animal_id == withdrawal_animal.id
+    )
     assert withdrawal_entry.has_active_withdrawal_lock is True
+    assert withdrawal_entry.priority_level == "Medium"
+    assert withdrawal_entry.recommended_actions == [
+        "Verify withdrawal end date before sale or use."
+    ]
     assert withdrawal_entry.net_economic_value is None
     assert withdrawal_entry.treatment_count == 0
     assert withdrawal_entry.health_event_count == 0
