@@ -8,6 +8,7 @@ import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
 import useAnimals from "../hooks/useAnimals";
+import { tAnimal as t } from "../i18n";
 
 const initialFormData = {
   animal_id: "",
@@ -37,7 +38,7 @@ function MilkRecords() {
         const data = await getMilkRecords();
         setRecords(data);
       } catch {
-        setError("Error: Failed to load milk records");
+        setError(t("Error: Failed to load milk records"));
       } finally {
         setLoading(false);
       }
@@ -74,7 +75,7 @@ function MilkRecords() {
       const data = await getMilkRecords();
       setRecords(data);
       setFormData(initialFormData);
-      setSuccessMessage("Milk record created successfully.");
+      setSuccessMessage(t("Milk record created successfully."));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -85,8 +86,8 @@ function MilkRecords() {
   return (
     <div className="page-card">
       <PageHeader
-        title="Milk Records"
-        subtitle="Create and review milk production records"
+        title={t("Milk Records")}
+        subtitle={t("Create and review milk production records")}
       />
 
       {error && <ErrorMessage message={error} className="error-text" />}
@@ -98,7 +99,7 @@ function MilkRecords() {
       <form onSubmit={handleSubmit}>
         <div>
           <label>
-            Animal:
+            {t("Animal")}:
             <select
               className="animal-select"
               name="animal_id"
@@ -108,7 +109,7 @@ function MilkRecords() {
               required
             >
               <option value="">
-                {animalsLoading ? "Loading animals..." : "Select animal"}
+                {animalsLoading ? t("Loading animals...") : t("Select animal")}
               </option>
               {animals.map((animal) => (
                 <option key={animal.id} value={animal.id}>
@@ -121,7 +122,7 @@ function MilkRecords() {
 
         <div>
           <label>
-            Date:
+            {t("Date")}:
             <input
               type="date"
               name="record_date"
@@ -134,7 +135,7 @@ function MilkRecords() {
 
         <div>
           <label>
-            Milk Liters:
+            {t("Milk Liters")}:
             <input
               type="number"
               step="0.01"
@@ -148,7 +149,7 @@ function MilkRecords() {
 
         <div>
           <label>
-            Session:
+            {t("Session")}:
             <input
               name="session"
               value={formData.session}
@@ -159,7 +160,7 @@ function MilkRecords() {
 
         <div>
           <label>
-            Notes:
+            {t("Notes")}:
             <textarea
               name="notes"
               value={formData.notes}
@@ -169,24 +170,24 @@ function MilkRecords() {
         </div>
 
         <button type="submit" disabled={saving || animalsLoading}>
-          {saving ? "Saving..." : "Create Milk Record"}
+          {saving ? t("Saving...") : t("Create Milk Record")}
         </button>
       </form>
 
       {loading ? (
-        <Loading text="Loading milk records..." className="status-text" />
+        <Loading text={t("Loading milk records...")} className="status-text" />
       ) : records.length === 0 ? (
-        <p className="empty-text">No milk records found.</p>
+        <p className="empty-text">{t("No milk records found.")}</p>
       ) : (
         <table className="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Animal</th>
-              <th>Date</th>
-              <th>Milk Liters</th>
-              <th>Session</th>
-              <th>Notes</th>
+              <th>{t("ID")}</th>
+              <th>{t("Animal")}</th>
+              <th>{t("Date")}</th>
+              <th>{t("Milk Liters")}</th>
+              <th>{t("Session")}</th>
+              <th>{t("Notes")}</th>
             </tr>
           </thead>
 

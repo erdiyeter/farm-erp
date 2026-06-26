@@ -8,6 +8,7 @@ import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
 import useAnimals from "../hooks/useAnimals";
+import { tAnimal as t } from "../i18n";
 
 const initialFormData = {
   animal_id: "",
@@ -38,7 +39,7 @@ function Vaccinations() {
         const data = await getVaccinations();
         setRecords(data);
       } catch {
-        setError("Error: Failed to load vaccination records");
+        setError(t("Error: Failed to load vaccination records"));
       } finally {
         setLoading(false);
       }
@@ -76,7 +77,7 @@ function Vaccinations() {
       const data = await getVaccinations();
       setRecords(data);
       setFormData(initialFormData);
-      setSuccessMessage("Vaccination record created successfully.");
+      setSuccessMessage(t("Vaccination record created successfully."));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -87,8 +88,8 @@ function Vaccinations() {
   return (
     <div className="page-card">
       <PageHeader
-        title="Vaccinations"
-        subtitle="Create and review vaccination records"
+        title={t("Vaccinations")}
+        subtitle={t("Create and review vaccination records")}
       />
 
       {error && <ErrorMessage message={error} className="error-text" />}
@@ -100,7 +101,7 @@ function Vaccinations() {
       <form onSubmit={handleSubmit}>
         <div>
           <label>
-            Animal:
+            {t("Animal")}:
             <select
               className="animal-select"
               name="animal_id"
@@ -110,7 +111,7 @@ function Vaccinations() {
               required
             >
               <option value="">
-                {animalsLoading ? "Loading animals..." : "Select animal"}
+                {animalsLoading ? t("Loading animals...") : t("Select animal")}
               </option>
               {animals.map((animal) => (
                 <option key={animal.id} value={animal.id}>
@@ -123,7 +124,7 @@ function Vaccinations() {
 
         <div>
           <label>
-            Vaccine Name:
+            {t("Vaccine Name")}:
             <input
               name="vaccine_name"
               value={formData.vaccine_name}
@@ -135,7 +136,7 @@ function Vaccinations() {
 
         <div>
           <label>
-            Dose:
+            {t("Dose")}:
             <input
               name="dose"
               value={formData.dose}
@@ -146,7 +147,7 @@ function Vaccinations() {
 
         <div>
           <label>
-            Application Date:
+            {t("Application Date")}:
             <input
               type="date"
               name="application_date"
@@ -159,7 +160,7 @@ function Vaccinations() {
 
         <div>
           <label>
-            Next Due Date:
+            {t("Next Due Date")}:
             <input
               type="date"
               name="next_due_date"
@@ -171,7 +172,7 @@ function Vaccinations() {
 
         <div>
           <label>
-            Notes:
+            {t("Notes")}:
             <textarea
               name="notes"
               value={formData.notes}
@@ -181,28 +182,28 @@ function Vaccinations() {
         </div>
 
         <button type="submit" disabled={saving || animalsLoading}>
-          {saving ? "Saving..." : "Create Vaccination Record"}
+          {saving ? t("Saving...") : t("Create Vaccination Record")}
         </button>
       </form>
 
       {loading ? (
         <Loading
-          text="Loading vaccination records..."
+          text={t("Loading vaccination records...")}
           className="status-text"
         />
       ) : records.length === 0 ? (
-        <p className="empty-text">No vaccination records found.</p>
+        <p className="empty-text">{t("No vaccination records found.")}</p>
       ) : (
         <table className="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Animal</th>
-              <th>Vaccine Name</th>
-              <th>Dose</th>
-              <th>Application Date</th>
-              <th>Next Due Date</th>
-              <th>Notes</th>
+              <th>{t("ID")}</th>
+              <th>{t("Animal")}</th>
+              <th>{t("Vaccine Name")}</th>
+              <th>{t("Dose")}</th>
+              <th>{t("Application Date")}</th>
+              <th>{t("Next Due Date")}</th>
+              <th>{t("Notes")}</th>
             </tr>
           </thead>
 

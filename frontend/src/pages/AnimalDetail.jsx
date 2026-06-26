@@ -9,9 +9,10 @@ import { getWeightRecordsByAnimalId } from "../api/weightRecordApi";
 import { getWithdrawalLocks } from "../api/withdrawalLockApi";
 import Loading from "../components/Loading";
 import ErrorMessage from "../components/ErrorMessage";
-import KpiCard from "../components/KpiCard";
+import BaseKpiCard from "../components/KpiCard";
 import { useAuth } from "../context/authContext";
 import useAnimalDetail from "../hooks/useAnimalDetail";
+import { tAnimal as t, tAnimalValue as tv } from "../i18n";
 
 const initialOperationalData = {
   milkRecords: [],
@@ -48,9 +49,9 @@ function formatEconomicValue(value) {
 
 function getDecisionSupportStatus(isActive, unavailable = false) {
   if (unavailable) {
-    return "Unavailable";
+    return t("Unavailable");
   }
-  return isActive ? "Active" : "Clear";
+  return isActive ? t("Active") : t("Clear");
 }
 
 function isDateWithinRange(dateText, startDate, endDate) {
@@ -59,11 +60,11 @@ function isDateWithinRange(dateText, startDate, endDate) {
 
 function formatPregnancyOutcome(outcome) {
   const labels = {
-    pregnant: "Pregnant",
-    birth: "Birth",
-    abortion: "Abortion",
-    failed: "Failed",
-    unknown: "Unknown",
+    pregnant: t("Pregnant"),
+    birth: t("Birth"),
+    abortion: t("Abortion"),
+    failed: t("Failed"),
+    unknown: t("Unknown"),
   };
   return labels[outcome] || "-";
 }
@@ -73,27 +74,31 @@ function getCurrentPregnancyStatus(event) {
     return "-";
   }
   if (event.pregnancy_outcome === "pregnant") {
-    return "Pregnant";
+    return t("Pregnant");
   }
   if (event.pregnancy_outcome === "birth") {
-    return "Birth recorded";
+    return t("Birth recorded");
   }
   if (event.pregnancy_outcome === "abortion") {
-    return "Abortion recorded";
+    return t("Abortion recorded");
   }
   if (event.pregnancy_outcome === "failed") {
-    return "Not pregnant / failed";
+    return t("Not pregnant / failed");
   }
   if (event.pregnancy_outcome === "unknown") {
-    return "Unknown";
+    return t("Unknown");
   }
   if (event.event_type === "pregnancy") {
-    return event.pregnancy_status ? "Pregnant" : "Not pregnant";
+    return event.pregnancy_status ? t("Pregnant") : t("Not pregnant");
   }
   if (event.event_type === "birth") {
-    return "Birth recorded";
+    return t("Birth recorded");
   }
-  return "Unknown";
+  return t("Unknown");
+}
+
+function KpiCard({ title, value, ...props }) {
+  return <BaseKpiCard title={t(title)} value={tv(value)} {...props} />;
 }
 
 function getDailyMilkTotals(records) {
@@ -134,25 +139,25 @@ function buildTimeline(operationalData) {
     ...operationalData.milkRecords.map((record) => ({
       key: `milk-${record.id}`,
       date: record.record_date,
-      type: "Milk",
-      event: `${record.milk_liters} liters${
+      type: t("Milk"),
+      event: `${record.milk_liters} ${t("liters")}${
         record.session ? ` (${record.session})` : ""
       }`,
-      details: record.notes || "Milk production recorded",
+      details: record.notes || t("Milk production recorded"),
     })),
     ...operationalData.healthRecords.map((record) => ({
       key: `health-${record.id}`,
       date: record.record_date,
-      type: "Health",
+      type: t("Health"),
       event: record.record_type,
       details:
-        record.diagnosis || record.treatment || "Health activity recorded",
+        record.diagnosis || record.treatment || t("Health activity recorded"),
       to: `/health-records/${record.id}`,
     })),
     ...operationalData.weightRecords.map((record) => ({
       key: `weight-${record.id}`,
       date: record.record_date,
-      type: "Weight",
+      type: t("Weight"),
       event: `${record.weight_kg} kg`,
       details: record.notes || "Weight recorded",
       to: `/weight-records/${record.id}`,
@@ -160,16 +165,16 @@ function buildTimeline(operationalData) {
     ...operationalData.reproductionEvents.map((event) => ({
       key: `reproduction-${event.id}`,
       date: event.event_date,
-      type: "Reproduction",
+      type: t("Reproduction"),
       event:
         event.event_type === "pregnancy"
           ? event.pregnancy_status
-            ? "Pregnancy confirmed"
-            : "Not pregnant"
+            ? t("Pregnancy confirmed")
+            : t("Not pregnant")
           : event.event_type === "birth"
-            ? `Birth (${event.offspring_count} offspring)`
-            : "Mating",
-      details: `${formatPregnancyOutcome(event.pregnancy_outcome)} outcome${
+            ? `${t("Birth")} (${event.offspring_count} ${t("offspring")})`
+            : t("Mating"),
+      details: `${formatPregnancyOutcome(event.pregnancy_outcome)} ${t("outcome")}${
         event.notes ? `; ${event.notes}` : ""
       }`,
       to: `/reproduction-events/${event.id}`,
@@ -177,18 +182,18 @@ function buildTimeline(operationalData) {
     ...operationalData.withdrawalLocks.map((lock) => ({
       key: `lock-${lock.id}`,
       date: lock.start_date,
-      type: "Withdrawal Lock",
-      event: lock.is_active ? "Lock activated" : "Released lock",
-      details: `${lock.reason || "No reason provided"}; ends ${lock.end_date}`,
+      type: t("Withdrawal Lock"),
+      event: lock.is_active ? t("Lock activated") : t("Released lock"),
+      details: `${lock.reason || t("No reason provided")}; ${t("ends")} ${lock.end_date}`,
       to: `/withdrawal-locks/${lock.id}`,
     })),
     ...operationalData.alarms.map((alarm) => ({
       key: `alarm-${alarm.id}`,
       date: alarm.due_date,
-      type: "Alarm",
+      type: t("Alarm"),
       event: alarm.title,
-      details: `${alarm.priority} priority; ${
-        alarm.is_completed ? "completed" : "open"
+      details: `${tv(alarm.priority)} ${t("priority")}; ${
+        alarm.is_completed ? t("completed") : t("open")
       }`,
       to: `/alarms/${alarm.id}`,
     })),
@@ -261,10 +266,10 @@ function AnimalDetail() {
   const productionTrend = milkDifference === null
     ? "-"
     : milkDifference > 0
-      ? `Up (+${milkDifference.toFixed(2)} L)`
+      ? `${t("Up")} (+${milkDifference.toFixed(2)} L)`
       : milkDifference < 0
-        ? `Down (${milkDifference.toFixed(2)} L)`
-        : "Unchanged (0.00 L)";
+        ? `${t("Down")} (${milkDifference.toFixed(2)} L)`
+        : `${t("Unchanged")} (0.00 L)`;
   const treatmentCount = operationalData.healthRecords.filter(
     (record) => record.record_type === "treatment"
   ).length;
@@ -346,7 +351,7 @@ function AnimalDetail() {
       ),
       detail: hasNetEconomicValue
         ? formatEconomicValue(economicSummary.net_economic_value)
-        : "Net economic value unavailable",
+        : t("Net economic value unavailable"),
     },
     {
       title: "Negative Economic Value",
@@ -356,21 +361,21 @@ function AnimalDetail() {
       ),
       detail: hasNetEconomicValue
         ? formatEconomicValue(economicSummary.net_economic_value)
-        : "Net economic value unavailable",
+        : t("Net economic value unavailable"),
     },
     {
       title: "Repeated Treatments",
       status: getDecisionSupportStatus(
         Number(economicSummary?.treatment_count || 0) >= 3
       ),
-      detail: `${economicSummary?.treatment_count ?? 0} treatments`,
+      detail: `${economicSummary?.treatment_count ?? 0} ${t("treatments")}`,
     },
     {
       title: "High Health Activity",
       status: getDecisionSupportStatus(
         Number(economicSummary?.health_event_count || 0) >= 5
       ),
-      detail: `${economicSummary?.health_event_count ?? 0} health events`,
+      detail: `${economicSummary?.health_event_count ?? 0} ${t("health events")}`,
     },
     {
       title: "Active Withdrawal Lock",
@@ -379,8 +384,8 @@ function AnimalDetail() {
         !canViewCare
       ),
       detail: canViewCare
-        ? `${operationalData.activeLocks.length} active locks`
-        : "Not available for your role",
+        ? `${operationalData.activeLocks.length} ${t("active locks")}`
+        : t("Not available for your role"),
     },
     {
       title: "Recently Exited Animal",
@@ -388,8 +393,8 @@ function AnimalDetail() {
         isDateWithinRange(animal?.exit_date, last30DaysStart, today)
       ),
       detail: animal?.exit_date
-        ? `${animal.exit_reason || "Exited"} on ${animal.exit_date}`
-        : "No exit date",
+        ? `${tv(animal.exit_reason) || t("Exited")} ${t("on")} ${animal.exit_date}`
+        : t("No exit date"),
     },
   ];
 
@@ -472,7 +477,7 @@ function AnimalDetail() {
 
   async function handleDeactivate() {
     const confirmed = window.confirm(
-      "Are you sure you want to deactivate this animal?"
+      t("Are you sure you want to deactivate this animal?")
     );
 
     if (!confirmed) {
@@ -488,7 +493,7 @@ function AnimalDetail() {
       navigate("/animals");
     } catch {
       setError(
-        "Unable to deactivate animal. Please make sure the backend server is running."
+        t("Unable to deactivate animal. Please make sure the backend server is running.")
       );
       setDeleting(false);
     }
@@ -497,7 +502,7 @@ function AnimalDetail() {
   if (loading) {
     return (
       <Loading
-        text="Loading animal details..."
+        text={t("Loading animal details...")}
         className="status-text"
       />
     );
@@ -517,18 +522,18 @@ function AnimalDetail() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h1>Animal Identity</h1>
-            <p>Core profile and current status for {animal.ear_tag}</p>
+            <h1>{t("Animal Identity")}</h1>
+            <p>{t("Core profile and current status for")} {animal.ear_tag}</p>
           </div>
           <div className="dashboard-export-links animal-profile-actions">
             <Link className="dashboard-nav-link" to="/animals">
-              Back to Animals
+              {t("Back to Animals")}
             </Link>
             <Link
               className="dashboard-nav-link"
               to={`/animals/${animal.id}/edit`}
             >
-              Edit
+              {t("Edit")}
             </Link>
             {animal.is_active === true && (
               <button
@@ -537,22 +542,22 @@ function AnimalDetail() {
                 onClick={handleDeactivate}
                 disabled={deleting}
               >
-                {deleting ? "Deactivating..." : "Deactivate"}
+                {deleting ? t("Deactivating...") : t("Deactivate")}
               </button>
             )}
           </div>
         </div>
 
         <dl className="animal-identity-grid">
-          <div><dt>ID</dt><dd>{animal.id}</dd></div>
-          <div><dt>Ear Tag</dt><dd>{animal.ear_tag}</dd></div>
-          <div><dt>Name</dt><dd>{animal.name || "-"}</dd></div>
-          <div><dt>Species</dt><dd>{animal.species || "-"}</dd></div>
-          <div><dt>Breed</dt><dd>{animal.breed || "-"}</dd></div>
-          <div><dt>Sex</dt><dd>{animal.sex || "-"}</dd></div>
-          <div><dt>Birth Date</dt><dd>{animal.birth_date || "-"}</dd></div>
+          <div><dt>{t("ID")}</dt><dd>{animal.id}</dd></div>
+          <div><dt>{t("Ear Tag")}</dt><dd>{animal.ear_tag}</dd></div>
+          <div><dt>{t("Name")}</dt><dd>{animal.name || "-"}</dd></div>
+          <div><dt>{t("Species")}</dt><dd>{animal.species || "-"}</dd></div>
+          <div><dt>{t("Breed")}</dt><dd>{animal.breed || "-"}</dd></div>
+          <div><dt>{t("Sex")}</dt><dd>{animal.sex || "-"}</dd></div>
+          <div><dt>{t("Birth Date")}</dt><dd>{animal.birth_date || "-"}</dd></div>
           <div className="animal-identity-notes">
-            <dt>Notes</dt><dd>{animal.notes || "-"}</dd>
+            <dt>{t("Notes")}</dt><dd>{animal.notes || "-"}</dd>
           </div>
         </dl>
       </section>
@@ -560,21 +565,21 @@ function AnimalDetail() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h2>Lifecycle Information</h2>
-            <p>Current herd lifecycle status</p>
+            <h2>{t("Lifecycle Information")}</h2>
+            <p>{t("Current herd lifecycle status")}</p>
           </div>
         </div>
         <dl className="animal-identity-grid">
           <div>
-            <dt>Status</dt>
-            <dd>{animal.exit_date ? "Exited" : "Active"}</dd>
+            <dt>{t("Status")}</dt>
+            <dd>{animal.exit_date ? t("Exited") : t("Active")}</dd>
           </div>
           <div>
-            <dt>Exit Date</dt>
+            <dt>{t("Exit Date")}</dt>
             <dd>{animal.exit_date || "-"}</dd>
           </div>
           <div>
-            <dt>Exit Reason</dt>
+            <dt>{t("Exit Reason")}</dt>
             <dd>{animal.exit_reason || "-"}</dd>
           </div>
         </dl>
@@ -583,14 +588,14 @@ function AnimalDetail() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h2>Lactation Summary</h2>
-            <p>Current lactation state for dairy operations</p>
+            <h2>{t("Lactation Summary")}</h2>
+            <p>{t("Current lactation state for dairy operations")}</p>
           </div>
         </div>
         <div className="dashboard-kpi-grid animal-profile-metrics">
           <KpiCard
             title="Lactation Status"
-            value={animal.lactation_status || "Unknown"}
+            value={tv(animal.lactation_status) || t("Unknown")}
           />
           <KpiCard
             title="Lactation Number"
@@ -610,7 +615,7 @@ function AnimalDetail() {
           />
           <KpiCard
             title="Active Lactation"
-            value={animal.active_lactation ? "Yes" : "No"}
+            value={animal.active_lactation ? t("Yes") : t("No")}
           />
         </div>
       </section>
@@ -618,37 +623,37 @@ function AnimalDetail() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h2>Economic Data</h2>
-            <p>Captured purchase and sale values for future economic analysis</p>
+            <h2>{t("Economic Data")}</h2>
+            <p>{t("Captured purchase and sale values for future economic analysis")}</p>
           </div>
         </div>
         <dl className="animal-identity-grid">
           <div>
-            <dt>Purchase Date</dt>
+            <dt>{t("Purchase Date")}</dt>
             <dd>{animal.purchase_date || "-"}</dd>
           </div>
           <div>
-            <dt>Purchase Value</dt>
+            <dt>{t("Purchase Value")}</dt>
             <dd>{formatEconomicValue(animal.economic_summary?.purchase_value)}</dd>
           </div>
           <div>
-            <dt>Sale Value</dt>
+            <dt>{t("Sale Value")}</dt>
             <dd>{formatEconomicValue(animal.economic_summary?.sale_value)}</dd>
           </div>
           <div>
-            <dt>Profit / Loss</dt>
+            <dt>{t("Profit / Loss")}</dt>
             <dd>{formatEconomicValue(animal.economic_summary?.profit_loss)}</dd>
           </div>
           <div>
-            <dt>Sale Status / Exit Reason</dt>
+            <dt>{t("Sale Status / Exit Reason")}</dt>
             <dd>
               {animal.exit_reason === "sold"
-                ? "Sold"
+                ? t("Sold")
                 : animal.exit_reason || "-"}
             </dd>
           </div>
           <div>
-            <dt>Lifetime Milk Production</dt>
+            <dt>{t("Lifetime Milk Production")}</dt>
             <dd>
               {animal.economic_summary
                 ? `${animal.economic_summary.lifetime_milk_production} L`
@@ -656,7 +661,7 @@ function AnimalDetail() {
             </dd>
           </div>
           <div>
-            <dt>Lifetime Milk Revenue</dt>
+            <dt>{t("Lifetime Milk Revenue")}</dt>
             <dd>
               {formatEconomicValue(
                 animal.economic_summary?.lifetime_milk_revenue
@@ -664,7 +669,7 @@ function AnimalDetail() {
             </dd>
           </div>
           <div>
-            <dt>Health Event Count</dt>
+            <dt>{t("Health Event Count")}</dt>
             <dd>
               {formatEconomicValue(
                 animal.economic_summary?.health_event_count
@@ -672,19 +677,19 @@ function AnimalDetail() {
             </dd>
           </div>
           <div>
-            <dt>Treatment Count</dt>
+            <dt>{t("Treatment Count")}</dt>
             <dd>
               {formatEconomicValue(animal.economic_summary?.treatment_count)}
             </dd>
           </div>
           <div>
-            <dt>Health Cost</dt>
+            <dt>{t("Health Cost")}</dt>
             <dd>
               {formatEconomicValue(animal.economic_summary?.health_cost)}
             </dd>
           </div>
           <div>
-            <dt>Net Economic Value</dt>
+            <dt>{t("Net Economic Value")}</dt>
             <dd>
               {formatEconomicValue(
                 animal.economic_summary?.net_economic_value
@@ -697,8 +702,8 @@ function AnimalDetail() {
       <section className="dashboard-section">
         <div className="dashboard-section-header">
           <div>
-            <h2>Decision Support</h2>
-            <p>Simple rule-based indicators from current animal data</p>
+            <h2>{t("Decision Support")}</h2>
+            <p>{t("Simple rule-based indicators from current animal data")}</p>
           </div>
         </div>
 
@@ -706,15 +711,15 @@ function AnimalDetail() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Indicator</th>
-                <th>Status</th>
-                <th>Basis</th>
+                <th>{t("Indicator")}</th>
+                <th>{t("Status")}</th>
+                <th>{t("Basis")}</th>
               </tr>
             </thead>
             <tbody>
               {decisionSupportIndicators.map((indicator) => (
                 <tr key={indicator.title}>
-                  <td>{indicator.title}</td>
+                  <td>{t(indicator.title)}</td>
                   <td>{indicator.status}</td>
                   <td>{indicator.detail}</td>
                 </tr>
@@ -730,7 +735,7 @@ function AnimalDetail() {
 
       {operationalLoading ? (
         <Loading
-          text="Loading operational details..."
+          text={t("Loading operational details...")}
           className="status-text"
         />
       ) : operationalError ? null : (
@@ -738,15 +743,15 @@ function AnimalDetail() {
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
-                <h2>Operational Summary</h2>
-                <p>Current activity linked to this animal</p>
+                <h2>{t("Operational Summary")}</h2>
+                <p>{t("Current activity linked to this animal")}</p>
               </div>
             </div>
 
             <div className="animal-profile-metric-group">
-              <h3>Production Context</h3>
+              <h3>{t("Production Context")}</h3>
               <p>
-                Latest-day comparison combines all milk records from each date.
+                {t("Latest-day comparison combines all milk records from each date.")}
               </p>
               <div className="dashboard-kpi-grid animal-profile-metrics">
                 <KpiCard
@@ -777,8 +782,8 @@ function AnimalDetail() {
             </div>
 
             <div className="animal-profile-metric-group">
-              <h3>Lifetime Summary</h3>
-              <p>Totals calculated from this animal's available history.</p>
+              <h3>{t("Lifetime Summary")}</h3>
+              <p>{t("Totals calculated from this animal's available history.")}</p>
               <div className="dashboard-kpi-grid animal-profile-metrics">
                 <KpiCard
                   title="Lifetime Milk Liters"
@@ -808,12 +813,12 @@ function AnimalDetail() {
             </div>
 
             <div className="animal-profile-metric-group">
-              <h3>Current Operational Indicators</h3>
-              <p>Recent activity and current restrictions.</p>
+              <h3>{t("Current Operational Indicators")}</h3>
+              <p>{t("Recent activity and current restrictions.")}</p>
               <div className="dashboard-kpi-grid animal-profile-metrics">
                 <KpiCard
                   title="Lifecycle Status"
-                  value={animal.exit_date ? "Exited" : "Active"}
+                  value={animal.exit_date ? t("Exited") : t("Active")}
                 />
                 <KpiCard
                   title="Exit Date"
@@ -868,9 +873,9 @@ function AnimalDetail() {
 
             {previousWeightRecord && (
               <div className="animal-profile-metric-group">
-                <h3>Weight Growth</h3>
+                <h3>{t("Weight Growth")}</h3>
                 <p>
-                  Calculated from the latest two weight measurements.
+                  {t("Calculated from the latest two weight measurements.")}
                 </p>
                 <div className="dashboard-kpi-grid animal-profile-metrics">
                   <KpiCard
@@ -902,8 +907,8 @@ function AnimalDetail() {
             )}
 
             <div className="animal-profile-metric-group">
-              <h3>Reproduction Summary</h3>
-              <p>Totals calculated from this animal's reproduction history.</p>
+              <h3>{t("Reproduction Summary")}</h3>
+              <p>{t("Totals calculated from this animal's reproduction history.")}</p>
               <div className="dashboard-kpi-grid animal-profile-metrics">
                 <KpiCard title="Total Matings" value={canViewReproduction ? matingCount : "-"} />
                 <KpiCard title="Total Pregnancies" value={canViewReproduction ? pregnancyCount : "-"} />
@@ -916,7 +921,7 @@ function AnimalDetail() {
                   title="Latest Reproduction Event"
                   value={
                     canViewReproduction && latestReproductionEvent
-                      ? `${latestReproductionEvent.event_type} on ${latestReproductionEvent.event_date}`
+                      ? `${tv(latestReproductionEvent.event_type)} ${t("on")} ${latestReproductionEvent.event_date}`
                       : "-"
                   }
                 />
@@ -937,22 +942,22 @@ function AnimalDetail() {
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
-                <h2>Operational Timeline</h2>
-                <p>Milk, health, weight, reproduction, withdrawal, and alarm activity</p>
+                <h2>{t("Operational Timeline")}</h2>
+                <p>{t("Milk, health, weight, reproduction, withdrawal, and alarm activity")}</p>
               </div>
             </div>
 
             {timelineItems.length === 0 ? (
-              <p className="empty-text">No timeline activity found.</p>
+              <p className="empty-text">{t("No timeline activity found.")}</p>
             ) : (
               <div className="dashboard-records-table">
                 <table className="data-table animal-profile-timeline">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Type</th>
-                      <th>Event</th>
-                      <th>Details</th>
+                      <th>{t("Date")}</th>
+                      <th>{t("Type")}</th>
+                      <th>{t("Event")}</th>
+                      <th>{t("Details")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -983,35 +988,35 @@ function AnimalDetail() {
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
-                <h2>Reproduction History</h2>
-                <p>Latest five reproduction events</p>
+                <h2>{t("Reproduction History")}</h2>
+                <p>{t("Latest five reproduction events")}</p>
               </div>
             </div>
 
             {!canViewReproduction ? (
               <p className="empty-text">
-                Reproduction history is not available for your role.
+                {t("Reproduction history is not available for your role.")}
               </p>
             ) : sortedReproductionEvents.length === 0 ? (
-              <p className="empty-text">No reproduction events found.</p>
+              <p className="empty-text">{t("No reproduction events found.")}</p>
             ) : (
               <div className="dashboard-records-table">
                 <table className="data-table">
                   <thead>
-                    <tr><th>Date</th><th>Type</th><th>Status / Offspring</th><th>Outcome</th><th>Notes</th></tr>
+                    <tr><th>{t("Date")}</th><th>{t("Type")}</th><th>{t("Status / Offspring")}</th><th>{t("Outcome")}</th><th>{t("Notes")}</th></tr>
                   </thead>
                   <tbody>
                     {sortedReproductionEvents.slice(0, 5).map((event) => (
                       <tr key={event.id}>
                         <td><Link to={`/reproduction-events/${event.id}`}>{event.event_date}</Link></td>
-                        <td>{event.event_type}</td>
+                        <td>{tv(event.event_type)}</td>
                         <td>
                           {event.event_type === "pregnancy"
                             ? event.pregnancy_status
-                              ? "Pregnancy confirmed"
-                              : "Not pregnant"
+                              ? t("Pregnancy confirmed")
+                              : t("Not pregnant")
                             : event.event_type === "birth"
-                              ? `${event.offspring_count} offspring${event.is_twin_birth ? " (twins)" : ""}`
+                              ? `${event.offspring_count} ${t("offspring")}${event.is_twin_birth ? ` (${t("twins")})` : ""}`
                               : "-"}
                         </td>
                         <td>{formatPregnancyOutcome(event.pregnancy_outcome)}</td>
@@ -1027,21 +1032,21 @@ function AnimalDetail() {
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
-                <h2>Recent Weight Records</h2>
-                <p>Latest five weight records</p>
+                <h2>{t("Recent Weight Records")}</h2>
+                <p>{t("Latest five weight records")}</p>
               </div>
             </div>
 
             {sortedWeightRecords.length === 0 ? (
-              <p className="empty-text">No weight records found.</p>
+              <p className="empty-text">{t("No weight records found.")}</p>
             ) : (
               <div className="dashboard-records-table">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Weight</th>
-                      <th>Notes</th>
+                      <th>{t("Date")}</th>
+                      <th>{t("Weight")}</th>
+                      <th>{t("Notes")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1065,26 +1070,26 @@ function AnimalDetail() {
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
-                <h2>Recent Milk Records</h2>
-                <p>Latest five milk records</p>
+                <h2>{t("Recent Milk Records")}</h2>
+                <p>{t("Latest five milk records")}</p>
               </div>
             </div>
 
             {!canViewMilk ? (
               <p className="empty-text">
-                Milk records are not available for your role.
+                {t("Milk records are not available for your role.")}
               </p>
             ) : operationalData.milkRecords.length === 0 ? (
-              <p className="empty-text">No milk records found.</p>
+              <p className="empty-text">{t("No milk records found.")}</p>
             ) : (
               <div className="dashboard-records-table">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Liters</th>
-                      <th>Session</th>
-                      <th>Notes</th>
+                      <th>{t("Date")}</th>
+                      <th>{t("Liters")}</th>
+                      <th>{t("Session")}</th>
+                      <th>{t("Notes")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1107,26 +1112,26 @@ function AnimalDetail() {
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
-                <h2>Recent Health Records</h2>
-                <p>Latest five health records</p>
+                <h2>{t("Recent Health Records")}</h2>
+                <p>{t("Latest five health records")}</p>
               </div>
             </div>
 
             {!canViewCare ? (
               <p className="empty-text">
-                Health records are not available for your role.
+                {t("Health records are not available for your role.")}
               </p>
             ) : operationalData.healthRecords.length === 0 ? (
-              <p className="empty-text">No health records found.</p>
+              <p className="empty-text">{t("No health records found.")}</p>
             ) : (
               <div className="dashboard-records-table">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Type</th>
-                      <th>Diagnosis</th>
-                      <th>Treatment</th>
+                      <th>{t("Date")}</th>
+                      <th>{t("Type")}</th>
+                      <th>{t("Diagnosis")}</th>
+                      <th>{t("Treatment")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1135,7 +1140,7 @@ function AnimalDetail() {
                       .map((record) => (
                         <tr key={record.id}>
                           <td>{record.record_date}</td>
-                          <td>{record.record_type}</td>
+                          <td>{tv(record.record_type)}</td>
                           <td>{record.diagnosis || "-"}</td>
                           <td>{record.treatment || "-"}</td>
                         </tr>
@@ -1149,25 +1154,25 @@ function AnimalDetail() {
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
-                <h2>Active Withdrawal Locks</h2>
-                <p>Current withdrawal periods for this animal</p>
+                <h2>{t("Active Withdrawal Locks")}</h2>
+                <p>{t("Current withdrawal periods for this animal")}</p>
               </div>
             </div>
 
             {!canViewCare ? (
               <p className="empty-text">
-                Withdrawal locks are not available for your role.
+                {t("Withdrawal locks are not available for your role.")}
               </p>
             ) : operationalData.activeLocks.length === 0 ? (
-              <p className="empty-text">No active withdrawal locks.</p>
+              <p className="empty-text">{t("No active withdrawal locks.")}</p>
             ) : (
               <div className="dashboard-records-table">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Start Date</th>
-                      <th>End Date</th>
-                      <th>Reason</th>
+                      <th>{t("Start Date")}</th>
+                      <th>{t("End Date")}</th>
+                      <th>{t("Reason")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1187,32 +1192,32 @@ function AnimalDetail() {
           <section className="dashboard-section">
             <div className="dashboard-section-header">
               <div>
-                <h2>Open Alarms</h2>
-                <p>Open withdrawal alarms reliably linked to this animal</p>
+                <h2>{t("Open Alarms")}</h2>
+                <p>{t("Open withdrawal alarms reliably linked to this animal")}</p>
               </div>
             </div>
 
             {!canViewCare ? (
               <p className="empty-text">
-                Alarms are not available for your role.
+                {t("Alarms are not available for your role.")}
               </p>
             ) : operationalData.activeAlarms.length === 0 ? (
-              <p className="empty-text">No open alarms found.</p>
+              <p className="empty-text">{t("No open alarms found.")}</p>
             ) : (
               <div className="dashboard-records-table">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Title</th>
-                      <th>Priority</th>
-                      <th>Due Date</th>
+                      <th>{t("Title")}</th>
+                      <th>{t("Priority")}</th>
+                      <th>{t("Due Date")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {operationalData.activeAlarms.map((alarm) => (
                       <tr key={alarm.id}>
                         <td>{alarm.title}</td>
-                        <td>{alarm.priority}</td>
+                        <td>{tv(alarm.priority)}</td>
                         <td>{alarm.due_date}</td>
                       </tr>
                     ))}
@@ -1227,8 +1232,8 @@ function AnimalDetail() {
       <div className="animal-profile-future">
         <div className="dashboard-section-header">
           <div>
-            <h2>Future Profile Areas</h2>
-            <p>Reserved for later operational development</p>
+            <h2>{t("Future Profile Areas")}</h2>
+            <p>{t("Reserved for later operational development")}</p>
           </div>
         </div>
         <div className="animal-profile-placeholder-grid">
@@ -1240,9 +1245,9 @@ function AnimalDetail() {
               className="dashboard-section animal-profile-placeholder"
               key={title}
             >
-              <span className="animal-profile-placeholder-status">Planned</span>
-              <h2>{title}</h2>
-              <p>{message}</p>
+              <span className="animal-profile-placeholder-status">{t("Planned")}</span>
+              <h2>{t(title)}</h2>
+              <p>{t(message)}</p>
             </section>
           ))}
         </div>

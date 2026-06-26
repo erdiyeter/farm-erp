@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "check:tr": "node scripts/check-turkish-text.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },
