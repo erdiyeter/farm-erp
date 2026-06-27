@@ -1,153 +1,58 @@
-# 07 · Deployment Guide
+# 07 - Deployment Guide
 
 ## Purpose
 
-This document describes the current development and deployment environment used by Farm ERP.
+This document describes the current development and deployment setup for Farm ERP.
 
-The project is currently optimized for local development.
-
-Production deployment is not a current priority.
+The project is currently optimized for local development. Production deployment is not part of the current implemented system.
 
 ---
 
-# Development Environment
+## Current Stack
 
-Current development machine:
+Backend:
 
-```text
-OS: Windows 10 Home x64
-CPU: Intel Core i7-7700HQ
-Editor: VS Code
-Terminal: PowerShell
-```
+- Python.
+- FastAPI.
+- SQLAlchemy.
+- Pydantic.
+- JWT authentication.
 
----
+Frontend:
 
-# Technology Stack
+- React.
+- Vite.
+- JavaScript.
 
-## Backend
+Database:
 
-```text
-Python 3.12
-FastAPI
-SQLAlchemy
-Pydantic
-JWT Authentication
-```
+- PostgreSQL.
 
 ---
 
-## Frontend
-
-```text
-React
-Vite
-JavaScript
-```
-
----
-
-## Database
-
-```text
-PostgreSQL 18
-```
-
-Current database:
-
-```text
-farm_erp
-```
-
----
-
-# Required Software
-
-## Backend
-
-```text
-Python 3.12+
-pip
-virtualenv
-```
-
----
-
-## Frontend
-
-```text
-Node.js LTS
-npm
-```
-
----
-
-## Database
-
-```text
-PostgreSQL 18
-```
-
----
-
-## Development Tools
-
-```text
-VS Code
-Git
-Postman
-```
-
----
-
-# Project Structure
+## Project Structure
 
 ```text
 farm-erp/
-
-├─ backend/
-├─ frontend/
-├─ docs/
-├─ notes/
+  backend/
+  frontend/
+  docs/
 ```
 
 ---
 
-# Backend Setup
+## Backend Setup
 
-Navigate to backend:
+From the repository root:
 
 ```powershell
 cd backend
-```
-
-Create virtual environment:
-
-```powershell
 python -m venv .venv
-```
-
-Activate environment:
-
-```powershell
 .venv\Scripts\Activate.ps1
-```
-
-Install dependencies:
-
-```powershell
 pip install -r requirements.txt
 ```
 
----
-
-# Environment Configuration
-
-Environment variables are stored in:
-
-```text
-backend/.env
-```
+Environment variables are loaded from `backend/.env`.
 
 Example:
 
@@ -158,71 +63,29 @@ ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 ```
 
----
-
-# Database Initialization
-
-Run database initialization:
-
-```powershell
-python -m app.init_db
-```
-
-Purpose:
-
-```text
-Create tables
-Initialize database structure
-Prepare application startup
-```
-
----
-
-# Running Backend
-
-From backend directory:
+Run the backend:
 
 ```powershell
 uvicorn app.main:app --reload
 ```
 
-Backend URL:
+Backend URLs:
 
 ```text
 http://localhost:8000
-```
-
-API Documentation:
-
-```text
 http://localhost:8000/docs
-```
-
-OpenAPI Schema:
-
-```text
 http://localhost:8000/openapi.json
 ```
 
 ---
 
-# Running Frontend
+## Frontend Setup
 
-Navigate to frontend:
+From the repository root:
 
 ```powershell
 cd frontend
-```
-
-Install dependencies:
-
-```powershell
 npm install
-```
-
-Run development server:
-
-```powershell
 npm run dev
 ```
 
@@ -232,155 +95,58 @@ Frontend URL:
 http://localhost:5173
 ```
 
----
-
-# Authentication Setup
-
-Current authentication method:
-
-```text
-JWT Bearer Authentication
-```
-
-Flow:
-
-```text
-Login
- ↓
-JWT Token
- ↓
-Protected API Access
-```
-
-Default development user depends on the database seed data.
-
----
-
-# Database Tables
-
-Current operational tables:
-
-```text
-users
-animals
-vaccinations
-milk_records
-health_records
-inventory_items
-inventory_movements
-financial_records
-withdrawal_locks
-alarms
-```
-
----
-
-# Verification Checklist
-
-## Backend
-
-Verify:
-
-```text
-Database connection works
-Application starts
-Swagger opens
-Authentication works
-```
-
-Check:
-
-```text
-http://localhost:8000/docs
-```
-
----
-
-## Frontend
-
-Verify:
-
-```text
-Frontend loads
-Navigation works
-Forms submit correctly
-Dashboard loads
-```
-
-Check:
-
-```text
-http://localhost:5173
-```
+The backend CORS configuration currently allows the local Vite origin.
 
 ---
 
 ## Database
 
-Verify:
+The backend requires a PostgreSQL database through `DATABASE_URL`.
 
-```text
-Database exists
-Tables created
-Application can read/write data
-```
+Implemented operational tables:
 
-Database name:
+- `users`
+- `animals`
+- `vaccinations`
+- `milk_records`
+- `health_records`
+- `inventory_items`
+- `inventory_movements`
+- `financial_records`
+- `withdrawal_locks`
+- `alarms`
+- `weight_records`
+- `reproduction_events`
+- `settings`
 
-```text
-farm_erp
-```
+Database initialization depends on the current backend setup scripts and migrations available in the repository. Use the implemented project scripts rather than creating tables manually.
 
 ---
 
-# Git Workflow
+## Local Verification
 
-Basic workflow:
+For documentation-only changes:
 
 ```powershell
-git status
-git add .
-git commit -m "message"
-git push
+git diff --check
 ```
 
-Commit after every completed task.
+For frontend code changes when needed:
+
+```powershell
+cd frontend
+npm.cmd run lint
+npm.cmd run build
+npm.cmd run check:tr
+```
+
+For backend code changes when needed, run the relevant backend tests or API checks for the changed area.
+
+Do not run broad test suites for documentation-only changes unless a generated file or documentation link requires it.
 
 ---
 
-# Backup Recommendation
-
-Current recommendation:
-
-```text
-Regular PostgreSQL backups
-Regular Git commits
-GitHub repository synchronization
-```
-
----
-
-# Docker Status
-
-Current status:
-
-```text
-Not used
-```
-
-Reason:
-
-```text
-Project simplicity
-Learning-focused development
-Local environment sufficient
-```
-
-Docker may be evaluated later if a real need appears.
-
----
-
-# Production Status
+## Current Deployment Status
 
 Current status:
 
@@ -388,32 +154,33 @@ Current status:
 Local development only
 ```
 
-Production deployment is not part of the current project phase.
+Not currently used:
+
+- Docker.
+- CI/CD deployment pipeline.
+- Redis.
+- Celery.
+- Message queues.
+- Cloud services.
+- Mobile app backend.
+- Offline sync service.
+
+These may be considered later only if there is a real operational need.
 
 ---
 
-# Future Deployment Candidates
+## Backup Recommendation
 
-Possible future options:
+For local development:
 
-```text
-Docker
-VPS Deployment
-Cloud PostgreSQL
-Automated Backup Strategy
-CI/CD Pipeline
-```
-
-None are currently required.
+- Keep regular Git commits.
+- Back up PostgreSQL data when the database contains important records.
+- Keep `.env` secrets out of Git.
 
 ---
 
-# Deployment Principles
+## Outdated Statements Removed
 
-```text
-Keep setup simple.
-Prefer local development.
-Avoid unnecessary infrastructure.
-Use proven and understandable tools.
-Follow YAGNI.
-```
+Older deployment documentation omitted implemented tables for weight records, reproduction events, and settings. They are now listed.
+
+Older deployment documentation included machine-specific details. The current guide keeps setup instructions general and project-focused.

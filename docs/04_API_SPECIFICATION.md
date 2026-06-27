@@ -1,4 +1,4 @@
-# 04 · API Specification
+# 04 - API Specification
 
 ## API Standard
 
@@ -14,13 +14,7 @@ Authentication:
 JWT Bearer Token
 ```
 
-Content type:
-
-```text
-application/json
-```
-
-Error format:
+Standard error shape:
 
 ```json
 {
@@ -28,35 +22,32 @@ Error format:
 }
 ```
 
----
-
-# Authentication API
-
-## POST /auth/login
-
-User login.
-
-Request:
-
-```json
-{
-  "email": "admin@farm.local",
-  "password": "password"
-}
-```
-
-Response:
-
-```json
-{
-  "access_token": "jwt_token",
-  "token_type": "bearer"
-}
-```
+Some validation errors use FastAPI's standard validation error list under `detail`.
 
 ---
 
-# Animals API
+## Authentication
+
+Base path:
+
+```text
+/auth
+```
+
+Endpoints:
+
+- `POST /auth/login` - login and return a bearer token.
+- `GET /auth/me` - return the current authenticated user.
+
+Current user roles:
+
+- `admin`
+- `worker`
+- `veterinarian`
+
+---
+
+## Animals
 
 Base path:
 
@@ -64,215 +55,91 @@ Base path:
 /animals
 ```
 
-## GET /animals
+Endpoints:
 
-List active animals.
+- `GET /animals` - list active animals.
+- `GET /animals/stats` - animal statistics.
+- `POST /animals` - create animal.
+- `GET /animals/{animal_id}` - animal detail.
+- `PUT /animals/{animal_id}` - update animal.
+- `DELETE /animals/{animal_id}` - deactivate animal.
 
----
-
-## POST /animals
-
-Create animal.
-
----
-
-## GET /animals/{id}
-
-Animal detail.
+Current animal data includes identity, lifecycle, purchase/sale, lactation, exit, and active status fields.
 
 ---
 
-## PUT /animals/{id}
+## Vaccinations
 
-Update animal.
+Endpoints:
 
----
-
-## DELETE /animals/{id}
-
-Soft delete animal.
+- `GET /vaccinations` - list vaccination records.
+- `POST /vaccinations` - create vaccination record.
+- `GET /animals/{animal_id}/vaccinations` - list vaccinations for one animal.
 
 ---
 
-## GET /animals/stats
+## Milk Records
 
-Animal statistics.
+Endpoints:
 
-Example response:
-
-```json
-{
-  "total_active": 120,
-  "male_count": 25,
-  "female_count": 95
-}
-```
+- `POST /milk-records` - create milk record.
+- `GET /milk-records` - list milk records.
+- `GET /animals/{animal_id}/milk-records` - list milk records for one animal.
 
 ---
 
-# Vaccinations API
+## Health Records
+
+Endpoints:
+
+- `GET /health-records` - list health records.
+- `POST /health-records` - create health record.
+- `GET /health-records/animal/{animal_id}` - list health records for one animal.
+- `GET /health-records/{health_record_id}` - health record detail.
+- `PATCH /health-records/{health_record_id}` - update health record.
+- `DELETE /health-records/{health_record_id}` - delete health record.
+
+Common record types used by the frontend:
+
+- `treatment`
+- `illness`
+- `checkup`
+- `vaccination`
+
+Health records can include withdrawal dates and optional inventory consumption through the implemented service workflow.
+
+---
+
+## Inventory
 
 Base path:
 
 ```text
-/ vaccinations
+/inventory
 ```
 
-## GET /vaccinations
+Item endpoints:
 
-List vaccination records.
+- `GET /inventory/items` - list inventory items.
+- `POST /inventory/items` - create inventory item.
+- `GET /inventory/items/{item_id}` - inventory item detail.
+- `PUT /inventory/items/{item_id}` - update inventory item.
+- `DELETE /inventory/items/{item_id}` - deactivate inventory item.
 
----
+Movement endpoints:
 
-## POST /vaccinations
-
-Create vaccination record.
-
----
-
-## GET /animals/{id}/vaccinations
-
-Animal vaccination history.
-
----
-
-# Milk Records API
-
-Base path:
-
-```text
-/milk-records
-```
-
-## GET /milk-records
-
-List milk records.
-
----
-
-## POST /milk-records
-
-Create milk record.
-
----
-
-## GET /animals/{id}/milk-records
-
-Animal milk history.
-
----
-
-# Health Records API
-
-Base path:
-
-```text
-/health-records
-```
-
-## GET /health-records
-
-List health records.
-
----
-
-## POST /health-records
-
-Create health record.
-
----
-
-## GET /health-records/{id}
-
-Health record detail.
-
----
-
-## PATCH /health-records/{id}
-
-Update health record.
-
----
-
-## DELETE /health-records/{id}
-
-Delete health record.
-
----
-
-## GET /health-records/animal/{animal_id}
-
-Health history for animal.
-
----
-
-# Inventory Items API
-
-Base path:
-
-```text
-/inventory/items
-```
-
-## GET /inventory/items
-
-List inventory items.
-
----
-
-## POST /inventory/items
-
-Create inventory item.
-
----
-
-## GET /inventory/items/{id}
-
-Inventory item detail.
-
----
-
-## PUT /inventory/items/{id}
-
-Update inventory item.
-
----
-
-## DELETE /inventory/items/{id}
-
-Soft delete inventory item.
-
----
-
-# Inventory Movements API
-
-Base path:
-
-```text
-/inventory/movements
-```
-
-## GET /inventory/movements
-
-List inventory movements.
-
----
-
-## POST /inventory/movements
-
-Create inventory movement.
+- `GET /inventory/movements` - list inventory movements.
+- `POST /inventory/movements` - create inventory movement.
 
 Supported movement types:
 
-```text
-in
-out
-adjustment
-```
+- `in`
+- `out`
+- `adjustment`
 
 ---
 
-# Finance API
+## Finance
 
 Base path:
 
@@ -280,44 +147,22 @@ Base path:
 /finance
 ```
 
-## GET /finance
+Endpoints:
 
-List finance records.
-
----
-
-## POST /finance
-
-Create finance record.
-
----
-
-## GET /finance/{id}
-
-Finance record detail.
-
----
-
-## PATCH /finance/{id}
-
-Update finance record.
-
----
-
-## DELETE /finance/{id}
-
-Soft delete finance record.
+- `GET /finance` - list active finance records.
+- `POST /finance` - create finance record.
+- `GET /finance/{finance_record_id}` - finance record detail.
+- `PATCH /finance/{finance_record_id}` - update finance record.
+- `DELETE /finance/{finance_record_id}` - deactivate finance record.
 
 Supported record types:
 
-```text
-income
-expense
-```
+- `income`
+- `expense`
 
 ---
 
-# Withdrawal Locks API
+## Withdrawal Locks
 
 Base path:
 
@@ -325,43 +170,18 @@ Base path:
 /withdrawal-locks
 ```
 
-## GET /withdrawal-locks
+Endpoints:
 
-List withdrawal locks.
-
----
-
-## GET /withdrawal-locks/active
-
-List active withdrawal locks.
-
----
-
-## POST /withdrawal-locks
-
-Create withdrawal lock.
+- `GET /withdrawal-locks` - list withdrawal locks.
+- `GET /withdrawal-locks/active` - list active withdrawal locks.
+- `POST /withdrawal-locks` - create withdrawal lock.
+- `GET /withdrawal-locks/{lock_id}` - withdrawal lock detail.
+- `PATCH /withdrawal-locks/{lock_id}` - update withdrawal lock.
+- `DELETE /withdrawal-locks/{lock_id}` - deactivate withdrawal lock.
 
 ---
 
-## GET /withdrawal-locks/{id}
-
-Withdrawal lock detail.
-
----
-
-## PATCH /withdrawal-locks/{id}
-
-Update withdrawal lock.
-
----
-
-## DELETE /withdrawal-locks/{id}
-
-Soft delete withdrawal lock.
-
----
-
-# Alarms API
+## Alarms
 
 Base path:
 
@@ -369,52 +189,79 @@ Base path:
 /alarms
 ```
 
-## GET /alarms
+Endpoints:
 
-List alarms.
-
----
-
-## POST /alarms
-
-Create alarm.
-
----
-
-## GET /alarms/{id}
-
-Alarm detail.
-
----
-
-## PATCH /alarms/{id}
-
-Update alarm.
-
----
-
-## DELETE /alarms/{id}
-
-Delete alarm.
+- `GET /alarms` - list alarms.
+- `POST /alarms` - create alarm.
+- `GET /alarms/{alarm_id}` - alarm detail.
+- `PATCH /alarms/{alarm_id}` - update alarm.
+- `DELETE /alarms/{alarm_id}` - delete alarm.
 
 Supported alarm types:
 
-```text
-reminder
-withdrawal
-```
+- `vaccination`
+- `withdrawal`
+- `health`
+- `reminder`
 
 Supported priorities:
 
-```text
-low
-medium
-high
-```
+- `low`
+- `medium`
+- `high`
 
 ---
 
-# Dashboard API
+## Weight Records
+
+Endpoints:
+
+- `POST /weight-records` - create weight record.
+- `GET /weight-records` - list weight records.
+- `GET /animals/{animal_id}/weight-records` - list weight records for one animal.
+- `GET /weight-records/{weight_record_id}` - weight record detail.
+- `PATCH /weight-records/{weight_record_id}` - update weight record.
+- `DELETE /weight-records/{weight_record_id}` - delete weight record.
+
+---
+
+## Reproduction Events
+
+Endpoints:
+
+- `POST /reproduction-events` - create reproduction event.
+- `GET /reproduction-events` - list reproduction events.
+- `GET /animals/{animal_id}/reproduction-events` - list reproduction events for one animal.
+- `GET /reproduction-events/{event_id}` - reproduction event detail.
+- `PATCH /reproduction-events/{event_id}` - update reproduction event.
+- `DELETE /reproduction-events/{event_id}` - delete reproduction event.
+
+Common event types used by the frontend:
+
+- `mating`
+- `pregnancy`
+- `birth`
+
+---
+
+## Settings
+
+Base path:
+
+```text
+/settings
+```
+
+Endpoints:
+
+- `GET /settings` - get farm settings.
+- `PUT /settings` - update farm settings.
+
+Settings currently include farm name, owner name, contact phone, milk price, address, and notes.
+
+---
+
+## Dashboard
 
 Base path:
 
@@ -422,24 +269,15 @@ Base path:
 /dashboard
 ```
 
-## GET /dashboard
+Endpoints:
 
-Dashboard summary.
+- `GET /dashboard` - return dashboard statistics and operational summary data.
 
-Current dashboard includes:
-
-```text
-Animal KPIs
-Milk KPIs
-Health KPIs
-Withdrawal Lock KPIs
-Alarm KPIs
-Recent Records
-```
+Dashboard data is calculated from operational records. It is not stored separately.
 
 ---
 
-# Reporting API
+## Reports
 
 Base path:
 
@@ -447,134 +285,59 @@ Base path:
 /reports
 ```
 
-## GET /reports/dashboard
+Summary endpoints:
 
-Dashboard reporting summary.
+- `GET /reports/animals/summary`
+- `GET /reports/milk/summary`
+- `GET /reports/health/summary`
+- `GET /reports/finance/summary`
+- `GET /reports/summary`
 
----
+Detail endpoint:
 
-## GET /reports/milk
+- `GET /reports/details`
 
-Milk reporting data.
+CSV export endpoints:
 
----
+- `GET /reports/animals/export.csv`
+- `GET /reports/health-records/export.csv`
+- `GET /reports/withdrawal-locks/export.csv`
+- `GET /reports/milk-records/export.csv`
+- `GET /reports/weight-records/export.csv`
 
-## GET /reports/health
+Supported date filters where applicable:
 
-Health reporting data.
+- `start_date`
+- `end_date`
 
----
-
-## GET /reports/finance
-
-Finance reporting data.
-
----
-
-## GET /reports/export/csv
-
-CSV export endpoint.
-
-Supported filters:
-
-```text
-start_date
-end_date
-```
+Report data includes animals, milk records, health records, weight records, reproduction events, exited animals, financial records, withdrawal locks, and alarms.
 
 ---
 
-# Business Rule Summary
+## Route Access Summary
 
-## Animals
+Route protection is configured in `backend/app/main.py`.
 
-```text
-Ear tag must be unique.
-Inactive animals cannot be used in operational records.
-```
+Current access is role-based at router level:
 
----
+- Auth routes are public where required for login.
+- Admin-only areas include finance, settings, and vaccinations.
+- Worker-oriented areas include animals, milk, inventory, weight, reproduction, and dashboard access.
+- Veterinarian-oriented areas include animals, health, withdrawal locks, alarms, and reports.
 
-## Milk Records
-
-```text
-Milk liters must be greater than zero.
-Future dates are not allowed.
-```
+This is the current implemented behavior, not a full permission management system.
 
 ---
 
-## Health Records
+## Outdated Statements Removed
 
-```text
-Animal must exist.
-Animal must be active.
-```
+Older API documentation omitted these implemented areas:
 
----
+- `GET /auth/me`
+- Weight record endpoints.
+- Reproduction event endpoints.
+- Settings endpoints.
+- Current report summary/detail/export endpoints.
+- Current role-based route protection.
 
-## Inventory
-
-```text
-Stock cannot become negative.
-OUT movements require sufficient stock.
-```
-
----
-
-## Finance
-
-```text
-Amount must be greater than zero.
-```
-
----
-
-## Withdrawal Locks
-
-```text
-Referenced animal must exist.
-Referenced health record must exist when provided.
-```
-
----
-
-## Authentication
-
-```text
-Protected endpoints require valid JWT token.
-```
-
----
-
-# HTTP Status Codes
-
-```text
-200 OK
-201 Created
-400 Bad Request
-401 Unauthorized
-404 Not Found
-422 Validation Error
-500 Internal Server Error
-```
-
----
-
-# Current API Scope
-
-Implemented modules:
-
-```text
-Authentication
-Animals
-Vaccinations
-Milk Records
-Health Records
-Inventory
-Finance
-Withdrawal Locks
-Alarms
-Dashboard
-Reporting
-```
+Older documentation also listed `/reports/dashboard`, `/reports/milk`, `/reports/health`, `/reports/finance`, and `/reports/export/csv` as if they were the active report API. The current code uses the report endpoints listed above.

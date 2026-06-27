@@ -1,71 +1,94 @@
-# 06 · AI Roadmap
+# 06 - AI Roadmap
 
-## Genel Karar
-AI özellikleri MVP'ye dahil değildir.
+## Status
 
-Sebep basit: AI için önce veri gerekir. Veri olmadan tahmin sistemi kurmak sahte sonuç üretir.
+AI is future work.
 
-## AI Öncesi Gerekli Veri
-AI özelliklerine geçmeden önce sistemde şunlar birikmiş olmalı:
+No AI service, AI model integration, prediction service, vector database, background worker, or AI-specific storage is part of the current Farm ERP implementation.
 
-- Hayvan kayıtları
-- Sağım geçmişi
-- Aşı geçmişi
-- Sağlık kayıtları
-- Tartım kayıtları
-- Finans kayıtları
+This document is only a future planning note.
 
-## Katman 3 AI Özellikleri
+---
 
-### 1. Mastitis Risk Skoru
-Girdi:
-- Son 7 gün sağım miktarı
-- Ani süt düşüşü
-- SCC verisi varsa SCC
-- Geçmiş mastitis kayıtları
+## Rule
 
-Çıktı:
-- 0-100 arası risk skoru
+AI features must not be added before the system has enough reliable operational data.
 
-İlk versiyon ML olmak zorunda değildir. Kural tabanlı başlayabilir.
+AI must never invent facts that are not supported by Farm ERP records.
 
-### 2. Süt Tahmini
-Girdi:
-- Günlük sağım kayıtları
-- Laktasyon dönemi
-- Mevsimsel bilgiler
+Any future AI feature must use real system data and clearly show uncertainty where appropriate.
 
-Çıktı:
-- 7/15 günlük tahmini süt verimi
+---
 
-### 3. Golden List
-En iyi hayvanları listeler.
+## Data Needed Before AI
 
-Kriterler:
-- Yüksek süt verimi
-- Düşük sağlık problemi
-- İyi üreme performansı
-- Pozitif finansal değer
+Useful AI or predictive features require accumulated records such as:
 
-### 4. Black List
-Dikkat edilmesi gereken hayvanları listeler.
+- Animal records.
+- Milk records.
+- Vaccination records.
+- Health records.
+- Weight records.
+- Reproduction events.
+- Finance records.
+- Withdrawal locks and alarms.
 
-Kriterler:
-- Düşük verim
-- Tekrarlayan sağlık problemi
-- Negatif finansal değer
-- Gelişim geriliği
+---
 
-### 5. AI Assistant
-Kullanıcı şu tarz sorular sorabilir:
+## Possible Future Features
 
-```text
-Bu hafta hangi hayvanlara öncelik vermeliyim?
-Hangi hayvanlarda süt düşüşü var?
-Hangi hayvanlar ekonomik olarak zayıf?
-```
+These are not current implementation.
 
-## AI İçin Kural
-AI hiçbir zaman veritabanında olmayan bilgiyi gerçekmiş gibi söylememeli.
+### Mastitis Or Health Risk Scoring
 
-AI sadece sistemdeki kayıtlar üzerinden yorum yapmalı.
+Possible inputs:
+
+- Recent milk production changes.
+- Health history.
+- Treatment history.
+- Repeated illness records.
+
+First versions should be rule-based before considering machine learning.
+
+### Milk Production Forecasting
+
+Possible inputs:
+
+- Daily milk records.
+- Lactation status.
+- Historical production trends.
+
+### Animal Priority Lists
+
+Possible lists:
+
+- Best-performing animals.
+- Animals requiring attention.
+- Animals with repeated health or production issues.
+
+The current dashboard already has decision-support style review sections based on implemented data. Future AI should build on that only if needed.
+
+### Assistant Interface
+
+Possible future questions:
+
+- Which animals need attention this week?
+- Which animals show production decline?
+- Which animals have repeated health issues?
+- Which animals are economically weak?
+
+---
+
+## Not Current Architecture
+
+Do not describe any of these as current Farm ERP architecture:
+
+- AI service.
+- LLM integration.
+- Vector database.
+- Embedding pipeline.
+- Background prediction workers.
+- Redis or Celery for AI jobs.
+- Event-driven AI pipeline.
+
+These may be considered only after a concrete operational requirement exists.

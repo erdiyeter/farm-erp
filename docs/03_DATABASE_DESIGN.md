@@ -1,512 +1,387 @@
-# 03 · Database Design
+# 03 - Database Design
 
 ## Purpose
 
-This document describes the current production database structure used by Farm ERP.
+This document describes the database tables implemented in the current Farm ERP codebase.
 
-The database reflects the actual implemented system.
+The database is PostgreSQL and is accessed by the FastAPI backend through SQLAlchemy.
 
-Future tables should not be added unless required by an implemented feature.
-
----
-
-# Database Technology
-
-```text
-PostgreSQL
-```
-
-Application access:
-
-```text
-FastAPI
-↓
-SQLAlchemy
-↓
-PostgreSQL
-```
-
-Business rules remain in the application layer.
+Business rules belong in the application layer unless a database constraint is already implemented.
 
 ---
 
-# Design Principles
+## Implemented Tables
 
-## Simplicity
+### users
 
-The database should remain understandable and maintainable.
-
----
-
-## YAGNI
-
-Tables are created only when required by implemented functionality.
-
----
-
-## Data Integrity
-
-Relationships are enforced through foreign keys.
-
----
-
-## Soft Delete Preference
-
-Operational records should remain available whenever possible.
-
-Some modules use soft delete.
-
----
-
-# Current Database Tables
-
-## users
-
-System users and authentication.
-
-```sql
-users
-```
+Purpose: authentication and role identity.
 
 Main fields:
 
-```text
-id
-email
-hashed_password
-is_active
-created_at
-```
+- `id`
+- `full_name`
+- `email`
+- `password_hash`
+- `role`
+- `is_active`
+- `created_at`
 
-Used by:
+Current roles used by the application:
 
-- Authentication
-- Login
-- JWT security
-
----
-
-## animals
-
-Master animal records.
-
-```sql
-animals
-```
-
-Main fields:
-
-```text
-id
-ear_tag
-name
-species
-breed
-sex
-birth_date
-notes
-is_active
-created_at
-updated_at
-```
-
-Relationships:
-
-```text
-animals
- ├─ vaccinations
- ├─ milk_records
- ├─ health_records
- └─ withdrawal_locks
-```
+- `admin`
+- `worker`
+- `veterinarian`
 
 ---
 
-## vaccinations
+### animals
 
-Vaccination history.
-
-```sql
-vaccinations
-```
+Purpose: master animal records and operational animal state.
 
 Main fields:
 
-```text
-id
-animal_id
-vaccine_name
-dose
-application_date
-next_due_date
-notes
-created_at
-```
+- `id`
+- `ear_tag`
+- `name`
+- `species`
+- `breed`
+- `sex`
+- `birth_date`
+- `purchase_date`
+- `purchase_price`
+- `sale_price`
+- `lactation_number`
+- `lactation_start_date`
+- `lactation_end_date`
+- `exit_date`
+- `exit_reason`
+- `notes`
+- `is_active`
+- `created_at`
+- `updated_at`
+
+Computed model properties:
+
+- `lactation_status`
+- `active_lactation`
+- `days_in_milk`
+
+---
+
+### vaccinations
+
+Purpose: vaccination history.
+
+Main fields:
+
+- `id`
+- `animal_id`
+- `vaccine_name`
+- `dose`
+- `application_date`
+- `next_due_date`
+- `notes`
+- `created_at`
 
 Relationship:
 
-```text
-vaccinations.animal_id
-→ animals.id
-```
+- `vaccinations.animal_id -> animals.id`
 
 ---
 
-## milk_records
+### milk_records
 
-Milk production records.
-
-```sql
-milk_records
-```
+Purpose: milk production records.
 
 Main fields:
 
-```text
-id
-animal_id
-record_date
-milk_liters
-session
-notes
-created_at
-```
+- `id`
+- `animal_id`
+- `record_date`
+- `milk_liters`
+- `session`
+- `notes`
+- `created_at`
 
 Relationship:
 
-```text
-milk_records.animal_id
-→ animals.id
-```
+- `milk_records.animal_id -> animals.id`
 
 ---
 
-## health_records
+### health_records
 
-Health events and treatments.
-
-```sql
-health_records
-```
+Purpose: animal health events and treatments.
 
 Main fields:
 
-```text
-id
-animal_id
-record_type
-diagnosis
-treatment
-medicine_name
-dosage
-record_date
-withdrawal_end_date
-notes
-created_at
-```
+- `id`
+- `animal_id`
+- `record_type`
+- `diagnosis`
+- `treatment`
+- `medicine_name`
+- `dosage`
+- `record_date`
+- `withdrawal_end_date`
+- `notes`
+- `created_at`
 
 Relationship:
 
-```text
-health_records.animal_id
-→ animals.id
-```
+- `health_records.animal_id -> animals.id`
 
-Supported record types:
+Common record types used by the frontend:
 
-```text
-treatment
-illness
-checkup
-vaccination
-```
+- `treatment`
+- `illness`
+- `checkup`
+- `vaccination`
 
 ---
 
-## inventory_items
+### inventory_items
 
-Inventory master records.
-
-```sql
-inventory_items
-```
+Purpose: inventory master data.
 
 Main fields:
 
-```text
-id
-name
-category
-unit
-current_quantity
-minimum_quantity
-notes
-is_active
-created_at
-updated_at
-```
-
-Relationship:
-
-```text
-inventory_items
- └─ inventory_movements
-```
+- `id`
+- `name`
+- `category`
+- `unit`
+- `current_quantity`
+- `minimum_quantity`
+- `unit_cost`
+- `notes`
+- `is_active`
+- `created_at`
+- `updated_at`
 
 ---
 
-## inventory_movements
+### inventory_movements
 
-Inventory transactions.
-
-```sql
-inventory_movements
-```
+Purpose: inventory quantity transactions.
 
 Main fields:
 
-```text
-id
-item_id
-movement_type
-quantity
-movement_date
-notes
-created_at
-```
+- `id`
+- `item_id`
+- `movement_type`
+- `quantity`
+- `movement_date`
+- `notes`
+- `created_at`
 
 Relationship:
 
-```text
-inventory_movements.item_id
-→ inventory_items.id
-```
+- `inventory_movements.item_id -> inventory_items.id`
 
 Supported movement types:
 
-```text
-in
-out
-adjustment
-```
+- `in`
+- `out`
+- `adjustment`
 
 ---
 
-## financial_records
+### financial_records
 
-Income and expense records.
-
-```sql
-financial_records
-```
+Purpose: income and expense records.
 
 Main fields:
 
-```text
-id
-record_type
-category
-amount
-record_date
-description
-is_active
-created_at
-```
+- `id`
+- `record_type`
+- `category`
+- `amount`
+- `record_date`
+- `description`
+- `is_active`
+- `created_at`
 
-Supported types:
+Implemented constraints:
 
-```text
-income
-expense
-```
+- `record_type` must be `income` or `expense`.
+- `amount` must be greater than zero.
 
 ---
 
-## withdrawal_locks
+### withdrawal_locks
 
-Drug withdrawal periods.
-
-```sql
-withdrawal_locks
-```
+Purpose: withdrawal periods linked to animals and optionally health records.
 
 Main fields:
 
-```text
-id
-animal_id
-health_record_id
-start_date
-end_date
-reason
-is_active
-created_at
-updated_at
-```
+- `id`
+- `animal_id`
+- `health_record_id`
+- `start_date`
+- `end_date`
+- `reason`
+- `is_active`
+- `created_at`
+- `updated_at`
 
 Relationships:
 
-```text
-withdrawal_locks.animal_id
-→ animals.id
-
-withdrawal_locks.health_record_id
-→ health_records.id
-```
+- `withdrawal_locks.animal_id -> animals.id`
+- `withdrawal_locks.health_record_id -> health_records.id`
 
 ---
 
-## alarms
+### alarms
 
-Operational reminders and alerts.
-
-```sql
-alarms
-```
+Purpose: operational reminders and alerts.
 
 Main fields:
 
-```text
-id
-title
-description
-alarm_type
-priority
-due_date
-is_completed
-created_at
-```
+- `id`
+- `title`
+- `description`
+- `alarm_type`
+- `priority`
+- `due_date`
+- `is_completed`
+- `created_at`
 
-Supported alarm types:
+Implemented constraints:
 
-```text
-reminder
-withdrawal
-```
-
-Supported priorities:
-
-```text
-low
-medium
-high
-```
+- `alarm_type` must be one of `vaccination`, `withdrawal`, `health`, `reminder`.
+- `priority` must be one of `low`, `medium`, `high`.
 
 ---
 
-# Entity Relationship Overview
+### weight_records
+
+Purpose: animal weight tracking and growth-related reporting.
+
+Main fields:
+
+- `id`
+- `animal_id`
+- `record_date`
+- `weight_kg`
+- `notes`
+- `created_at`
+- `updated_at`
+
+Relationship:
+
+- `weight_records.animal_id -> animals.id`
+
+---
+
+### reproduction_events
+
+Purpose: mating, pregnancy, and birth events.
+
+Main fields:
+
+- `id`
+- `animal_id`
+- `event_type`
+- `event_date`
+- `pregnancy_status`
+- `pregnancy_outcome`
+- `offspring_count`
+- `notes`
+- `created_at`
+- `updated_at`
+
+Relationship:
+
+- `reproduction_events.animal_id -> animals.id`
+
+Common event types used by the frontend:
+
+- `mating`
+- `pregnancy`
+- `birth`
+
+Computed model property:
+
+- `is_twin_birth`
+
+---
+
+### settings
+
+Purpose: farm-level settings.
+
+Main fields:
+
+- `id`
+- `farm_name`
+- `owner_name`
+- `contact_phone`
+- `milk_price`
+- `address`
+- `notes`
+
+---
+
+## Relationship Overview
 
 ```text
 animals
- ├─ vaccinations
- ├─ milk_records
- ├─ health_records
- │      └─ withdrawal_locks
- └─ withdrawal_locks
+  -> vaccinations
+  -> milk_records
+  -> health_records
+       -> withdrawal_locks
+  -> withdrawal_locks
+  -> weight_records
+  -> reproduction_events
 
 inventory_items
- └─ inventory_movements
+  -> inventory_movements
 
 users
-
 financial_records
-
 alarms
+settings
 ```
 
 ---
 
-# Reporting Data Sources
+## Reporting Data Sources
 
-Reporting currently reads directly from operational tables.
+Reports and dashboard values are calculated from operational tables, including:
 
-Sources:
+- `animals`
+- `milk_records`
+- `health_records`
+- `weight_records`
+- `reproduction_events`
+- `financial_records`
+- `withdrawal_locks`
+- `alarms`
+- `inventory_items`
+- `inventory_movements`
 
-```text
-animals
-milk_records
-health_records
-withdrawal_locks
-alarms
-financial_records
-inventory_items
-inventory_movements
-```
-
-No reporting tables exist.
-
-No reporting warehouse exists.
+No report tables, data warehouse, event store, or AI storage tables are implemented.
 
 ---
 
-# Dashboard Data Sources
+## Outdated Statements Removed
 
-Dashboard values are calculated from:
+Older documentation listed `weight_records` as a future candidate table. It is now implemented.
 
-```text
-animals
-milk_records
-health_records
-withdrawal_locks
-alarms
-```
-
-Dashboard data is not stored separately.
+Older documentation omitted `reproduction_events` and `settings`. They are now included as implemented tables.
 
 ---
 
-# Current Database Scope
+## Not Implemented
 
-Implemented modules:
+The following tables are not part of the current system:
 
-```text
-Authentication
-Animal Management
-Vaccinations
-Milk Production
-Health Tracking
-Inventory
-Finance
-Withdrawal Locks
-Alarms
-Reporting
-Dashboard
-```
-
----
-
-# Future Candidate Tables
-
-These tables are not implemented.
-
-Possible future additions:
-
-```text
-weight_records
-breeding_records
-pregnancy_records
-lambing_records
-calving_records
-ai_predictions
-hardware_tags
-sync_queue
-```
-
-Future tables must be justified by an implemented feature.
-
----
-
-# Excluded by Design
-
-The following database structures are intentionally not used:
-
-```text
-Event Store
-CQRS Tables
-Message Queue Tables
-Workflow Engines
-AI Storage Tables
-Microservice Databases
-```
-
-The current system does not require them.
+- `breeding_records`
+- `pregnancy_records`
+- `lambing_records`
+- `calving_records`
+- `ai_predictions`
+- `hardware_tags`
+- `sync_queue`
+- event store tables
+- CQRS tables

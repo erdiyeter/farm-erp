@@ -1,459 +1,124 @@
-# 01 · Development Roadmap
+# 01 - Development Roadmap
 
 ## Current Status
 
-Project Status: Post-MVP Operational Enhancement Phase
+Project status: Post-MVP operational improvement and documentation alignment.
 
-Layer 1 (Core MVP) has been completed.
+The MVP and the main post-MVP operational modules are implemented. Current work is focused on keeping documentation accurate, improving day-to-day usability, and making controlled refinements to the existing system.
 
-Layer 2 (Operational System) is largely completed and currently focuses on operational improvements, documentation alignment, and selected business capabilities required for real-world usage.
+This document describes the implemented roadmap state. Future work is listed only as future work.
 
 ---
 
-# Development Strategy
+## Development Principles
 
-The project follows a layered development model.
-
-Principles:
-
+- Keep the architecture simple.
 - Build working software first.
-- Keep architecture simple.
-- Avoid unnecessary complexity.
-- Follow YAGNI.
-- Reuse existing code whenever possible.
-- Expand only when real operational needs appear.
-- Keep documentation synchronized with the implementation.
+- Avoid speculative infrastructure.
+- Add new capabilities only when there is a real operational need.
+- Keep documentation synchronized with the implemented system.
+- Use `docs/09_TURKISH_TERMINOLOGY_GLOSSARY.md` as the SSOT for Turkish UI terminology.
 
 ---
 
-# Layer 1 — Core MVP
+## Layer 1 - Core MVP
 
-Status: Completed
+Status: Completed.
 
-## Goal
+Implemented scope:
 
-Build a working farm management application capable of handling basic farm records.
+- Animal records: create, list, detail, edit, soft delete, statistics.
+- Vaccination records and animal vaccination history.
+- Milk production records and animal milk history.
+- Basic dashboard metrics.
+- FastAPI backend.
+- PostgreSQL database.
+- React/Vite frontend.
+- REST API.
 
-## Completed Scope
-
-### Animal Management
-
-- Create animal
-- List animals
-- Animal detail page
-- Edit animal
-- Soft delete animal
-- Animal statistics
-
-### Vaccination Management
-
-- Vaccination records
-- Vaccination history
-
-### Milk Production
-
-- Milk records
-- Milk history
-- Dashboard integration
-
-### Dashboard
-
-- Total animals
-- Daily milk production
-- Last 7-day milk production
-- Recent activity
-
-### Technical Foundation
-
-- FastAPI backend
-- PostgreSQL database
-- React frontend
-- REST API architecture
-
-## Layer 1 Outcome
-
-Successfully completed.
-
-The system became operational and capable of supporting basic farm record management.
+Layer 1 outcome: the system became usable for basic farm record management.
 
 ---
 
-# Layer 2 — Operational System
+## Layer 2 - Operational System
 
-Status: Mostly Completed
+Status: Completed for the current implemented scope.
 
-## Goal
+Implemented modules:
 
-Expand the MVP into a practical operational management platform.
+- Authentication with JWT and role-based route protection.
+- Animal management with operational fields, lifecycle exit fields, lactation fields, and economic values.
+- Vaccination tracking.
+- Milk production tracking.
+- Health records for treatment, illness, checkup, and vaccination-type records.
+- Inventory items and inventory movements.
+- Health-to-inventory medicine consumption workflow.
+- Finance records for income and expense.
+- Withdrawal lock management.
+- Alarm management.
+- Weight records and growth-related reporting.
+- Reproduction events for mating, pregnancy, and birth.
+- Farm settings.
+- Dashboard and reporting views.
+- CSV report exports.
+- Frontend Turkish translation cleanup and glossary-based terminology.
 
----
-
-## Completed Modules
-
-### Authentication
-
-Status: Completed
-
-Features:
-
-- JWT authentication
-- Login endpoint
-- Protected frontend routes
-- Protected backend endpoints
-
----
-
-### Animal Management
-
-Status: Completed
-
-Features:
-
-- CRUD operations
-- Detail view
-- Edit functionality
-- Soft delete
-- Statistics endpoint
-- Operational profile improvements
+Layer 2 outcome: the system now supports practical daily farm operations beyond the original MVP.
 
 ---
 
-### Health Tracking
+## Current Phase
 
-Status: Completed
+Status: Documentation refactor and alignment.
 
-Features:
+Current priority:
 
-- Treatment records
-- Illness records
-- Checkups
-- Vaccination-type records
-- Health filters
-- Health dashboard metrics
-- Animal health history
+1. Keep documentation aligned with the real codebase.
+2. Preserve the current simple architecture.
+3. Improve existing workflows without changing APIs or business behavior unnecessarily.
+4. Keep Turkish UI terminology consistent with the glossary.
 
 ---
 
-### Milk Production
+## Completed Items That Were Previously Listed As Future Work
 
-Status: Completed
+The following items are now implemented and should no longer be documented as future-only work:
 
-Features:
-
-- Milk record management
-- Animal milk history
-- Dashboard integration
-- Animal profile integration
-
----
-
-### Inventory Management
-
-Status: Completed
-
-Features:
-
-- Inventory items
-- Inventory movements
-- Stock adjustments
-- Low stock monitoring
-- Inventory dashboard
+- Weight tracking.
+- Growth-related metrics in reporting/dashboard views.
+- Reproduction event tracking.
+- Basic role-based access behavior.
+- Settings page and settings API.
+- Decision-support style dashboard review sections based on existing operational data.
 
 ---
 
-### Inventory ↔ Health Integration
+## Future Work
 
-Status: Completed
+Future work must remain optional until there is a clear operational need.
 
-Features:
+Possible future enhancements:
 
-- Medicine consumption tracking
-- Automatic inventory OUT movements
-- Stock validation
-- Linked treatment consumption history
+- More detailed role and permission management.
+- More advanced reporting filters.
+- Better dashboard resilience and partial loading behavior.
+- Additional animal analytics based on accumulated data.
+- Hardware identification such as RFID, NFC, or QR.
+- Mobile or offline support.
+- AI-assisted analysis after enough reliable farm data exists.
 
----
+Not current implementation:
 
-### Finance Management
-
-Status: Completed
-
-Features:
-
-- Income records
-- Expense records
-- Financial record detail
-- Edit functionality
-- Soft delete behavior
-
----
-
-### Withdrawal Lock Management
-
-Status: Completed
-
-Features:
-
-- Withdrawal lock records
-- Active lock monitoring
-- Released lock tracking
-- Expired lock tracking
-- Dashboard integration
-- Animal profile integration
+- Redis.
+- Celery.
+- Microservices.
+- Event systems.
+- Offline sync.
+- Mobile app.
+- AI services.
 
 ---
 
-### Alarm System
+## Long-Term Direction
 
-Status: Completed
-
-Features:
-
-- Alarm CRUD
-- Alarm filters
-- Dashboard integration
-- Automatic withdrawal lock alarms
-
----
-
-### Reporting
-
-Status: Completed
-
-Features:
-
-- Reporting API
-- Date range filtering
-- Dashboard reporting
-- CSV export
-- Reporting UI improvements
-
----
-
-### Animal Profile Improvements
-
-Status: Completed
-
-Features:
-
-- Operational summary
-- Recent milk records
-- Recent health records
-- Withdrawal indicators
-- Alarm indicators
-- Lifetime metrics using existing data
-
----
-
-### UI Standardization
-
-Status: Completed
-
-Features:
-
-- Dashboard cleanup
-- Navigation cleanup
-- Reporting UI standardization
-- Animal profile polish
-- Responsive layout improvements
-
----
-
-### Quality Assurance
-
-Status: Completed
-
-Features:
-
-- Backend automated tests
-- API validation
-- Frontend build verification
-- PostgreSQL verification
-- MVP QA review
-
----
-
-# Layer 2 Remaining Work
-
-Status: Active
-
-The following items are potential operational enhancements.
-
----
-
-## High Priority
-
-### Documentation Refactor
-
-Goal:
-
-Bring documentation back in sync with the real system.
-
-Scope:
-
-- Vision update
-- Roadmap update
-- Architecture update
-- Database documentation update
-- API documentation update
-- Frontend guide update
-- Deployment guide update
-
----
-
-### Weight Tracking
-
-Goal:
-
-Support growth monitoring and livestock operations beyond milk production.
-
-Potential Scope:
-
-- Weight records
-- Weight history
-- Current weight tracking
-- Growth monitoring
-
----
-
-### Growth Metrics
-
-Goal:
-
-Provide operational animal performance indicators.
-
-Potential Metrics:
-
-- Weight gain
-- Average daily gain (ADG)
-- Growth trend indicators
-
----
-
-### Advanced Animal Analytics
-
-Goal:
-
-Expand animal profile using existing and future operational data.
-
-Potential Metrics:
-
-- Production indicators
-- Health indicators
-- Growth indicators
-- Operational scoring
-
----
-
-## Medium Priority
-
-### User Roles
-
-Examples:
-
-- Admin
-- Worker
-- Veterinarian
-
-Status:
-
-Deferred until a real multi-user requirement exists.
-
----
-
-## Low Priority
-
-### Dashboard Resilience
-
-Examples:
-
-- Independent widget loading
-- Partial dashboard failure handling
-- Advanced frontend fault tolerance
-
-Status:
-
-Can be postponed.
-
----
-
-# Layer 3 — Decision Support System
-
-Status: Planned
-
-## Goal
-
-Transform the platform into a decision-support system using accumulated farm data.
-
----
-
-## Planned Features
-
-### Animal Performance Analysis
-
-- Production metrics
-- Growth metrics
-- Health metrics
-
-### Risk Detection
-
-- Mastitis risk analysis
-- Health trend monitoring
-- Productivity decline detection
-
-### Predictive Features
-
-- Milk production forecasting
-- Growth forecasting
-
-### Decision Support
-
-- Golden List
-- Black List
-- Priority monitoring
-
-### AI Assistant
-
-Example questions:
-
-- Which animals need attention?
-- Which animals show performance decline?
-- Which animals have recurring health issues?
-- Which animals should be prioritized?
-
----
-
-## Future Expansion
-
-Potential future areas:
-
-- RFID integration
-- NFC integration
-- QR identification
-- Offline support
-- Mobile application
-
-These will only be implemented if a real operational need appears.
-
----
-
-# Current Development Priority
-
-1. Documentation Refactor
-2. Weight Tracking
-3. Growth Metrics
-4. Advanced Animal Analytics
-5. User Roles
-6. Decision Support Features
-
----
-
-# Long-Term Vision
-
-Farm ERP should evolve from a record-keeping application into a practical decision-support platform while maintaining:
-
-- Simplicity
-- Reliability
-- Maintainability
-- Accurate documentation
-- Sustainable growth
+Farm ERP should remain a practical farm management system that can gradually evolve into a decision-support platform while staying maintainable, understandable, and accurately documented.

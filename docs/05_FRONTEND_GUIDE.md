@@ -1,697 +1,255 @@
-# 05 · Frontend Guide
+# 05 - Frontend Guide
 
 ## Purpose
 
-This document describes the current frontend structure used by Farm ERP.
+This document describes the current implemented frontend.
 
-The frontend is focused on operational usability, simplicity, and maintainability.
-
----
-
-# Technology Stack
-
-```text
-React
-Vite
-JavaScript
-React Router
-Fetch API
-CSS
-```
-
-Frontend communicates only with the backend API.
-
-Database access is never performed directly.
+The frontend is a React/Vite application focused on operational farm workflows. It should stay simple and follow existing page, API, and i18n patterns.
 
 ---
 
-# Frontend Architecture
+## Technology
+
+- React.
+- Vite.
+- JavaScript.
+- React Router.
+- Fetch API through local API helper modules.
+- CSS.
+
+Not currently used:
+
+- Redux.
+- MobX.
+- React Query.
+- GraphQL.
+- Micro frontends.
+
+---
+
+## Current Structure
 
 ```text
-Pages
-  ↓
-API Layer
-  ↓
-Backend API
-```
-
-Simple architecture is intentionally preferred.
-
-No frontend state management framework is currently required.
-
-Not used:
-
-```text
-Redux
-MobX
-GraphQL
-React Query
-Micro Frontends
+frontend/src/
+  api/
+  assets/
+  components/
+  context/
+  hooks/
+  i18n/
+  pages/
+  App.jsx
+  App.css
+  main.jsx
 ```
 
 ---
 
-# Current Project Structure
-
-```text
-src/
-
-├─ api/
-├─ pages/
-├─ components/
-├─ assets/
-├─ App.jsx
-├─ App.css
-├─ main.jsx
-```
-
----
-
-# API Layer
+## API Layer
 
 Current API modules:
 
-```text
-animalsApi.js
-vaccinationsApi.js
-milkRecordsApi.js
-healthRecordApi.js
-inventoryApi.js
-financeApi.js
-withdrawalLockApi.js
-alarmApi.js
-reportApi.js
-dashboardApi.js
-authApi.js
-```
+- `alarmApi.js`
+- `animalApi.js`
+- `apiClient.js`
+- `authApi.js`
+- `dashboardApi.js`
+- `financeApi.js`
+- `healthRecordApi.js`
+- `inventoryApi.js`
+- `milkRecordApi.js`
+- `reproductionEventApi.js`
+- `settingsApi.js`
+- `vaccinationApi.js`
+- `weightRecordApi.js`
+- `withdrawalLockApi.js`
 
 Responsibilities:
 
-- HTTP requests
-- API communication
-- Response handling
+- Build backend request URLs.
+- Send authenticated requests.
+- Parse responses.
+- Convert failed responses into UI-facing errors.
 
 Business logic should remain in the backend.
 
 ---
 
-# Authentication Pages
+## Authentication And Navigation
 
-## Login
+Authentication is handled with:
 
-Purpose:
+- `AuthProvider`
+- `useAuth`
+- `ProtectedRoute`
+- JWT token storage and authenticated fetch helpers.
 
-```text
-User authentication
-JWT token generation
-Protected system access
-```
+Navigation is role-aware in `App.jsx`.
 
-Responsibilities:
+Current roles used by the frontend:
 
-- Login form
-- Credential submission
-- Token storage
-- Redirect after login
+- `admin`
+- `worker`
+- `veterinarian`
 
----
-
-# Dashboard
-
-Route:
-
-```text
-/dashboard
-```
-
-Purpose:
-
-Provide a farm-wide operational overview.
-
-Current sections:
-
-```text
-Animal KPIs
-Milk KPIs
-Health KPIs
-Withdrawal Lock KPIs
-Alarm KPIs
-Recent Records
-Quick Navigation
-```
-
-Dashboard aggregates information from multiple modules.
+The frontend hides or shows navigation items based on role, while the backend remains responsible for enforcing access.
 
 ---
 
-# Animal Management Pages
+## Implemented Pages
 
-## Animals
+Authentication:
 
-Route:
+- `/login` - login page.
 
-```text
-/animals
-```
+Dashboard:
 
-Features:
+- `/dashboard` - dashboard, operational summaries, decision-support style review sections, reports, and CSV export actions.
 
-```text
-Animal list
-Create animal
-View animal
-Navigate to edit page
-```
+Animals:
 
----
+- `/animals` - animal list.
+- `/animals/new` - animal create.
+- `/animals/:id` - animal detail and operational profile.
+- `/animals/:id/edit` - animal edit.
 
-## Animal Detail
+Vaccinations:
 
-Route:
+- `/vaccinations` - vaccination list and creation.
 
-```text
-/animals/:id
-```
+Milk:
 
-Current sections:
+- `/milk-records` - milk record list and creation.
 
-```text
-Identity Information
-Operational Summary
-Recent Milk Records
-Recent Health Records
-Active Withdrawal Locks
-Related Alarms
-```
+Inventory:
 
-Purpose:
+- `/inventory` - inventory dashboard.
+- `/inventory/items` - inventory item list and creation.
+- `/inventory/items/:id` - inventory item detail.
+- `/inventory/items/:id/edit` - inventory item edit.
+- `/inventory/movements` - inventory movement list and creation.
 
-Provide a single operational view of an animal.
+Finance:
 
----
+- `/finance` - finance record list and creation.
+- `/finance/:id` - finance record detail.
+- `/finance/:id/edit` - finance record edit.
 
-## Animal Edit
+Health:
 
-Route:
+- `/health-records` - health record list, creation, and filters.
+- `/health-records/:id` - health record detail.
+- `/health-records/:id/edit` - health record edit.
 
-```text
-/animals/:id/edit
-```
+Weight:
 
-Features:
+- `/weight-records` - weight record list and creation.
+- `/weight-records/:id` - weight record detail.
+- `/weight-records/:id/edit` - weight record edit.
 
-```text
-Update animal information
-Manage active status
-```
+Reproduction:
 
----
+- `/reproduction-events` - mating, pregnancy, and birth event list and creation.
+- `/reproduction-events/:id` - reproduction event detail.
+- `/reproduction-events/:id/edit` - reproduction event edit.
 
-# Vaccination Pages
+Withdrawal locks:
 
-## Vaccinations
+- `/withdrawal-locks` - withdrawal lock list, creation, and filters.
+- `/withdrawal-locks/:id` - withdrawal lock detail.
+- `/withdrawal-locks/:id/edit` - withdrawal lock edit.
 
-Route:
+Alarms:
 
-```text
-/vaccinations
-```
+- `/alarms` - alarm list, creation, and filters.
+- `/alarms/:id` - alarm detail.
+- `/alarms/:id/edit` - alarm edit.
 
-Features:
+Settings:
 
-```text
-Vaccination list
-Vaccination creation
-Animal association
-```
+- `/settings` - farm settings.
 
 ---
 
-# Milk Production Pages
+## Dashboard And Reports
 
-## Milk Records
+Reporting is integrated into the dashboard page.
 
-Route:
+Current dashboard/report behavior includes:
 
-```text
-/milk-records
-```
+- Operational KPIs.
+- Animal performance and economic ranking sections.
+- Milk, health, withdrawal, alarm, weight, reproduction, finance, and lifecycle reporting.
+- Date range filters.
+- CSV export actions.
 
-Features:
-
-```text
-Milk record list
-Milk record creation
-Animal association
-```
-
-Purpose:
-
-Milk production tracking.
+The dashboard reads data from backend endpoints. It does not persist dashboard-only state to the database.
 
 ---
 
-# Health Tracking Pages
+## i18n Structure
 
-## Health Records
-
-Route:
+Current Turkish i18n files:
 
 ```text
-/health-records
+frontend/src/i18n/index.js
+frontend/src/i18n/tr/animals.js
+frontend/src/i18n/tr/business.js
+frontend/src/i18n/tr/dashboard.js
+frontend/src/i18n/tr/operations.js
 ```
 
-Features:
+Current helper exports:
 
-```text
-Health record list
-Health record creation
-Health filters
-```
+- `tAnimal`
+- `tAnimalValue`
+- `tBusiness`
+- `tBusinessValue`
+- `tDashboard`
+- `tDashboardValue`
+- `tOperation`
+- `tOperationValue`
 
-Supported filters:
+Rules:
 
-```text
-All
-Treatments
-Vaccinations
-Checkups
-```
+- Use `t...()` for UI labels and fixed text.
+- Use `t...Value()` for enum-like display values.
+- Do not translate user-entered free text unless it exactly matches a known standardized/system value.
+- Keep `docs/09_TURKISH_TERMINOLOGY_GLOSSARY.md` as the SSOT for Turkish UI terminology.
 
 ---
 
-## Health Record Detail
+## UI Principles
 
-Route:
-
-```text
-/health-records/:id
-```
-
-Features:
-
-```text
-Health information
-Treatment information
-Inventory consumption information
-Withdrawal information
-```
+- Prefer existing page and component patterns.
+- Keep forms direct and predictable.
+- Keep table/detail/list pages consistent.
+- Keep operational usability ahead of visual decoration.
+- Do not add new frontend state frameworks unless the current codebase actually needs one.
 
 ---
 
-## Health Record Edit
+## Outdated Statements Removed
 
-Route:
+Older frontend documentation omitted implemented pages for:
 
-```text
-/health-records/:id/edit
-```
+- Weight records.
+- Reproduction events.
+- Settings.
+- Role-aware navigation.
+- Current i18n helper structure.
 
-Features:
-
-```text
-Update health record
-Update treatment information
-```
+Older documentation described reporting as separate reporting screens. In the current frontend, reporting is integrated into `Dashboard.jsx`.
 
 ---
 
-# Inventory Pages
+## Future Work
 
-## Inventory Dashboard
+Future frontend work may include better role-permission UX, more resilient dashboard loading, and additional reporting controls.
 
-Route:
+Not current frontend implementation:
 
-```text
-/inventory
-```
-
-Features:
-
-```text
-Inventory summary
-Stock overview
-Low stock indicators
-```
-
----
-
-## Inventory Items
-
-Route:
-
-```text
-/inventory/items
-```
-
-Features:
-
-```text
-Item list
-Create item
-View item
-Edit item
-```
-
----
-
-## Inventory Item Detail
-
-Route:
-
-```text
-/inventory/items/:id
-```
-
-Features:
-
-```text
-Item information
-Stock information
-Movement history
-```
-
----
-
-## Inventory Item Edit
-
-Route:
-
-```text
-/inventory/items/:id/edit
-```
-
-Features:
-
-```text
-Update item
-Update thresholds
-```
-
----
-
-## Inventory Movements
-
-Route:
-
-```text
-/inventory/movements
-```
-
-Features:
-
-```text
-Movement list
-Create movement
-Stock adjustment
-```
-
-Supported types:
-
-```text
-IN
-OUT
-ADJUSTMENT
-```
-
----
-
-# Finance Pages
-
-## Finance Records
-
-Route:
-
-```text
-/finance
-```
-
-Features:
-
-```text
-Income records
-Expense records
-Record creation
-```
-
----
-
-## Finance Detail
-
-Route:
-
-```text
-/finance/:id
-```
-
-Features:
-
-```text
-Record details
-Financial information
-```
-
----
-
-## Finance Edit
-
-Route:
-
-```text
-/finance/:id/edit
-```
-
-Features:
-
-```text
-Update finance record
-```
-
----
-
-# Withdrawal Lock Pages
-
-## Withdrawal Locks
-
-Route:
-
-```text
-/withdrawal-locks
-```
-
-Features:
-
-```text
-Lock list
-Lock creation
-Status filters
-```
-
-Supported filters:
-
-```text
-All
-Active
-Expired
-Released
-```
-
----
-
-## Withdrawal Lock Detail
-
-Route:
-
-```text
-/withdrawal-locks/:id
-```
-
-Features:
-
-```text
-Lock details
-Animal reference
-Health record reference
-```
-
----
-
-## Withdrawal Lock Edit
-
-Route:
-
-```text
-/withdrawal-locks/:id/edit
-```
-
-Features:
-
-```text
-Update withdrawal lock
-```
-
----
-
-# Alarm Pages
-
-## Alarms
-
-Route:
-
-```text
-/alarms
-```
-
-Features:
-
-```text
-Alarm list
-Alarm creation
-Alarm filtering
-```
-
-Supported filters:
-
-```text
-All
-Open
-Completed
-Overdue
-Upcoming
-```
-
----
-
-## Alarm Detail
-
-Route:
-
-```text
-/alarms/:id
-```
-
-Features:
-
-```text
-Alarm details
-Status information
-```
-
----
-
-## Alarm Edit
-
-Route:
-
-```text
-/alarms/:id/edit
-```
-
-Features:
-
-```text
-Update alarm
-Mark completed
-```
-
----
-
-# Reporting Pages
-
-Current reporting functionality is integrated into dashboard and reporting screens.
-
-Features:
-
-```text
-Date range filtering
-Reporting summaries
-CSV export
-Preset date ranges
-```
-
----
-
-# Navigation Structure
-
-Current primary navigation:
-
-```text
-Dashboard
-Animals
-Vaccinations
-Milk Records
-Health Records
-Inventory
-Finance
-Withdrawal Locks
-Alarms
-Reports
-```
-
----
-
-# UI Principles
-
-## Operational First
-
-The system is designed for daily farm operations.
-
-Functionality is more important than visual effects.
-
----
-
-## Simple Forms
-
-Every form should:
-
-```text
-Accept input
-Validate input
-Submit data
-Show result
-```
-
----
-
-## Clear Navigation
-
-Users should reach important data in as few clicks as possible.
-
----
-
-## Reuse Existing Components
-
-Existing patterns should be reused whenever possible.
-
-Avoid creating duplicate UI patterns.
-
----
-
-# Current Frontend Scope
-
-Implemented:
-
-```text
-Authentication
-Dashboard
-Animals
-Vaccinations
-Milk Records
-Health Records
-Inventory
-Finance
-Withdrawal Locks
-Alarms
-Reporting
-```
-
-Future candidates:
-
-```text
-Weight Tracking
-Breeding Tracking
-Advanced Animal Analytics
-Role-Based UI Permissions
-AI Insights
-Mobile Interface
-```
+- Mobile app.
+- Offline mode.
+- AI interface.
+- Micro frontend architecture.

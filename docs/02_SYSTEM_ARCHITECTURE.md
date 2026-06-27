@@ -1,417 +1,233 @@
-# 02 · System Architecture
+# 02 - System Architecture
 
 ## Purpose
 
-Farm ERP is a personal farm management system developed for learning, long-term use, and real farm operations.
+This document describes the current implemented architecture of Farm ERP.
 
-The project follows a simple architecture:
+The system is intentionally simple:
 
 ```text
-React Frontend
-      ↓ HTTP / JSON
-FastAPI Backend
-      ↓ SQLAlchemy
-PostgreSQL Database
+React/Vite frontend
+        |
+        | HTTP / JSON
+        v
+FastAPI backend
+        |
+        | SQLAlchemy
+        v
+PostgreSQL database
 ```
 
-The goal is not architectural complexity.
-
-The goal is a maintainable and understandable system.
+No microservices, message queues, Redis, Celery, event bus, GraphQL layer, mobile backend, or AI service is part of the current implementation.
 
 ---
 
-# Current System Status
+## Current Modules
 
-Project phase:
+Implemented application areas:
 
-```text
-Post-MVP Operational Enhancement Phase
-```
-
-Current architecture supports:
-
-- Animal Management
-- Vaccination Management
-- Milk Production Tracking
-- Health Tracking
-- Inventory Management
-- Finance Management
-- Withdrawal Lock Management
-- Alarm Management
-- Authentication
-- Reporting
-- Dashboard
+- Authentication and roles.
+- Animals.
+- Vaccinations.
+- Milk records.
+- Health records.
+- Inventory items and movements.
+- Finance records.
+- Withdrawal locks.
+- Alarms.
+- Weight records.
+- Reproduction events.
+- Settings.
+- Dashboard.
+- Reports and CSV exports.
 
 ---
 
-# High Level Architecture
-
-```text
-Frontend (React + Vite)
-            ↓
-REST API (FastAPI)
-            ↓
-Business Logic Layer
-            ↓
-Repository Layer
-            ↓
-PostgreSQL Database
-```
-
-No microservices are used.
-
-No distributed systems are used.
-
-No external processing services are required.
-
----
-
-# Frontend Layer
+## Frontend
 
 Technology:
 
-```text
-React
-Vite
-JavaScript
-```
+- React.
+- Vite.
+- JavaScript.
+- React Router.
+- CSS.
 
 Responsibilities:
 
-- Display pages
-- Handle user input
-- Form validation
-- API communication
-- Navigation
-- Dashboard rendering
-- Reporting screens
+- Render pages and navigation.
+- Manage forms and local UI state.
+- Call backend APIs.
+- Store and send the JWT token.
+- Display dashboard and report data.
+- Display Turkish UI text through the existing i18n helper structure.
 
-Frontend never accesses the database directly.
+The frontend does not access the database directly.
 
-All communication goes through the backend API.
+Current i18n structure:
+
+```text
+frontend/src/i18n/index.js
+frontend/src/i18n/tr/animals.js
+frontend/src/i18n/tr/business.js
+frontend/src/i18n/tr/dashboard.js
+frontend/src/i18n/tr/operations.js
+```
+
+The Turkish terminology glossary remains the SSOT for UI wording.
 
 ---
 
-# Backend Layer
+## Backend
 
 Technology:
 
+- FastAPI.
+- SQLAlchemy.
+- Pydantic.
+- JWT authentication.
+
+Current backend structure:
+
 ```text
-FastAPI
-SQLAlchemy
-Pydantic
-JWT Authentication
+backend/app/main.py
+backend/app/database.py
+backend/app/models/
+backend/app/repositories/
+backend/app/routers/
+backend/app/schemas/
+backend/app/services/
 ```
 
 Responsibilities:
 
-- API endpoints
-- Business rules
-- Authentication
-- Data validation
-- Reporting calculations
-- Inventory transactions
-- Withdrawal lock logic
-- Alarm generation
-
-Backend acts as the single source of business logic.
+- Define REST endpoints.
+- Validate request and response data.
+- Enforce authentication and role access.
+- Apply business rules in services.
+- Read and write PostgreSQL data through repositories and SQLAlchemy sessions.
+- Calculate dashboard and report responses.
+- Coordinate inventory movement creation when treatments consume inventory.
+- Coordinate withdrawal lock and alarm behavior.
 
 ---
 
-# Database Layer
+## Database
 
 Technology:
 
-```text
-PostgreSQL
-```
+- PostgreSQL.
+- SQLAlchemy models.
 
-Current main tables:
+Implemented tables:
 
-```text
-users
-animals
-vaccinations
-milk_records
-health_records
-inventory_items
-inventory_movements
-financial_records
-withdrawal_locks
-alarms
-```
+- `users`
+- `animals`
+- `vaccinations`
+- `milk_records`
+- `health_records`
+- `inventory_items`
+- `inventory_movements`
+- `financial_records`
+- `withdrawal_locks`
+- `alarms`
+- `weight_records`
+- `reproduction_events`
+- `settings`
 
-Database responsibilities:
-
-- Store operational data
-- Maintain relationships
-- Support reporting
-- Support authentication
-
-No database-side business automation is currently required.
-
-Business logic remains in the application layer.
+No separate reporting database exists. Dashboard and report data is calculated from operational tables.
 
 ---
 
-# Backend Internal Structure
+## Authentication And Roles
 
-Current backend follows a simple layered architecture.
+Authentication uses JWT bearer tokens.
 
-```text
-Router
-  ↓
-Service
-  ↓
-Repository
-  ↓
-Database
-```
+Implemented user roles are used by backend route dependencies and frontend navigation:
+
+- `admin`
+- `worker`
+- `veterinarian`
+
+The current role behavior is route-level access control. It is not a full configurable permissions system.
 
 ---
 
-## Router Layer
+## Reporting
 
-Responsibilities:
+Reports are generated directly from operational data.
 
-- Define API endpoints
-- Receive requests
-- Validate request schemas
-- Return responses
+Implemented reporting includes:
 
-Example:
+- Summary endpoints.
+- Detailed report endpoint.
+- Date range filters.
+- CSV exports for selected datasets.
+- Dashboard report UI.
+
+No background worker or reporting warehouse is used.
+
+---
+
+## Current Integration Points
+
+Health and inventory:
 
 ```text
-GET /animals
-POST /health-records
-GET /reports/dashboard
+Treatment health record
+        |
+        v
+Optional inventory item consumption
+        |
+        v
+Inventory OUT movement and stock update
 ```
 
----
-
-## Service Layer
-
-Responsibilities:
-
-- Business rules
-- Validation logic
-- Workflow coordination
-- Cross-module operations
-
-Examples:
+Health and withdrawal:
 
 ```text
-Check stock availability
-
-Create inventory movement
-
-Generate withdrawal lock
-
-Generate withdrawal alarm
-
-Validate animal state
+Health record with withdrawal end date
+        |
+        v
+Withdrawal tracking and related operational alerting
 ```
 
----
-
-## Repository Layer
-
-Responsibilities:
-
-- Database access
-- CRUD operations
-- Query execution
-
-Repositories should not contain business rules.
-
----
-
-# Authentication Architecture
-
-Current authentication method:
+Dashboard and reports:
 
 ```text
-User Login
-      ↓
-JWT Token
-      ↓
-Protected API Access
+Operational tables
+        |
+        v
+Backend calculations
+        |
+        v
+Dashboard / report views / CSV exports
 ```
 
-Authentication flow:
+---
 
-```text
-Login Request
-      ↓
-Credential Validation
-      ↓
-JWT Creation
-      ↓
-Frontend Stores Token
-      ↓
-Authorized API Requests
-```
+## Outdated Statements Removed
 
-Current scope:
+Older documentation described weight tracking, growth metrics, reproduction tracking, and roles as future-only work. They are now implemented in the current codebase and are documented as current modules.
 
-- Login
-- JWT authentication
-- Protected endpoints
-
-Future scope:
-
-- Role-based permissions
+Older documentation also described the backend as a strict router-service-repository architecture. The current backend has routers, services, repositories, schemas, and models, but the documentation should not imply a more complex architecture than the code actually uses.
 
 ---
 
-# Reporting Architecture
+## Not Current Implementation
 
-Reporting is generated directly from operational data.
+The following are not part of the current system:
 
-```text
-Operational Tables
-        ↓
-Reporting Service
-        ↓
-Reporting API
-        ↓
-Dashboard / CSV Export
-```
+- Redis.
+- Celery.
+- RabbitMQ.
+- Kafka.
+- Microservices.
+- Event sourcing.
+- CQRS.
+- GraphQL.
+- Offline sync.
+- Mobile app.
+- AI service.
 
-Current reporting features:
-
-- Dashboard summaries
-- Date range filtering
-- CSV export
-
-No separate reporting database exists.
-
----
-
-# Inventory and Health Integration
-
-Current workflow:
-
-```text
-Health Treatment Record
-          ↓
-Medicine Selected
-          ↓
-Inventory OUT Movement
-          ↓
-Stock Updated
-```
-
-This integration prevents inventory and treatment records from diverging.
-
----
-
-# Withdrawal Lock and Alarm Integration
-
-Current workflow:
-
-```text
-Health Record
-        ↓
-Withdrawal Period
-        ↓
-Withdrawal Lock
-        ↓
-Alarm Generation
-```
-
-The system automatically tracks active withdrawal periods and related alarms.
-
----
-
-# Dashboard Architecture
-
-Dashboard aggregates data from multiple modules.
-
-Sources:
-
-```text
-Animals
-Milk Records
-Health Records
-Withdrawal Locks
-Alarms
-Reports
-```
-
-Dashboard does not store its own data.
-
-All values are calculated from operational records.
-
----
-
-# Design Principles
-
-## Simplicity First
-
-The simplest working solution is preferred.
-
----
-
-## YAGNI
-
-Features are not added before they are needed.
-
----
-
-## Single Source of Truth
-
-Operational data should exist in one place.
-
-Duplicate storage is avoided.
-
----
-
-## Learning-Friendly Architecture
-
-The system should remain understandable after months of inactivity.
-
-Complex patterns are avoided unless they provide clear value.
-
----
-
-# Not Used
-
-The following technologies are intentionally excluded:
-
-```text
-Redis
-Celery
-RabbitMQ
-Kafka
-Microservices
-Event Bus
-CQRS
-Event Sourcing
-GraphQL
-Offline Sync
-AI Services
-Mobile Backend
-```
-
-These may be evaluated in future phases if a real requirement appears.
-
----
-
-# Future Expansion Areas
-
-Possible future additions:
-
-```text
-Weight Tracking
-Breeding Management
-Lambing / Calving Tracking
-Role-Based Permissions
-Advanced Reporting
-AI Decision Support
-RFID / NFC / QR Integration
-Offline Support
-Mobile Application
-```
-
-Future additions must follow existing architecture and avoid unnecessary complexity.
+They may be considered only as future work if a real requirement appears.
