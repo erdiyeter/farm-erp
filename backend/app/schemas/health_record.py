@@ -14,6 +14,7 @@ class HealthRecordBase(BaseModel):
     diagnosis: str | None = Field(default=None, max_length=150)
     treatment: str | None = None
     medicine_name: str | None = Field(default=None, max_length=150)
+    medicine_catalog_id: int | None = None
     dosage: str | None = Field(default=None, max_length=100)
     record_date: date
     withdrawal_end_date: date | None = None
@@ -30,6 +31,7 @@ class HealthRecordUpdate(BaseModel):
     diagnosis: str | None = Field(default=None, max_length=150)
     treatment: str | None = None
     medicine_name: str | None = Field(default=None, max_length=150)
+    medicine_catalog_id: int | None = None
     dosage: str | None = Field(default=None, max_length=100)
     record_date: date | None = None
     withdrawal_end_date: date | None = None
@@ -46,6 +48,7 @@ class HealthRecordResponse(BaseModel):
     diagnosis: str | None
     treatment: str | None
     medicine_name: str | None
+    medicine_catalog_id: int | None
     dosage: str | None
     record_date: date
     withdrawal_end_date: date | None

@@ -7,6 +7,7 @@ from app.init_db import (
     ensure_animal_economic_columns,
     ensure_animal_lactation_columns,
     ensure_animal_lifecycle_columns,
+    ensure_health_record_medicine_catalog_column,
     ensure_inventory_unit_cost_column,
     ensure_reproduction_outcome_column,
     ensure_settings_milk_price_column,
@@ -23,6 +24,7 @@ def initialize_test_database() -> None:
     ensure_settings_milk_price_column()
     ensure_inventory_unit_cost_column()
     ensure_reproduction_outcome_column()
+    ensure_health_record_medicine_catalog_column()
     ensure_user_role_column()
 
 

@@ -17,6 +17,9 @@ class HealthRecord(Base):
     diagnosis: Mapped[str | None] = mapped_column(String(150))
     treatment: Mapped[str | None] = mapped_column(Text)
     medicine_name: Mapped[str | None] = mapped_column(String(150))
+    medicine_catalog_id: Mapped[int | None] = mapped_column(
+        ForeignKey("medicine_catalog.id")
+    )
     dosage: Mapped[str | None] = mapped_column(String(100))
     record_date: Mapped[date] = mapped_column(Date, nullable=False)
     withdrawal_end_date: Mapped[date | None] = mapped_column(Date)

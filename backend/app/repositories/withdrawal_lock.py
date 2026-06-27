@@ -33,11 +33,14 @@ def get_withdrawal_lock_by_id(
 
 
 def create_withdrawal_lock(
-    db: Session, data: WithdrawalLockCreate
+    db: Session, data: WithdrawalLockCreate, commit: bool = True
 ) -> WithdrawalLock:
     withdrawal_lock = WithdrawalLock(**data.model_dump())
     db.add(withdrawal_lock)
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(withdrawal_lock)
     return withdrawal_lock
 

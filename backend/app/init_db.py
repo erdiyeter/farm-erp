@@ -122,6 +122,16 @@ def ensure_reproduction_outcome_column() -> None:
         )
 
 
+def ensure_health_record_medicine_catalog_column() -> None:
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE health_records ADD COLUMN IF NOT EXISTS "
+                "medicine_catalog_id INTEGER"
+            )
+        )
+
+
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     ensure_animal_lifecycle_columns()
@@ -130,6 +140,7 @@ def init_db() -> None:
     ensure_settings_milk_price_column()
     ensure_inventory_unit_cost_column()
     ensure_reproduction_outcome_column()
+    ensure_health_record_medicine_catalog_column()
     ensure_finance_soft_delete_column()
     ensure_user_role_column()
     with SessionLocal() as db:
