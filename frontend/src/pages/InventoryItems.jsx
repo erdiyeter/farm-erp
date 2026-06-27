@@ -7,7 +7,7 @@ import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
-import { tBusiness as t } from "../i18n";
+import { tBusiness as t, tBusinessValue as tv } from "../i18n";
 
 const initialFormData = {
   name: "",
@@ -213,7 +213,7 @@ function InventoryItems() {
               <tr key={item.id}>
                 <td>{item.id}</td>
                 <td>{item.name}</td>
-                <td>{item.category || "-"}</td>
+                <td>{tv(item.category) || "-"}</td>
                 <td>{item.unit}</td>
                 <td>{item.current_quantity}</td>
                 <td>{item.minimum_quantity}</td>

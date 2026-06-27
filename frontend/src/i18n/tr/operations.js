@@ -151,6 +151,17 @@ export const operationText = {
   vaccination: "aşı",
   Vaccinations: "Aşılar",
   withdrawal: "arınma",
+  Feed: "Yem",
+  Medicine: "İlaç",
+  Labor: "İşçilik",
+  Other: "Diğer",
+  sold: "Satıldı",
+  death: "Ölüm",
+  died: "Ölüm",
+  slaughter: "Kesim",
+  culled: "Sürüden Çıkarıldı",
+  transferred: "Transfer Edildi",
+  other: "Diğer",
 };
 
 export function tOperation(key) {

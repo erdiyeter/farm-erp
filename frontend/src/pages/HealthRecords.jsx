@@ -384,8 +384,8 @@ function HealthRecords() {
                       {tv(record.record_type)}
                     </span>
                   </td>
-                  <td>{record.diagnosis || "-"}</td>
-                  <td>{record.treatment || "-"}</td>
+                  <td>{tv(record.diagnosis) || "-"}</td>
+                  <td>{tv(record.treatment) || "-"}</td>
                   <td className="health-medicine-cell">
                     <strong>{record.medicine_name || "-"}</strong>
                     {record.dosage && <small>{t("Dosage")}: {record.dosage}</small>}

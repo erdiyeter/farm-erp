@@ -1271,7 +1271,7 @@ function Dashboard() {
                           {getAnimalLabel(event.animal_id)}
                         </Link>
                       </td>
-                      <td>{event.event_type}</td>
+                      <td>{tv(event.event_type)}</td>
                       <td>
                         {event.event_type === "pregnancy"
                           ? event.pregnancy_status
@@ -1316,7 +1316,7 @@ function Dashboard() {
                 <div className="dashboard-records-table">
                   <table className="data-table">
                     <thead><tr><th>{t("Date")}</th><th>{t("Animal")}</th><th>{t("Type")}</th></tr></thead>
-                    <tbody>{recentHealthActivity.map((record) => <tr key={record.id}><td>{record.record_date}</td><td><Link to={`/animals/${record.animal_id}`}>{getAnimalLabel(record.animal_id)}</Link></td><td><Link to={`/health-records/${record.id}`}>{record.record_type}</Link></td></tr>)}</tbody>
+                    <tbody>{recentHealthActivity.map((record) => <tr key={record.id}><td>{record.record_date}</td><td><Link to={`/animals/${record.animal_id}`}>{getAnimalLabel(record.animal_id)}</Link></td><td><Link to={`/health-records/${record.id}`}>{tv(record.record_type)}</Link></td></tr>)}</tbody>
                   </table>
                 </div>
               )}
@@ -1373,7 +1373,7 @@ function Dashboard() {
                       <tr key={item.lockId}>
                         <td>{item.priorityLabel}</td>
                         <td>{getAnimalLabel(item.animalId)}</td>
-                        <td>{item.reason}</td>
+                        <td>{tv(item.reason)}</td>
                         <td>{item.dueDate}</td>
                         <td>
                           <Link to={`/animals/${item.animalId}`}>{t("View")}</Link>
@@ -1428,7 +1428,7 @@ function Dashboard() {
                     {prioritizedOverdueAlarms.map((alarm) => (
                       <tr key={alarm.id}>
                         <td>{alarm.due_date}</td>
-                        <td>{alarm.priority}</td>
+                        <td>{tv(alarm.priority)}</td>
                         <td>{alarm.title}</td>
                         <td>
                           <button
@@ -1565,7 +1565,7 @@ function Dashboard() {
                             {getAnimalLabel(record.animal_id)}
                           </Link>
                         </td>
-                        <td>{record.record_type}</td>
+                        <td>{tv(record.record_type)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1850,7 +1850,7 @@ function Dashboard() {
         )}
 
         {reportLoading ? (
-          <Loading text="Loading reports..." className="status-text" />
+          <Loading text={t("Loading reports...")} className="status-text" />
         ) : reportSummary && reportDetails ? (
           <>
             <div className="report-kpi-group">
@@ -1957,7 +1957,7 @@ function Dashboard() {
                     {reportSummary.exits_by_reason.length === 0
                       ? t("No exits in this period.")
                       : reportSummary.exits_by_reason
-                          .map((item) => `${item.exit_reason}: ${item.count}`)
+                          .map((item) => `${tv(item.exit_reason)}: ${item.count}`)
                           .join(", ")}
                   </small>
                 </div>
@@ -2030,7 +2030,7 @@ function Dashboard() {
               <div className="dashboard-records-table">
                 <table className="data-table report-data-table">
                   <thead><tr><th>{t("Exit Date")}</th><th>{t("Animal")}</th><th>{t("Reason")}</th><th>{t("Status")}</th></tr></thead>
-                  <tbody>{reportExitedAnimals.map((animal) => <tr key={animal.id}><td>{animal.exit_date}</td><td><Link to={`/animals/${animal.id}`}>{getAnimalLabel(animal.id)}</Link></td><td>{animal.exit_reason}</td><td>{t("Exited")}</td></tr>)}</tbody>
+                  <tbody>{reportExitedAnimals.map((animal) => <tr key={animal.id}><td>{animal.exit_date}</td><td><Link to={`/animals/${animal.id}`}>{getAnimalLabel(animal.id)}</Link></td><td>{tv(animal.exit_reason)}</td><td>{t("Exited")}</td></tr>)}</tbody>
                 </table>
               </div>
             </ReportSection>
@@ -2259,7 +2259,7 @@ function Dashboard() {
                             {getAnimalLabel(event.animal_id)}
                           </Link>
                         </td>
-                        <td>{event.event_type}</td>
+                        <td>{tv(event.event_type)}</td>
                         <td>
                           {event.event_type === "pregnancy"
                             ? event.pregnancy_status
@@ -2286,7 +2286,7 @@ function Dashboard() {
               <div className="dashboard-records-table">
                 <table className="data-table report-data-table">
                   <thead><tr><th>{t("Date")}</th><th>{t("Animal")}</th><th>{t("Type")}</th><th>{t("Diagnosis")}</th></tr></thead>
-                  <tbody>{reportHealthRecords.map((record) => <tr key={record.id}><td>{record.record_date}</td><td><Link to={`/animals/${record.animal_id}`}>{getAnimalLabel(record.animal_id)}</Link></td><td>{record.record_type}</td><td>{record.diagnosis || "-"}</td></tr>)}</tbody>
+                  <tbody>{reportHealthRecords.map((record) => <tr key={record.id}><td>{record.record_date}</td><td><Link to={`/animals/${record.animal_id}`}>{getAnimalLabel(record.animal_id)}</Link></td><td>{tv(record.record_type)}</td><td>{tv(record.diagnosis) || "-"}</td></tr>)}</tbody>
                 </table>
               </div>
             </ReportSection>
@@ -2300,7 +2300,7 @@ function Dashboard() {
               <div className="dashboard-records-table">
                 <table className="data-table report-data-table">
                   <thead><tr><th>{t("Date")}</th><th>{t("Type")}</th><th>{t("Category")}</th><th>{t("Amount")}</th></tr></thead>
-                  <tbody>{reportFinancialRecords.map((record) => <tr key={record.id}><td>{record.record_date}</td><td>{record.record_type}</td><td>{record.category}</td><td>{record.amount}</td></tr>)}</tbody>
+                  <tbody>{reportFinancialRecords.map((record) => <tr key={record.id}><td>{record.record_date}</td><td>{tv(record.record_type)}</td><td>{tv(record.category)}</td><td>{record.amount}</td></tr>)}</tbody>
                 </table>
               </div>
             </ReportSection>
@@ -2328,7 +2328,7 @@ function Dashboard() {
               <div className="dashboard-records-table">
                 <table className="data-table report-data-table">
                   <thead><tr><th>{t("Due Date")}</th><th>{t("Title")}</th><th>{t("Priority")}</th><th>{t("Status")}</th></tr></thead>
-                  <tbody>{reportAlarms.map((alarm) => <tr key={alarm.id}><td>{alarm.due_date}</td><td>{alarm.title}</td><td>{alarm.priority}</td><td>{alarm.is_completed ? t("Completed") : t("Open")}</td></tr>)}</tbody>
+                  <tbody>{reportAlarms.map((alarm) => <tr key={alarm.id}><td>{alarm.due_date}</td><td>{alarm.title}</td><td>{tv(alarm.priority)}</td><td>{alarm.is_completed ? t("Completed") : t("Open")}</td></tr>)}</tbody>
                 </table>
               </div>
             </ReportSection>

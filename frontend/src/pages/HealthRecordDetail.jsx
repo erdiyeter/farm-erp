@@ -20,14 +20,14 @@ function buildHealthTimeline(record, locks, alarms) {
       date: record.record_date,
       type: t("Health Record"),
       event: tv(record.record_type),
-      details: record.diagnosis || record.treatment || t("Record created"),
+      details: tv(record.diagnosis) || tv(record.treatment) || t("Record created"),
     },
     ...locks.map((lock) => ({
       key: `lock-${lock.id}`,
       date: lock.start_date,
       type: t("Withdrawal"),
       event: lock.is_active ? t("Lock activated") : t("Lock released"),
-      details: `${lock.reason || t("No reason provided")}; ${t("End")} ${lock.end_date}`,
+      details: `${tv(lock.reason) || t("No reason provided")}; ${t("End")} ${lock.end_date}`,
     })),
     ...alarms.map((alarm) => ({
       key: `alarm-${alarm.id}`,
@@ -209,7 +209,7 @@ function HealthRecordDetail() {
         <dl className="health-detail-grid">
           <div><dt>{t("Record ID")}</dt><dd>{record.id}</dd></div>
           <div><dt>{t("Animal")}</dt><dd>{getAnimalLabel(record.animal_id)}</dd></div>
-          <div><dt>{t("Diagnosis")}</dt><dd>{record.diagnosis || "-"}</dd></div>
+          <div><dt>{t("Diagnosis")}</dt><dd>{tv(record.diagnosis) || "-"}</dd></div>
           <div><dt>{t("Created At")}</dt><dd>{record.created_at || "-"}</dd></div>
           <div className="health-detail-wide">
             <dt>{t("Notes")}</dt><dd>{record.notes || "-"}</dd>
@@ -226,7 +226,7 @@ function HealthRecordDetail() {
         </div>
         <dl className="health-detail-grid">
           <div className="health-detail-wide">
-            <dt>{t("Treatment")}</dt><dd>{record.treatment || "-"}</dd>
+            <dt>{t("Treatment")}</dt><dd>{tv(record.treatment) || "-"}</dd>
           </div>
           <div><dt>{t("Medication")}</dt><dd>{record.medicine_name || "-"}</dd></div>
           <div><dt>{t("Dosage")}</dt><dd>{record.dosage || "-"}</dd></div>
@@ -267,7 +267,7 @@ function HealthRecordDetail() {
           <div className="dashboard-records-table">
             <table className="data-table">
               <thead><tr><th>{t("Start")}</th><th>{t("End")}</th><th>{t("Reason")}</th><th>{t("Status")}</th></tr></thead>
-              <tbody>{withdrawalLocks.map((lock) => <tr key={lock.id}><td>{lock.start_date}</td><td>{lock.end_date}</td><td>{lock.reason || "-"}</td><td>{tv(lock.is_active && lock.end_date >= today ? "Active" : "Ended")}</td></tr>)}</tbody>
+              <tbody>{withdrawalLocks.map((lock) => <tr key={lock.id}><td>{lock.start_date}</td><td>{lock.end_date}</td><td>{tv(lock.reason) || "-"}</td><td>{tv(lock.is_active && lock.end_date >= today ? "Active" : "Ended")}</td></tr>)}</tbody>
             </table>
           </div>
         )}

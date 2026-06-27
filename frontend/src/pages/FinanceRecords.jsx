@@ -181,7 +181,7 @@ function FinanceRecords() {
               <tr key={record.id}>
                 <td>{record.id}</td>
                 <td>{tv(record.record_type)}</td>
-                <td>{record.category}</td>
+                <td>{tv(record.category)}</td>
                 <td>{record.amount}</td>
                 <td>{record.record_date}</td>
                 <td>{record.description || "-"}</td>

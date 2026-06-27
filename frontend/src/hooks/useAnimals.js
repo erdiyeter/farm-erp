@@ -27,7 +27,7 @@ function useAnimals() {
     const animal = animals.find((item) => item.id === Number(animalId));
 
     if (!animal) {
-      return `Animal ID ${animalId}`;
+      return `Hayvan ID ${animalId}`;
     }
 
     return `${animal.ear_tag}${animal.name ? ` - ${animal.name}` : ""} (ID: ${animal.id})`;

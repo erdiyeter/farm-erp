@@ -7,7 +7,7 @@ import {
 import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
-import { tBusiness as t } from "../i18n";
+import { tBusiness as t, tBusinessValue as tv } from "../i18n";
 
 function InventoryItemDetail() {
   const { id } = useParams();
@@ -86,7 +86,7 @@ function InventoryItemDetail() {
       </p>
 
       <p>
-        <strong>{t("Category")}:</strong> {item.category || "-"}
+        <strong>{t("Category")}:</strong> {tv(item.category) || "-"}
       </p>
 
       <p>

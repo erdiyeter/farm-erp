@@ -77,7 +77,7 @@ function FinanceRecordDetail() {
       </p>
 
       <p>
-        <strong>{t("Category")}:</strong> {record.category}
+        <strong>{t("Category")}:</strong> {tv(record.category)}
       </p>
 
       <p>

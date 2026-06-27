@@ -149,9 +149,9 @@ function buildTimeline(operationalData) {
       key: `health-${record.id}`,
       date: record.record_date,
       type: t("Health"),
-      event: record.record_type,
+      event: tv(record.record_type),
       details:
-        record.diagnosis || record.treatment || t("Health activity recorded"),
+        tv(record.diagnosis) || tv(record.treatment) || t("Health activity recorded"),
       to: `/health-records/${record.id}`,
     })),
     ...operationalData.weightRecords.map((record) => ({
@@ -184,7 +184,7 @@ function buildTimeline(operationalData) {
       date: lock.start_date,
       type: t("Withdrawal Lock"),
       event: lock.is_active ? t("Lock activated") : t("Released lock"),
-      details: `${lock.reason || t("No reason provided")}; ${t("ends")} ${lock.end_date}`,
+      details: `${tv(lock.reason) || t("No reason provided")}; ${t("ends")} ${lock.end_date}`,
       to: `/withdrawal-locks/${lock.id}`,
     })),
     ...operationalData.alarms.map((alarm) => ({
@@ -552,9 +552,9 @@ function AnimalDetail() {
           <div><dt>{t("ID")}</dt><dd>{animal.id}</dd></div>
           <div><dt>{t("Ear Tag")}</dt><dd>{animal.ear_tag}</dd></div>
           <div><dt>{t("Name")}</dt><dd>{animal.name || "-"}</dd></div>
-          <div><dt>{t("Species")}</dt><dd>{animal.species || "-"}</dd></div>
+          <div><dt>{t("Species")}</dt><dd>{tv(animal.species) || "-"}</dd></div>
           <div><dt>{t("Breed")}</dt><dd>{animal.breed || "-"}</dd></div>
-          <div><dt>{t("Sex")}</dt><dd>{animal.sex || "-"}</dd></div>
+          <div><dt>{t("Sex")}</dt><dd>{tv(animal.sex) || "-"}</dd></div>
           <div><dt>{t("Birth Date")}</dt><dd>{animal.birth_date || "-"}</dd></div>
           <div className="animal-identity-notes">
             <dt>{t("Notes")}</dt><dd>{animal.notes || "-"}</dd>
@@ -580,7 +580,7 @@ function AnimalDetail() {
           </div>
           <div>
             <dt>{t("Exit Reason")}</dt>
-            <dd>{animal.exit_reason || "-"}</dd>
+            <dd>{tv(animal.exit_reason) || "-"}</dd>
           </div>
         </dl>
       </section>
@@ -647,9 +647,7 @@ function AnimalDetail() {
           <div>
             <dt>{t("Sale Status / Exit Reason")}</dt>
             <dd>
-              {animal.exit_reason === "sold"
-                ? t("Sold")
-                : animal.exit_reason || "-"}
+              {tv(animal.exit_reason) || "-"}
             </dd>
           </div>
           <div>
@@ -826,7 +824,7 @@ function AnimalDetail() {
                 />
                 <KpiCard
                   title="Exit Reason"
-                  value={animal.exit_reason || "-"}
+                  value={tv(animal.exit_reason) || "-"}
                 />
                 <KpiCard
                   title="Last 30 Days Milk Liters"
@@ -1141,8 +1139,8 @@ function AnimalDetail() {
                         <tr key={record.id}>
                           <td>{record.record_date}</td>
                           <td>{tv(record.record_type)}</td>
-                          <td>{record.diagnosis || "-"}</td>
-                          <td>{record.treatment || "-"}</td>
+                          <td>{tv(record.diagnosis) || "-"}</td>
+                          <td>{tv(record.treatment) || "-"}</td>
                         </tr>
                       ))}
                   </tbody>
@@ -1180,7 +1178,7 @@ function AnimalDetail() {
                       <tr key={lock.id}>
                         <td>{lock.start_date}</td>
                         <td>{lock.end_date}</td>
-                        <td>{lock.reason || "-"}</td>
+                        <td>{tv(lock.reason) || "-"}</td>
                       </tr>
                     ))}
                   </tbody>

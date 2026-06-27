@@ -107,6 +107,10 @@ export const businessText = {
   View: "Görüntüle",
   "View Inventory Items": "Ürünleri Görüntüle",
   "View Inventory Movements": "Stok Hareketlerini Görüntüle",
+  Feed: "Yem",
+  Medicine: "İlaç",
+  Labor: "İşçilik",
+  Other: "Diğer",
   Yes: "Evet",
 };
 

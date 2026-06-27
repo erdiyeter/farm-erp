@@ -9,7 +9,7 @@ import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
 import useAnimals from "../hooks/useAnimals";
-import { tOperation as t } from "../i18n";
+import { tOperation as t, tOperationValue as tv } from "../i18n";
 
 const initialFormData = {
   animal_id: "",
@@ -252,7 +252,7 @@ function WithdrawalLocks() {
                   <td>{lock.health_record_id || "-"}</td>
                   <td>{lock.start_date}</td>
                   <td>{lock.end_date}</td>
-                  <td>{lock.reason || "-"}</td>
+                  <td>{tv(lock.reason) || "-"}</td>
                   <td>{lock.is_active ? t("Yes") : t("No")}</td>
                   <td>{lock.created_at || "-"}</td>
                   <td>{lock.updated_at || "-"}</td>

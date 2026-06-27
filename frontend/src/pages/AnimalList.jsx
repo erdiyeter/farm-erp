@@ -3,7 +3,7 @@ import ErrorMessage from "../components/ErrorMessage";
 import ButtonLink from "../components/ButtonLink";
 import PageHeader from "../components/PageHeader";
 import useAnimals from "../hooks/useAnimals";
-import { tAnimal as t } from "../i18n";
+import { tAnimal as t, tAnimalValue as tv } from "../i18n";
 
 function AnimalList() {
   const { animals, loading, error } = useAnimals();
@@ -46,7 +46,7 @@ function AnimalList() {
                 <td>{animal.ear_tag}</td>
                 <td>{animal.name || "-"}</td>
                 <td>{animal.breed || "-"}</td>
-                <td>{animal.sex || "-"}</td>
+                <td>{tv(animal.sex) || "-"}</td>
                 <td>
                   <ButtonLink to={`/animals/${animal.id}`} variant="secondary">
                     {t("View")}

@@ -8,7 +8,7 @@ import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import useAnimals from "../hooks/useAnimals";
-import { tOperation as t } from "../i18n";
+import { tOperation as t, tOperationValue as tv } from "../i18n";
 
 function WithdrawalLockDetail() {
   const { id } = useParams();
@@ -99,7 +99,7 @@ function WithdrawalLockDetail() {
       </p>
 
       <p>
-        <strong>{t("Reason")}:</strong> {lock.reason || "-"}
+        <strong>{t("Reason")}:</strong> {tv(lock.reason) || "-"}
       </p>
 
       <p>
