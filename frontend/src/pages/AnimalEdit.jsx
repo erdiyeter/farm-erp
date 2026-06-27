@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getAnimalById, updateAnimal } from "../api/animalApi";
 import Loading from "../components/Loading";
 import ErrorMessage from "../components/ErrorMessage";
+import { tAnimal as t } from "../i18n";
 
 function AnimalEdit() {
   const { id } = useParams();
@@ -52,7 +53,7 @@ function AnimalEdit() {
         });
       } catch {
         setError(
-          "Unable to load animal. Please make sure the backend server is running."
+          t("Unable to load animal. Please make sure the backend server is running.")
         );
       } finally {
         setLoading(false);
@@ -100,7 +101,7 @@ function AnimalEdit() {
       navigate(`/animals/${id}`);
     } catch {
       setError(
-        "Unable to update animal. Please make sure the backend server is running."
+        t("Unable to update animal. Please make sure the backend server is running.")
       );
     } finally {
       setSaving(false);
@@ -117,12 +118,12 @@ function AnimalEdit() {
 
   return (
     <div>
-      <h1>Edit Animal</h1>
+      <h1>{t("Edit Animal")}</h1>
 
       <form onSubmit={handleSubmit}>
         <div>
           <label>
-            Ear Tag:
+            {t("Ear Tag")}:
             <input
               name="ear_tag"
               value={formData.ear_tag}
@@ -134,7 +135,7 @@ function AnimalEdit() {
 
         <div>
           <label>
-            Name:
+            {t("Name")}:
             <input
               name="name"
               value={formData.name}
@@ -145,7 +146,7 @@ function AnimalEdit() {
 
         <div>
           <label>
-            Species:
+            {t("Species")}:
             <input
               name="species"
               value={formData.species}
@@ -156,7 +157,7 @@ function AnimalEdit() {
 
         <div>
           <label>
-            Breed:
+            {t("Breed")}:
             <input
               name="breed"
               value={formData.breed}
@@ -167,7 +168,7 @@ function AnimalEdit() {
 
         <div>
           <label>
-            Sex:
+            {t("Sex")}:
             <input
               name="sex"
               value={formData.sex}
@@ -178,7 +179,7 @@ function AnimalEdit() {
 
         <div>
           <label>
-            Birth Date:
+            {t("Birth Date")}:
             <input
               type="date"
               name="birth_date"
@@ -190,7 +191,7 @@ function AnimalEdit() {
 
         <div>
           <label>
-            Purchase Date:
+            {t("Purchase Date")}:
             <input
               type="date"
               name="purchase_date"
@@ -202,7 +203,7 @@ function AnimalEdit() {
 
         <div>
           <label>
-            Purchase Price:
+            {t("Purchase Price")}:
             <input
               type="number"
               name="purchase_price"
@@ -216,7 +217,7 @@ function AnimalEdit() {
 
         <div>
           <label>
-            Sale Price:
+            {t("Sale Price")}:
             <input
               type="number"
               name="sale_price"
@@ -230,7 +231,7 @@ function AnimalEdit() {
 
         <div>
           <label>
-            Lactation Number:
+            {t("Lactation Number")}:
             <input
               type="number"
               name="lactation_number"
@@ -244,7 +245,7 @@ function AnimalEdit() {
 
         <div>
           <label>
-            Lactation Start Date:
+            {t("Lactation Start Date")}:
             <input
               type="date"
               name="lactation_start_date"
@@ -256,7 +257,7 @@ function AnimalEdit() {
 
         <div>
           <label>
-            Lactation End Date:
+            {t("Lactation End Date")}:
             <input
               type="date"
               name="lactation_end_date"
@@ -268,7 +269,7 @@ function AnimalEdit() {
 
         <div>
           <label>
-            Notes:
+            {t("Notes")}:
             <textarea
               name="notes"
               value={formData.notes}
@@ -279,7 +280,7 @@ function AnimalEdit() {
 
         <div>
           <label>
-            Active:
+            {t("Active")}:
             <input
               type="checkbox"
               name="is_active"
@@ -290,14 +291,14 @@ function AnimalEdit() {
         </div>
 
         <button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save"}
+          {saving ? t("Saving...") : t("Save")}
         </button>
 
         <button
           type="button"
           onClick={() => navigate(`/animals/${id}`)}
         >
-          Cancel
+          {t("Cancel")}
         </button>
       </form>
     </div>

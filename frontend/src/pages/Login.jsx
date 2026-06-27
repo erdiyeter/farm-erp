@@ -3,6 +3,7 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { loginUser } from "../api/authApi";
 import ErrorMessage from "../components/ErrorMessage";
 import { useAuth } from "../context/authContext";
+import { tAnimal as t } from "../i18n";
 
 
 function Login() {
@@ -36,14 +37,14 @@ function Login() {
 
   return (
     <div className="page-card login-page">
-      <h1>Login</h1>
-      <p className="page-subtitle">Sign in to access Farm ERP.</p>
+      <h1>{t("Login")}</h1>
+      <p className="page-subtitle">{t("Sign in to access Farm ERP.")}</p>
 
       {error && <ErrorMessage message={error} className="error-text" />}
 
       <form className="auth-form" onSubmit={handleSubmit}>
         <label>
-          Email
+          {t("Email")}
           <input
             type="email"
             value={email}
@@ -53,7 +54,7 @@ function Login() {
         </label>
 
         <label>
-          Password
+          {t("Password")}
           <input
             type="password"
             value={password}
@@ -63,7 +64,7 @@ function Login() {
         </label>
 
         <button type="submit" disabled={submitting}>
-          {submitting ? "Logging in..." : "Login"}
+          {submitting ? t("Logging in...") : t("Login")}
         </button>
       </form>
     </div>

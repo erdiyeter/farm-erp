@@ -7,6 +7,7 @@ import {
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import useAnimals from "../hooks/useAnimals";
+import { tAnimal as t } from "../i18n";
 
 const initialFormData = {
   animal_id: "",
@@ -76,7 +77,7 @@ function WeightRecordEdit() {
   }
 
   if (loading) {
-    return <Loading text="Loading weight record..." className="status-text" />;
+    return <Loading text={t("Loading weight record...")} className="status-text" />;
   }
 
   if (loadError) {
@@ -85,7 +86,7 @@ function WeightRecordEdit() {
 
   return (
     <div className="page-card">
-      <h1>Edit Weight Record</h1>
+      <h1>{t("Edit Weight Record")}</h1>
 
       {error && <ErrorMessage message={error} className="error-text" />}
       {animalsError && (
@@ -95,7 +96,7 @@ function WeightRecordEdit() {
       <form className="health-record-form" onSubmit={handleSubmit}>
         <div>
           <label>
-            Animal:
+            {t("Animal")}:
             <select
               className="animal-select"
               name="animal_id"
@@ -105,7 +106,7 @@ function WeightRecordEdit() {
               required
             >
               <option value="">
-                {animalsLoading ? "Loading animals..." : "Select animal"}
+                {animalsLoading ? t("Loading animals...") : t("Select animal")}
               </option>
               {formData.animal_id &&
                 !animals.some(
@@ -126,7 +127,7 @@ function WeightRecordEdit() {
 
         <div>
           <label>
-            Record Date:
+            {t("Record Date")}:
             <input
               type="date"
               name="record_date"
@@ -139,7 +140,7 @@ function WeightRecordEdit() {
 
         <div>
           <label>
-            Weight (kg):
+            {t("Weight")} (kg):
             <input
               type="number"
               name="weight_kg"
@@ -154,7 +155,7 @@ function WeightRecordEdit() {
 
         <div>
           <label>
-            Notes:
+            {t("Notes")}:
             <textarea
               name="notes"
               value={formData.notes}
@@ -164,10 +165,10 @@ function WeightRecordEdit() {
         </div>
 
         <button type="submit" disabled={saving || animalsLoading}>
-          {saving ? "Saving..." : "Save"}
+          {saving ? t("Saving...") : t("Save")}
         </button>
         <Link to={`/weight-records/${id}`}>
-          <button type="button">Cancel</button>
+          <button type="button">{t("Cancel")}</button>
         </Link>
       </form>
     </div>

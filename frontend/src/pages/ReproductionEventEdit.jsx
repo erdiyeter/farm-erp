@@ -7,6 +7,7 @@ import {
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import useAnimals from "../hooks/useAnimals";
+import { tAnimal as t } from "../i18n";
 
 const initialFormData = {
   animal_id: "",
@@ -97,7 +98,7 @@ function ReproductionEventEdit() {
   }
 
   if (loading) {
-    return <Loading text="Loading reproduction event..." className="status-text" />;
+    return <Loading text={t("Loading reproduction event...")} className="status-text" />;
   }
   if (loadError) {
     return <ErrorMessage message={loadError} className="error-text" />;
@@ -105,41 +106,41 @@ function ReproductionEventEdit() {
 
   return (
     <div className="page-card">
-      <h1>Edit Reproduction Event</h1>
+      <h1>{t("Edit Reproduction Event")}</h1>
       {error && <ErrorMessage message={error} className="error-text" />}
       <form className="health-record-form" onSubmit={handleSubmit}>
         <div>
           <label>
-            Animal:
+            {t("Animal")}:
             <select name="animal_id" value={formData.animal_id} onChange={handleChange} disabled={animalsLoading} required>
-              <option value="">Select animal</option>
+              <option value="">{t("Select animal")}</option>
               {animals.map((animal) => <option key={animal.id} value={animal.id}>{getAnimalLabel(animal.id)}</option>)}
             </select>
           </label>
         </div>
         <div>
           <label>
-            Event Type:
+            {t("Event Type")}:
             <select name="event_type" value={formData.event_type} onChange={handleChange}>
-              <option value="mating">Mating</option>
-              <option value="pregnancy">Pregnancy Confirmation</option>
-              <option value="birth">Birth</option>
+              <option value="mating">{t("Mating")}</option>
+              <option value="pregnancy">{t("Pregnancy Confirmation")}</option>
+              <option value="birth">{t("Birth")}</option>
             </select>
           </label>
         </div>
-        <div><label>Event Date:<input type="date" name="event_date" value={formData.event_date} onChange={handleChange} required /></label></div>
+        <div><label>{t("Event Date")}:<input type="date" name="event_date" value={formData.event_date} onChange={handleChange} required /></label></div>
         {formData.event_type === "pregnancy" && (
-          <div><label>Pregnancy Status:<select name="pregnancy_status" value={formData.pregnancy_status} onChange={handleChange}><option value="true">Pregnancy confirmed</option><option value="false">Not pregnant</option></select></label></div>
+          <div><label>{t("Pregnancy Status")}:<select name="pregnancy_status" value={formData.pregnancy_status} onChange={handleChange}><option value="true">{t("Pregnancy confirmed")}</option><option value="false">{t("Not pregnant")}</option></select></label></div>
         )}
         {formData.event_type !== "birth" && (
-          <div><label>Pregnancy Outcome:<select name="pregnancy_outcome" value={formData.pregnancy_outcome} onChange={handleChange}><option value="unknown">Unknown</option><option value="pregnant">Pregnant</option><option value="abortion">Abortion</option><option value="failed">Failed</option></select></label></div>
+          <div><label>{t("Pregnancy Outcome")}:<select name="pregnancy_outcome" value={formData.pregnancy_outcome} onChange={handleChange}><option value="unknown">{t("Unknown")}</option><option value="pregnant">{t("Pregnant")}</option><option value="abortion">{t("Abortion")}</option><option value="failed">{t("Failed")}</option></select></label></div>
         )}
         {formData.event_type === "birth" && (
-          <div><label>Offspring Count:<input type="number" name="offspring_count" value={formData.offspring_count} onChange={handleChange} min="1" step="1" required /></label></div>
+          <div><label>{t("Offspring Count")}:<input type="number" name="offspring_count" value={formData.offspring_count} onChange={handleChange} min="1" step="1" required /></label></div>
         )}
-        <div><label>Notes:<textarea name="notes" value={formData.notes} onChange={handleChange} /></label></div>
-        <button type="submit" disabled={saving || animalsLoading}>{saving ? "Saving..." : "Save"}</button>
-        <Link to={`/reproduction-events/${id}`}><button type="button">Cancel</button></Link>
+        <div><label>{t("Notes")}:<textarea name="notes" value={formData.notes} onChange={handleChange} /></label></div>
+        <button type="submit" disabled={saving || animalsLoading}>{saving ? t("Saving...") : t("Save")}</button>
+        <Link to={`/reproduction-events/${id}`}><button type="button">{t("Cancel")}</button></Link>
       </form>
     </div>
   );

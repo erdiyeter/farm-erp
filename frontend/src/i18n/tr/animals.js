@@ -17,14 +17,18 @@ export const animalText = {
   "Birth recorded": "Doğum kaydedildi",
   Breed: "Irk",
   Cancel: "İptal",
+  Back: "Geri",
   Clear: "Temiz",
   Date: "Tarih",
   Dashboard: "Ana Sayfa",
   Deactivate: "Pasifleştir",
   "Deactivating...": "Pasifleştiriliyor...",
+  Delete: "Sil",
+  "Deleting...": "Siliniyor...",
   Details: "Detaylar",
   Dose: "Doz",
   Edit: "Düzenle",
+  "Edit Animal": "Hayvanı Düzenle",
   "Ear Tag": "Küpe No",
   "Ear tag already exists. Please enter a different ear tag.":
     "Küpe no zaten var. Lütfen farklı bir küpe no girin.",
@@ -55,7 +59,11 @@ export const animalText = {
   "Loading animals...": "Hayvanlar yükleniyor...",
   "Loading milk records...": "Sağım kayıtları yükleniyor...",
   "Loading operational details...": "Operasyon detayları yükleniyor...",
+  "Loading reproduction event...": "Üreme olayı yükleniyor...",
+  "Loading reproduction events...": "Üreme olayları yükleniyor...",
+  "Loading settings...": "Ayarlar yükleniyor...",
   "Loading vaccination records...": "Aşı kayıtları yükleniyor...",
+  "Loading weight record...": "Ağırlık kaydı yükleniyor...",
   Milk: "Süt",
   "Milk production recorded": "Süt üretimi kaydedildi",
   "Milk record created successfully.": "Sağım kaydı başarıyla oluşturuldu.",
@@ -126,6 +134,9 @@ export const animalText = {
   Alarms: "Alarmlar",
   Inventory: "Stok",
   Login: "Giriş",
+  Email: "E-posta",
+  Password: "Şifre",
+  "Logging in...": "Giriş yapılıyor...",
   Logout: "Çıkış",
   Reports: "Raporlar",
   "Restoring session...": "Oturum geri yükleniyor...",
@@ -150,6 +161,10 @@ export const animalText = {
   Alarm: "Alarm",
   "Are you sure you want to deactivate this animal?":
     "Bu hayvanı pasifleştirmek istediğinize emin misiniz?",
+  "Are you sure you want to delete this reproduction event?":
+    "Bu üreme olayını silmek istediğinize emin misiniz?",
+  "Are you sure you want to delete this weight record?":
+    "Bu ağırlık kaydını silmek istediğinize emin misiniz?",
   "Average Daily Gain": "Ortalama Günlük Artış",
   "Average Milk per Record": "Kayıt Başına Ortalama Süt",
   "Back to Animals": "Hayvanlara Dön",
@@ -160,7 +175,11 @@ export const animalText = {
   "Core profile and current status for": "Temel profil ve güncel durum:",
   "Create Milk Record": "Sağım Kaydı Oluştur",
   "Create Animal": "Hayvan Oluştur",
+  "Create Reproduction Event": "Üreme Olayı Oluştur",
   "Create Vaccination Record": "Aşı Kaydı Oluştur",
+  "Create Weight Record": "Ağırlık Kaydı Oluştur",
+  "Create and review animal weight records":
+    "Hayvan ağırlık kayıtlarını oluştur ve incele",
   "Create and review milk production records":
     "Süt üretim kayıtlarını oluştur ve incele",
   "Create and review vaccination records": "Aşı kayıtlarını oluştur ve incele",
@@ -181,6 +200,10 @@ export const animalText = {
   Diagnosis: "Teşhis",
   Down: "Düşüşte",
   "Due Date": "Son Tarih",
+  "Edit Reproduction Event": "Üreme Olayını Düzenle",
+  "Edit Weight Record": "Ağırlık Kaydını Düzenle",
+  "Event Date": "Olay Tarihi",
+  "Event Type": "Olay Tipi",
   "Economic Data": "Ekonomik Veri",
   "End Date": "Bitiş Tarihi",
   Exited: "Çıktı",
@@ -219,6 +242,7 @@ export const animalText = {
     "Süt, sağlık, ağırlık, üreme, arınma ve alarm aktivitesi",
   "Not pregnant": "Gebe değil",
   "Not pregnant / failed": "Gebe değil / başarısız",
+  "Offspring Count": "Yavru Sayısı",
   "Open Alarms": "Açık Alarmlar",
   "Open withdrawal alarms reliably linked to this animal":
     "Bu hayvana güvenilir şekilde bağlanan açık arınma alarmları",
@@ -228,6 +252,9 @@ export const animalText = {
   Priority: "Öncelik",
   "Production Context": "Üretim Bağlamı",
   "Production Trend": "Üretim Trendi",
+  "Pregnancy Confirmation": "Gebelik Onayı",
+  "Pregnancy Outcome": "Gebelik Sonucu",
+  "Pregnancy Status": "Gebelik Durumu",
   Reason: "Neden",
   "Recent Health Records": "Son Sağlık Kayıtları",
   "Recent Milk Records": "Son Sağım Kayıtları",
@@ -236,7 +263,14 @@ export const animalText = {
     "Son aktivite ve güncel kısıtlar.",
   "Released lock": "Arınma sonlandırıldı",
   "Reproduction History": "Üreme Geçmişi",
+  "Reproduction event created successfully.":
+    "Üreme olayı başarıyla oluşturuldu.",
+  "Reproduction Event Detail": "Üreme Olayı Detayı",
+  "Reproduction Events": "Üreme Olayları",
   "Reproduction Summary": "Üreme Özeti",
+  "Record Date": "Kayıt Tarihi",
+  "Record mating, pregnancy, and birth events":
+    "Çiftleşme, gebelik ve doğum olaylarını kaydet",
   "Reserved for later operational development":
     "Gelecek operasyonel geliştirme için ayrıldı",
   "Simple rule-based indicators from current animal data":
@@ -257,12 +291,20 @@ export const animalText = {
   "Totals calculated from this animal's reproduction history.":
     "Bu hayvanın üreme geçmişinden hesaplanan toplamlar.",
   "Twin Birth Count": "İkiz Doğum Sayısı",
+  "Twin Birth": "İkiz Doğum",
   "Unable to deactivate animal. Please make sure the backend server is running.":
     "Hayvan pasifleştirilemedi. Backend sunucusunun çalıştığından emin olun.",
+  "Unable to load animal. Please make sure the backend server is running.":
+    "Hayvan yüklenemedi. Backend sunucusunun çalıştığından emin olun.",
+  "Unable to update animal. Please make sure the backend server is running.":
+    "Hayvan güncellenemedi. Backend sunucusunun çalıştığından emin olun.",
   Unchanged: "Değişmedi",
   Up: "Yükselişte",
   "Weight Change": "Ağırlık Değişimi",
   "Weight Growth": "Ağırlık Büyümesi",
+  "Weight record created successfully.":
+    "Ağırlık kaydı başarıyla oluşturuldu.",
+  "Weight Record Detail": "Ağırlık Kaydı Detayı",
   "Weight recorded": "Ağırlık kaydedildi",
   "Withdrawal History": "Arınma Geçmişi",
   "active locks": "aktif arınma kaydı",
@@ -281,6 +323,20 @@ export const animalText = {
   "Genetics / Breeding": "Genetik / Damızlık",
   "Genetics and breeding data will be added in a future sprint.":
     "Genetik ve damızlık verileri gelecek sprintte eklenecek.",
+  Address: "Adres",
+  "Contact Phone": "İletişim Telefonu",
+  "Farm Name": "Çiftlik Adı",
+  "Manage basic farm and application information":
+    "Temel çiftlik ve uygulama bilgilerini yönetin",
+  "Milk Price": "Süt Fiyatı",
+  "Owner Name": "Sahip Adı",
+  "Save Settings": "Ayarları Kaydet",
+  "Settings saved successfully.": "Ayarlar başarıyla kaydedildi.",
+  "Sign in to access Farm ERP.": "Farm ERP'ye erişmek için giriş yapın.",
+  Confirmed: "Onaylandı",
+  "Loading weight records...": "Ağırlık kayıtları yükleniyor...",
+  "Mating recorded": "Çiftleşme kaydedildi",
+  "twin birth": "ikiz doğum",
 };
 
 export function tAnimal(key) {

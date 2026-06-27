@@ -8,6 +8,7 @@ import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
 import useAnimals from "../hooks/useAnimals";
+import { tAnimal as t, tAnimalValue as tv } from "../i18n";
 
 const initialFormData = {
   animal_id: "",
@@ -20,26 +21,19 @@ const initialFormData = {
 };
 
 function formatPregnancyOutcome(outcome) {
-  const labels = {
-    pregnant: "Pregnant",
-    birth: "Birth",
-    abortion: "Abortion",
-    failed: "Failed",
-    unknown: "Unknown",
-  };
-  return labels[outcome] || "-";
+  return tv(outcome) || "-";
 }
 
 function getEventDetails(event) {
   if (event.event_type === "pregnancy") {
-    return `${event.pregnancy_status ? "Pregnancy confirmed" : "Not pregnant"}; outcome: ${formatPregnancyOutcome(event.pregnancy_outcome)}`;
+    return `${event.pregnancy_status ? t("Pregnancy confirmed") : t("Not pregnant")}; ${t("outcome")}: ${formatPregnancyOutcome(event.pregnancy_outcome)}`;
   }
   if (event.event_type === "birth") {
-    return `${event.offspring_count} offspring${
-      event.is_twin_birth ? " (twin birth)" : ""
+    return `${event.offspring_count} ${t("offspring")}${
+      event.is_twin_birth ? ` (${t("twin birth")})` : ""
     }`;
   }
-  return `Mating recorded; outcome: ${formatPregnancyOutcome(event.pregnancy_outcome)}`;
+  return `${t("Mating recorded")}; ${t("outcome")}: ${formatPregnancyOutcome(event.pregnancy_outcome)}`;
 }
 
 function ReproductionEvents() {
@@ -111,7 +105,7 @@ function ReproductionEvents() {
       });
       setEvents(await getReproductionEvents());
       setFormData(initialFormData);
-      setSuccessMessage("Reproduction event created successfully.");
+      setSuccessMessage(t("Reproduction event created successfully."));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -122,8 +116,8 @@ function ReproductionEvents() {
   return (
     <div className="page-card">
       <PageHeader
-        title="Reproduction Events"
-        subtitle="Record mating, pregnancy, and birth events"
+        title={t("Reproduction Events")}
+        subtitle={t("Record mating, pregnancy, and birth events")}
       />
       {error && <ErrorMessage message={error} className="error-text" />}
       {animalsError && (
@@ -134,7 +128,7 @@ function ReproductionEvents() {
       <form className="health-record-form" onSubmit={handleSubmit}>
         <div>
           <label>
-            Animal:
+            {t("Animal")}:
             <select
               className="animal-select"
               name="animal_id"
@@ -144,7 +138,7 @@ function ReproductionEvents() {
               required
             >
               <option value="">
-                {animalsLoading ? "Loading animals..." : "Select animal"}
+                {animalsLoading ? t("Loading animals...") : t("Select animal")}
               </option>
               {animals.map((animal) => (
                 <option key={animal.id} value={animal.id}>
@@ -156,21 +150,21 @@ function ReproductionEvents() {
         </div>
         <div>
           <label>
-            Event Type:
+            {t("Event Type")}:
             <select
               name="event_type"
               value={formData.event_type}
               onChange={handleChange}
             >
-              <option value="mating">Mating</option>
-              <option value="pregnancy">Pregnancy Confirmation</option>
-              <option value="birth">Birth</option>
+              <option value="mating">{t("Mating")}</option>
+              <option value="pregnancy">{t("Pregnancy Confirmation")}</option>
+              <option value="birth">{t("Birth")}</option>
             </select>
           </label>
         </div>
         <div>
           <label>
-            Event Date:
+            {t("Event Date")}:
             <input
               type="date"
               name="event_date"
@@ -183,14 +177,14 @@ function ReproductionEvents() {
         {formData.event_type === "pregnancy" && (
           <div>
             <label>
-              Pregnancy Status:
+              {t("Pregnancy Status")}:
               <select
                 name="pregnancy_status"
                 value={formData.pregnancy_status}
                 onChange={handleChange}
               >
-                <option value="true">Pregnancy confirmed</option>
-                <option value="false">Not pregnant</option>
+                <option value="true">{t("Pregnancy confirmed")}</option>
+                <option value="false">{t("Not pregnant")}</option>
               </select>
             </label>
           </div>
@@ -198,16 +192,16 @@ function ReproductionEvents() {
         {formData.event_type !== "birth" && (
           <div>
             <label>
-              Pregnancy Outcome:
+              {t("Pregnancy Outcome")}:
               <select
                 name="pregnancy_outcome"
                 value={formData.pregnancy_outcome}
                 onChange={handleChange}
               >
-                <option value="unknown">Unknown</option>
-                <option value="pregnant">Pregnant</option>
-                <option value="abortion">Abortion</option>
-                <option value="failed">Failed</option>
+                <option value="unknown">{t("Unknown")}</option>
+                <option value="pregnant">{t("Pregnant")}</option>
+                <option value="abortion">{t("Abortion")}</option>
+                <option value="failed">{t("Failed")}</option>
               </select>
             </label>
           </div>
@@ -215,7 +209,7 @@ function ReproductionEvents() {
         {formData.event_type === "birth" && (
           <div>
             <label>
-              Offspring Count:
+              {t("Offspring Count")}:
               <input
                 type="number"
                 name="offspring_count"
@@ -230,7 +224,7 @@ function ReproductionEvents() {
         )}
         <div>
           <label>
-            Notes:
+            {t("Notes")}:
             <textarea
               name="notes"
               value={formData.notes}
@@ -239,33 +233,33 @@ function ReproductionEvents() {
           </label>
         </div>
         <button type="submit" disabled={saving || animalsLoading}>
-          {saving ? "Saving..." : "Create Reproduction Event"}
+          {saving ? t("Saving...") : t("Create Reproduction Event")}
         </button>
       </form>
 
       {loading ? (
-        <Loading text="Loading reproduction events..." className="status-text" />
+        <Loading text={t("Loading reproduction events...")} className="status-text" />
       ) : events.length === 0 ? (
-        <p className="empty-text">No reproduction events found.</p>
+        <p className="empty-text">{t("No reproduction events found.")}</p>
       ) : (
         <div className="dashboard-records-table">
           <table className="data-table">
             <thead>
-              <tr><th>Date</th><th>Animal</th><th>Type</th><th>Details</th><th>Actions</th></tr>
+              <tr><th>{t("Date")}</th><th>{t("Animal")}</th><th>{t("Type")}</th><th>{t("Details")}</th><th>{t("Actions")}</th></tr>
             </thead>
             <tbody>
               {events.map((event) => (
                 <tr key={event.id}>
                   <td>{event.event_date}</td>
                   <td>{getAnimalLabel(event.animal_id)}</td>
-                  <td>{event.event_type}</td>
+                  <td>{tv(event.event_type)}</td>
                   <td>{getEventDetails(event)}</td>
                   <td>
                     <ButtonLink
                       to={`/reproduction-events/${event.id}`}
                       variant="secondary"
                     >
-                      View
+                      {t("View")}
                     </ButtonLink>
                   </td>
                 </tr>

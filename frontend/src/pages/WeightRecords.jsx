@@ -8,6 +8,7 @@ import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
 import useAnimals from "../hooks/useAnimals";
+import { tAnimal as t } from "../i18n";
 
 const initialFormData = {
   animal_id: "",
@@ -72,7 +73,7 @@ function WeightRecords() {
       const data = await getWeightRecords();
       setRecords([...data].sort(newestFirst));
       setFormData(initialFormData);
-      setSuccessMessage("Weight record created successfully.");
+      setSuccessMessage(t("Weight record created successfully."));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -83,8 +84,8 @@ function WeightRecords() {
   return (
     <div className="page-card">
       <PageHeader
-        title="Weight Records"
-        subtitle="Create and review animal weight records"
+        title={t("Weight Records")}
+        subtitle={t("Create and review animal weight records")}
       />
 
       {error && <ErrorMessage message={error} className="error-text" />}
@@ -96,7 +97,7 @@ function WeightRecords() {
       <form className="health-record-form" onSubmit={handleSubmit}>
         <div>
           <label>
-            Animal:
+            {t("Animal")}:
             <select
               className="animal-select"
               name="animal_id"
@@ -106,7 +107,7 @@ function WeightRecords() {
               required
             >
               <option value="">
-                {animalsLoading ? "Loading animals..." : "Select animal"}
+                {animalsLoading ? t("Loading animals...") : t("Select animal")}
               </option>
               {animals.map((animal) => (
                 <option key={animal.id} value={animal.id}>
@@ -119,7 +120,7 @@ function WeightRecords() {
 
         <div>
           <label>
-            Record Date:
+            {t("Record Date")}:
             <input
               type="date"
               name="record_date"
@@ -132,7 +133,7 @@ function WeightRecords() {
 
         <div>
           <label>
-            Weight (kg):
+            {t("Weight")} (kg):
             <input
               type="number"
               name="weight_kg"
@@ -147,7 +148,7 @@ function WeightRecords() {
 
         <div>
           <label>
-            Notes:
+            {t("Notes")}:
             <textarea
               name="notes"
               value={formData.notes}
@@ -157,24 +158,24 @@ function WeightRecords() {
         </div>
 
         <button type="submit" disabled={saving || animalsLoading}>
-          {saving ? "Saving..." : "Create Weight Record"}
+          {saving ? t("Saving...") : t("Create Weight Record")}
         </button>
       </form>
 
       {loading ? (
-        <Loading text="Loading weight records..." className="status-text" />
+        <Loading text={t("Loading weight records...")} className="status-text" />
       ) : records.length === 0 ? (
-        <p className="empty-text">No weight records found.</p>
+        <p className="empty-text">{t("No weight records found.")}</p>
       ) : (
         <div className="dashboard-records-table">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Animal</th>
-                <th>Weight</th>
-                <th>Notes</th>
-                <th>Actions</th>
+                <th>{t("Date")}</th>
+                <th>{t("Animal")}</th>
+                <th>{t("Weight")}</th>
+                <th>{t("Notes")}</th>
+                <th>{t("Actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -189,7 +190,7 @@ function WeightRecords() {
                       to={`/weight-records/${record.id}`}
                       variant="secondary"
                     >
-                      View
+                      {t("View")}
                     </ButtonLink>
                   </td>
                 </tr>

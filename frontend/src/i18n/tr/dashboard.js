@@ -89,7 +89,7 @@ export const dashboardText = {
   "Exit Date": "Çıkış Tarihi",
   Indicator: "Gösterge",
   "Golden List": "Altın Liste",
-  "Active animals with positive economic value and low operational cöncern":
+  "Active animals with positive economic value and low operational concern":
     "Pozitif ekonomik değeri ve düşük operasyonel riski olan aktif hayvanlar",
   "No animals currently qualify for the Golden List.":
     "Şu anda Altın Liste için uygun hayvan yok.",

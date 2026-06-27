@@ -8,6 +8,7 @@ import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import useAnimals from "../hooks/useAnimals";
+import { tAnimal as t } from "../i18n";
 
 function WeightRecordDetail() {
   const { id } = useParams();
@@ -33,7 +34,7 @@ function WeightRecordDetail() {
   }, [id]);
 
   async function handleDelete() {
-    if (!window.confirm("Are you sure you want to delete this weight record?")) {
+    if (!window.confirm(t("Are you sure you want to delete this weight record?"))) {
       return;
     }
 
@@ -50,7 +51,7 @@ function WeightRecordDetail() {
   }
 
   if (loading) {
-    return <Loading text="Loading weight record..." className="status-text" />;
+    return <Loading text={t("Loading weight record...")} className="status-text" />;
   }
 
   if (!record) {
@@ -59,7 +60,7 @@ function WeightRecordDetail() {
 
   return (
     <div className="page-card">
-      <h1>Weight Record Detail</h1>
+      <h1>{t("Weight Record Detail")}</h1>
 
       {error && <ErrorMessage message={error} className="error-text" />}
       {animalsError && (
@@ -68,35 +69,35 @@ function WeightRecordDetail() {
 
       <dl className="health-detail-grid">
         <div>
-          <dt>Animal</dt>
+          <dt>{t("Animal")}</dt>
           <dd>{getAnimalLabel(record.animal_id)}</dd>
         </div>
         <div>
-          <dt>Record Date</dt>
+          <dt>{t("Record Date")}</dt>
           <dd>{record.record_date}</dd>
         </div>
         <div>
-          <dt>Weight</dt>
+          <dt>{t("Weight")}</dt>
           <dd>{record.weight_kg} kg</dd>
         </div>
         <div className="health-detail-wide">
-          <dt>Notes</dt>
+          <dt>{t("Notes")}</dt>
           <dd>{record.notes || "-"}</dd>
         </div>
       </dl>
 
       <div className="dashboard-export-links">
         <ButtonLink to="/weight-records" variant="secondary">
-          Back
+          {t("Back")}
         </ButtonLink>
         <ButtonLink
           to={`/weight-records/${record.id}/edit`}
           variant="secondary"
         >
-          Edit
+          {t("Edit")}
         </ButtonLink>
         <button onClick={handleDelete} disabled={deleting}>
-          {deleting ? "Deleting..." : "Delete"}
+          {deleting ? t("Deleting...") : t("Delete")}
         </button>
       </div>
     </div>

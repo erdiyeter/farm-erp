@@ -8,16 +8,10 @@ import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import useAnimals from "../hooks/useAnimals";
+import { tAnimal as t, tAnimalValue as tv } from "../i18n";
 
 function formatPregnancyOutcome(outcome) {
-  const labels = {
-    pregnant: "Pregnant",
-    birth: "Birth",
-    abortion: "Abortion",
-    failed: "Failed",
-    unknown: "Unknown",
-  };
-  return labels[outcome] || "-";
+  return tv(outcome) || "-";
 }
 
 function ReproductionEventDetail() {
@@ -43,7 +37,7 @@ function ReproductionEventDetail() {
   }, [id]);
 
   async function handleDelete() {
-    if (!window.confirm("Are you sure you want to delete this reproduction event?")) {
+    if (!window.confirm(t("Are you sure you want to delete this reproduction event?"))) {
       return;
     }
     setDeleting(true);
@@ -58,7 +52,7 @@ function ReproductionEventDetail() {
   }
 
   if (loading) {
-    return <Loading text="Loading reproduction event..." className="status-text" />;
+    return <Loading text={t("Loading reproduction event...")} className="status-text" />;
   }
   if (!event) {
     return <ErrorMessage message={error} className="error-text" />;
@@ -66,26 +60,26 @@ function ReproductionEventDetail() {
 
   return (
     <div className="page-card">
-      <h1>Reproduction Event Detail</h1>
+      <h1>{t("Reproduction Event Detail")}</h1>
       {error && <ErrorMessage message={error} className="error-text" />}
       <dl className="health-detail-grid">
-        <div><dt>Animal</dt><dd>{getAnimalLabel(event.animal_id)}</dd></div>
-        <div><dt>Event Type</dt><dd>{event.event_type}</dd></div>
-        <div><dt>Event Date</dt><dd>{event.event_date}</dd></div>
+        <div><dt>{t("Animal")}</dt><dd>{getAnimalLabel(event.animal_id)}</dd></div>
+        <div><dt>{t("Event Type")}</dt><dd>{tv(event.event_type)}</dd></div>
+        <div><dt>{t("Event Date")}</dt><dd>{event.event_date}</dd></div>
         <div>
-          <dt>Pregnancy Status</dt>
-          <dd>{event.pregnancy_status === null ? "-" : event.pregnancy_status ? "Confirmed" : "Not pregnant"}</dd>
+          <dt>{t("Pregnancy Status")}</dt>
+          <dd>{event.pregnancy_status === null ? "-" : event.pregnancy_status ? t("Confirmed") : t("Not pregnant")}</dd>
         </div>
-        <div><dt>Pregnancy Outcome</dt><dd>{formatPregnancyOutcome(event.pregnancy_outcome)}</dd></div>
-        <div><dt>Offspring Count</dt><dd>{event.offspring_count ?? "-"}</dd></div>
-        <div><dt>Twin Birth</dt><dd>{event.is_twin_birth ? "Yes" : "No"}</dd></div>
-        <div className="health-detail-wide"><dt>Notes</dt><dd>{event.notes || "-"}</dd></div>
+        <div><dt>{t("Pregnancy Outcome")}</dt><dd>{formatPregnancyOutcome(event.pregnancy_outcome)}</dd></div>
+        <div><dt>{t("Offspring Count")}</dt><dd>{event.offspring_count ?? "-"}</dd></div>
+        <div><dt>{t("Twin Birth")}</dt><dd>{event.is_twin_birth ? t("Yes") : t("No")}</dd></div>
+        <div className="health-detail-wide"><dt>{t("Notes")}</dt><dd>{event.notes || "-"}</dd></div>
       </dl>
       <div className="dashboard-export-links">
-        <ButtonLink to="/reproduction-events" variant="secondary">Back</ButtonLink>
-        <ButtonLink to={`/reproduction-events/${event.id}/edit`} variant="secondary">Edit</ButtonLink>
+        <ButtonLink to="/reproduction-events" variant="secondary">{t("Back")}</ButtonLink>
+        <ButtonLink to={`/reproduction-events/${event.id}/edit`} variant="secondary">{t("Edit")}</ButtonLink>
         <button onClick={handleDelete} disabled={deleting}>
-          {deleting ? "Deleting..." : "Delete"}
+          {deleting ? t("Deleting...") : t("Delete")}
         </button>
       </div>
     </div>

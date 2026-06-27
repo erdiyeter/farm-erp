@@ -3,6 +3,7 @@ import { getSettings, updateSettings } from "../api/settingsApi";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
+import { tAnimal as t } from "../i18n";
 
 const initialFormData = {
   farm_name: "",
@@ -67,7 +68,7 @@ function Settings() {
     try {
       const settings = await updateSettings(payload);
       setFormData(toFormData(settings));
-      setSuccessMessage("Settings saved successfully.");
+      setSuccessMessage(t("Settings saved successfully."));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -76,14 +77,14 @@ function Settings() {
   }
 
   if (loading) {
-    return <Loading text="Loading settings..." className="status-text" />;
+    return <Loading text={t("Loading settings...")} className="status-text" />;
   }
 
   return (
     <div className="page-card">
       <PageHeader
-        title="Settings"
-        subtitle="Manage basic farm and application information"
+        title={t("Settings")}
+        subtitle={t("Manage basic farm and application information")}
       />
 
       {error && <ErrorMessage message={error} className="error-text" />}
@@ -91,7 +92,7 @@ function Settings() {
 
       <form className="settings-form" onSubmit={handleSubmit}>
         <label>
-          Farm Name
+          {t("Farm Name")}
           <input
             name="farm_name"
             value={formData.farm_name}
@@ -100,7 +101,7 @@ function Settings() {
         </label>
 
         <label>
-          Owner Name
+          {t("Owner Name")}
           <input
             name="owner_name"
             value={formData.owner_name}
@@ -109,7 +110,7 @@ function Settings() {
         </label>
 
         <label>
-          Contact Phone
+          {t("Contact Phone")}
           <input
             name="contact_phone"
             value={formData.contact_phone}
@@ -118,7 +119,7 @@ function Settings() {
         </label>
 
         <label>
-          Milk Price
+          {t("Milk Price")}
           <input
             type="number"
             step="0.01"
@@ -130,7 +131,7 @@ function Settings() {
         </label>
 
         <label>
-          Address
+          {t("Address")}
           <textarea
             name="address"
             value={formData.address}
@@ -139,7 +140,7 @@ function Settings() {
         </label>
 
         <label>
-          Notes
+          {t("Notes")}
           <textarea
             name="notes"
             value={formData.notes}
@@ -148,7 +149,7 @@ function Settings() {
         </label>
 
         <button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save Settings"}
+          {saving ? t("Saving...") : t("Save Settings")}
         </button>
       </form>
     </div>
