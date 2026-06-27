@@ -7,6 +7,7 @@ import {
 import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
+import { tBusiness as t } from "../i18n";
 
 function InventoryItemDetail() {
   const { id } = useParams();
@@ -23,7 +24,7 @@ function InventoryItemDetail() {
         const data = await getInventoryItemById(id);
         setItem(data);
       } catch {
-        setError("Error: Failed to load inventory item");
+        setError(t("Error: Failed to load inventory item"));
       } finally {
         setLoading(false);
       }
@@ -34,7 +35,7 @@ function InventoryItemDetail() {
 
   async function handleDeactivate() {
     const confirmed = window.confirm(
-      "Are you sure you want to deactivate this inventory item?"
+      t("Are you sure you want to deactivate this inventory item?")
     );
 
     if (!confirmed) {
@@ -48,7 +49,7 @@ function InventoryItemDetail() {
     try {
       const data = await deactivateInventoryItem(id);
       setItem(data);
-      setSuccessMessage("Inventory item deactivated successfully.");
+      setSuccessMessage(t("Inventory item deactivated successfully."));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -59,7 +60,7 @@ function InventoryItemDetail() {
   if (loading) {
     return (
       <Loading
-        text="Loading inventory item..."
+        text={t("Loading inventory item...")}
         className="status-text"
       />
     );
@@ -71,72 +72,72 @@ function InventoryItemDetail() {
 
   return (
     <div className="page-card">
-      <h1>Inventory Item Detail</h1>
+      <h1>{t("Inventory Item Detail")}</h1>
 
       {error && <ErrorMessage message={error} className="error-text" />}
       {successMessage && <p className="status-text">{successMessage}</p>}
 
       <p>
-        <strong>ID:</strong> {item.id}
+        <strong>{t("ID")}:</strong> {item.id}
       </p>
 
       <p>
-        <strong>Name:</strong> {item.name}
+        <strong>{t("Name")}:</strong> {item.name}
       </p>
 
       <p>
-        <strong>Category:</strong> {item.category || "-"}
+        <strong>{t("Category")}:</strong> {item.category || "-"}
       </p>
 
       <p>
-        <strong>Unit:</strong> {item.unit}
+        <strong>{t("Unit")}:</strong> {item.unit}
       </p>
 
       <p>
-        <strong>Current Quantity:</strong> {item.current_quantity}
+        <strong>{t("Current Quantity")}:</strong> {item.current_quantity}
       </p>
 
       <p>
-        <strong>Minimum Quantity:</strong> {item.minimum_quantity}
+        <strong>{t("Minimum Quantity")}:</strong> {item.minimum_quantity}
       </p>
 
       <p>
-        <strong>Unit Cost:</strong> {item.unit_cost ?? "-"}
+        <strong>{t("Unit Cost")}:</strong> {item.unit_cost ?? "-"}
       </p>
 
       <p>
-        <strong>Notes:</strong> {item.notes || "-"}
+        <strong>{t("Notes")}:</strong> {item.notes || "-"}
       </p>
 
       <p>
-        <strong>Is Active:</strong> {item.is_active ? "Yes" : "No"}
+        <strong>{t("Is Active")}:</strong> {item.is_active ? t("Yes") : t("No")}
       </p>
 
       <p>
-        <strong>Created At:</strong> {item.created_at || "-"}
+        <strong>{t("Created At")}:</strong> {item.created_at || "-"}
       </p>
 
       <p>
-        <strong>Updated At:</strong> {item.updated_at || "-"}
+        <strong>{t("Updated At")}:</strong> {item.updated_at || "-"}
       </p>
 
       <ButtonLink to="/inventory/items" variant="secondary">
-        Back to Inventory Items
+        {t("Back to Inventory Items")}
       </ButtonLink>
 
       <ButtonLink to={`/inventory/items/${item.id}/edit`} variant="secondary">
-        Edit
+        {t("Edit")}
       </ButtonLink>
 
       {item.is_active === true && (
         <button onClick={handleDeactivate} disabled={deactivating}>
-          {deactivating ? "Deactivating..." : "Deactivate"}
+          {deactivating ? t("Deactivating...") : t("Deactivate")}
         </button>
       )}
 
       {successMessage && (
         <p>
-          <Link to="/inventory/items">Return to Inventory Items</Link>
+          <Link to="/inventory/items">{t("Return to Inventory Items")}</Link>
         </p>
       )}
     </div>

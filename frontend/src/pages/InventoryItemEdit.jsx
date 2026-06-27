@@ -6,6 +6,7 @@ import {
 } from "../api/inventoryApi";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
+import { tBusiness as t } from "../i18n";
 
 const initialFormData = {
   name: "",
@@ -41,7 +42,7 @@ function InventoryItemEdit() {
           notes: item.notes || "",
         });
       } catch {
-        setError("Error: Failed to load inventory item");
+        setError(t("Error: Failed to load inventory item"));
       } finally {
         setLoading(false);
       }
@@ -77,7 +78,7 @@ function InventoryItemEdit() {
 
     try {
       await updateInventoryItem(id, payload);
-      setSuccessMessage("Inventory item updated successfully.");
+      setSuccessMessage(t("Inventory item updated successfully."));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -88,7 +89,7 @@ function InventoryItemEdit() {
   if (loading) {
     return (
       <Loading
-        text="Loading inventory item..."
+        text={t("Loading inventory item...")}
         className="status-text"
       />
     );
@@ -100,7 +101,7 @@ function InventoryItemEdit() {
 
   return (
     <div className="page-card">
-      <h1>Edit Inventory Item</h1>
+      <h1>{t("Edit Inventory Item")}</h1>
 
       {error && <ErrorMessage message={error} className="error-text" />}
       {successMessage && <p className="status-text">{successMessage}</p>}
@@ -108,7 +109,7 @@ function InventoryItemEdit() {
       <form onSubmit={handleSubmit}>
         <div>
           <label>
-            Name:
+            {t("Name")}:
             <input
               name="name"
               value={formData.name}
@@ -120,7 +121,7 @@ function InventoryItemEdit() {
 
         <div>
           <label>
-            Category:
+            {t("Category")}:
             <input
               name="category"
               value={formData.category}
@@ -131,7 +132,7 @@ function InventoryItemEdit() {
 
         <div>
           <label>
-            Unit:
+            {t("Unit")}:
             <input
               name="unit"
               value={formData.unit}
@@ -143,7 +144,7 @@ function InventoryItemEdit() {
 
         <div>
           <label>
-            Current Quantity:
+            {t("Current Quantity")}:
             <input
               type="number"
               step="0.01"
@@ -157,7 +158,7 @@ function InventoryItemEdit() {
 
         <div>
           <label>
-            Minimum Quantity:
+            {t("Minimum Quantity")}:
             <input
               type="number"
               step="0.01"
@@ -171,7 +172,7 @@ function InventoryItemEdit() {
 
         <div>
           <label>
-            Unit Cost:
+            {t("Unit Cost")}:
             <input
               type="number"
               step="0.01"
@@ -185,7 +186,7 @@ function InventoryItemEdit() {
 
         <div>
           <label>
-            Notes:
+            {t("Notes")}:
             <textarea
               name="notes"
               value={formData.notes}
@@ -195,17 +196,17 @@ function InventoryItemEdit() {
         </div>
 
         <button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save"}
+          {saving ? t("Saving...") : t("Save")}
         </button>
 
         <Link to={`/inventory/items/${id}`}>
-          <button type="button">Cancel</button>
+          <button type="button">{t("Cancel")}</button>
         </Link>
       </form>
 
       {successMessage && (
         <p>
-          <Link to={`/inventory/items/${id}`}>Back to Inventory Item</Link>
+          <Link to={`/inventory/items/${id}`}>{t("Back to Inventory Item")}</Link>
         </p>
       )}
     </div>

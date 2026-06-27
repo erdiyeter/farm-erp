@@ -5,6 +5,7 @@ import ErrorMessage from "../components/ErrorMessage";
 import KpiCard from "../components/KpiCard";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
+import { tBusiness as t } from "../i18n";
 
 function InventoryDashboard() {
   const [items, setItems] = useState([]);
@@ -26,7 +27,7 @@ function InventoryDashboard() {
         const data = await getInventoryItems();
         setItems(data);
       } catch {
-        setError("Error: Failed to load inventory summary");
+        setError(t("Error: Failed to load inventory summary"));
       } finally {
         setLoading(false);
       }
@@ -38,7 +39,7 @@ function InventoryDashboard() {
   if (loading) {
     return (
       <Loading
-        text="Loading inventory summary..."
+        text={t("Loading inventory summary...")}
         className="status-text"
       />
     );
@@ -51,38 +52,38 @@ function InventoryDashboard() {
   return (
     <div className="dashboard-page">
       <PageHeader
-        title="Inventory"
-        subtitle="Inventory summary and low stock overview"
+        title={t("Inventory")}
+        subtitle={t("Inventory summary and low stock overview")}
       />
 
       <div className="dashboard-kpi-grid">
-        <KpiCard title="Total Active Items" value={activeItems.length} />
-        <KpiCard title="Total Stock Quantity" value={totalStockQuantity} />
-        <KpiCard title="Low Stock Items" value={lowStockItems.length} />
+        <KpiCard title={t("Total Active Items")} value={activeItems.length} />
+        <KpiCard title={t("Total Stock Quantity")} value={totalStockQuantity} />
+        <KpiCard title={t("Low Stock Items")} value={lowStockItems.length} />
       </div>
 
       <div className="dashboard-links">
-        <Link to="/inventory/items">View Inventory Items</Link>
+        <Link to="/inventory/items">{t("View Inventory Items")}</Link>
         {" | "}
-        <Link to="/inventory/movements">View Inventory Movements</Link>
+        <Link to="/inventory/movements">{t("View Inventory Movements")}</Link>
       </div>
 
       <section className="dashboard-section">
         <div className="dashboard-section-header">
-          <h2>Low Stock Items</h2>
+          <h2>{t("Low Stock Items")}</h2>
         </div>
 
         {lowStockItems.length === 0 ? (
-          <p className="empty-text">No low stock items.</p>
+          <p className="empty-text">{t("No low stock items.")}</p>
         ) : (
           <table className="data-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Current Quantity</th>
-                <th>Minimum Quantity</th>
-                <th>Unit</th>
+                <th>{t("ID")}</th>
+                <th>{t("Name")}</th>
+                <th>{t("Current Quantity")}</th>
+                <th>{t("Minimum Quantity")}</th>
+                <th>{t("Unit")}</th>
               </tr>
             </thead>
 

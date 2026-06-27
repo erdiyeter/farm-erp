@@ -7,6 +7,7 @@ import {
 import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
+import { tBusiness as t, tBusinessValue as tv } from "../i18n";
 
 function FinanceRecordDetail() {
   const { id } = useParams();
@@ -23,7 +24,7 @@ function FinanceRecordDetail() {
         const data = await getFinanceRecord(id);
         setRecord(data);
       } catch {
-        setError("Failed to load finance record.");
+        setError(t("Failed to load finance record."));
       } finally {
         setLoading(false);
       }
@@ -34,7 +35,7 @@ function FinanceRecordDetail() {
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this finance record?"
+      t("Are you sure you want to delete this finance record?")
     );
 
     if (!confirmed) {
@@ -48,13 +49,13 @@ function FinanceRecordDetail() {
       await deleteFinanceRecord(id);
       navigate("/finance");
     } catch {
-      setError("Failed to delete finance record.");
+      setError(t("Failed to delete finance record."));
       setDeleting(false);
     }
   }
 
   if (loading) {
-    return <Loading text="Loading finance record..." className="status-text" />;
+    return <Loading text={t("Loading finance record...")} className="status-text" />;
   }
 
   if (!record && error) {
@@ -63,48 +64,48 @@ function FinanceRecordDetail() {
 
   return (
     <div className="page-card">
-      <h1>Finance Record Detail</h1>
+      <h1>{t("Finance Record Detail")}</h1>
 
       {error && <ErrorMessage message={error} className="error-text" />}
 
       <p>
-        <strong>ID:</strong> {record.id}
+        <strong>{t("ID")}:</strong> {record.id}
       </p>
 
       <p>
-        <strong>Type:</strong> {record.record_type}
+        <strong>{t("Type")}:</strong> {tv(record.record_type)}
       </p>
 
       <p>
-        <strong>Category:</strong> {record.category}
+        <strong>{t("Category")}:</strong> {record.category}
       </p>
 
       <p>
-        <strong>Amount:</strong> {record.amount}
+        <strong>{t("Amount")}:</strong> {record.amount}
       </p>
 
       <p>
-        <strong>Date:</strong> {record.record_date}
+        <strong>{t("Date")}:</strong> {record.record_date}
       </p>
 
       <p>
-        <strong>Description:</strong> {record.description || "-"}
+        <strong>{t("Description")}:</strong> {record.description || "-"}
       </p>
 
       <p>
-        <strong>Created At:</strong> {record.created_at || "-"}
+        <strong>{t("Created At")}:</strong> {record.created_at || "-"}
       </p>
 
       <ButtonLink to="/finance" variant="secondary">
-        Back
+        {t("Back")}
       </ButtonLink>
 
       <ButtonLink to={`/finance/${record.id}/edit`} variant="secondary">
-        Edit
+        {t("Edit")}
       </ButtonLink>
 
       <button onClick={handleDelete} disabled={deleting}>
-        {deleting ? "Deleting..." : "Delete"}
+        {deleting ? t("Deleting...") : t("Delete")}
       </button>
     </div>
   );

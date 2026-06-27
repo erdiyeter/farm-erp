@@ -7,6 +7,7 @@ import ButtonLink from "../components/ButtonLink";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
+import { tBusiness as t } from "../i18n";
 
 const initialFormData = {
   name: "",
@@ -32,7 +33,7 @@ function InventoryItems() {
         const data = await getInventoryItems();
         setItems(data);
       } catch {
-        setError("Error: Failed to load inventory items");
+        setError(t("Error: Failed to load inventory items"));
       } finally {
         setLoading(false);
       }
@@ -71,7 +72,7 @@ function InventoryItems() {
       const data = await getInventoryItems();
       setItems(data);
       setFormData(initialFormData);
-      setSuccessMessage("Inventory item created successfully.");
+      setSuccessMessage(t("Inventory item created successfully."));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -82,8 +83,8 @@ function InventoryItems() {
   return (
     <div className="page-card">
       <PageHeader
-        title="Inventory Items"
-        subtitle="Create and review inventory items"
+        title={t("Inventory Items")}
+        subtitle={t("Create and review inventory items")}
       />
 
       {error && <ErrorMessage message={error} className="error-text" />}
@@ -92,7 +93,7 @@ function InventoryItems() {
       <form onSubmit={handleSubmit}>
         <div>
           <label>
-            Name:
+            {t("Name")}:
             <input
               name="name"
               value={formData.name}
@@ -104,7 +105,7 @@ function InventoryItems() {
 
         <div>
           <label>
-            Category:
+            {t("Category")}:
             <input
               name="category"
               value={formData.category}
@@ -115,7 +116,7 @@ function InventoryItems() {
 
         <div>
           <label>
-            Unit:
+            {t("Unit")}:
             <input
               name="unit"
               value={formData.unit}
@@ -127,7 +128,7 @@ function InventoryItems() {
 
         <div>
           <label>
-            Current Quantity:
+            {t("Current Quantity")}:
             <input
               type="number"
               step="0.01"
@@ -141,7 +142,7 @@ function InventoryItems() {
 
         <div>
           <label>
-            Minimum Quantity:
+            {t("Minimum Quantity")}:
             <input
               type="number"
               step="0.01"
@@ -155,7 +156,7 @@ function InventoryItems() {
 
         <div>
           <label>
-            Unit Cost:
+            {t("Unit Cost")}:
             <input
               type="number"
               step="0.01"
@@ -169,7 +170,7 @@ function InventoryItems() {
 
         <div>
           <label>
-            Notes:
+            {t("Notes")}:
             <textarea
               name="notes"
               value={formData.notes}
@@ -179,31 +180,31 @@ function InventoryItems() {
         </div>
 
         <button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Create Inventory Item"}
+          {saving ? t("Saving...") : t("Create Inventory Item")}
         </button>
       </form>
 
       {loading ? (
         <Loading
-          text="Loading inventory items..."
+          text={t("Loading inventory items...")}
           className="status-text"
         />
       ) : items.length === 0 ? (
-        <p className="empty-text">No inventory items found.</p>
+        <p className="empty-text">{t("No inventory items found.")}</p>
       ) : (
         <table className="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Unit</th>
-              <th>Current Quantity</th>
-              <th>Minimum Quantity</th>
-              <th>Unit Cost</th>
-              <th>Stock Status</th>
-              <th>Notes</th>
-              <th>Actions</th>
+              <th>{t("ID")}</th>
+              <th>{t("Name")}</th>
+              <th>{t("Category")}</th>
+              <th>{t("Unit")}</th>
+              <th>{t("Current Quantity")}</th>
+              <th>{t("Minimum Quantity")}</th>
+              <th>{t("Unit Cost")}</th>
+              <th>{t("Stock Status")}</th>
+              <th>{t("Notes")}</th>
+              <th>{t("Actions")}</th>
             </tr>
           </thead>
 
@@ -220,7 +221,7 @@ function InventoryItems() {
                 <td>
                   {Number(item.current_quantity) <=
                   Number(item.minimum_quantity)
-                    ? "Low stock"
+                    ? t("Low stock")
                     : "-"}
                 </td>
                 <td>{item.notes || "-"}</td>
@@ -229,7 +230,7 @@ function InventoryItems() {
                     to={`/inventory/items/${item.id}`}
                     variant="secondary"
                   >
-                    View
+                    {t("View")}
                   </ButtonLink>
                 </td>
               </tr>

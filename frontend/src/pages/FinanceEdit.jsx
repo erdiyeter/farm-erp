@@ -6,6 +6,7 @@ import {
 } from "../api/financeApi";
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
+import { tBusiness as t, tBusinessValue as tv } from "../i18n";
 
 const initialFormData = {
   record_type: "income",
@@ -72,7 +73,7 @@ function FinanceEdit() {
 
     try {
       await updateFinanceRecord(id, payload);
-      setSuccessMessage("Finance record updated successfully.");
+      setSuccessMessage(t("Finance record updated successfully."));
       setTimeout(() => navigate(`/finance/${id}`), 700);
     } catch (err) {
       setError(err.message);
@@ -82,7 +83,7 @@ function FinanceEdit() {
   }
 
   if (loading) {
-    return <Loading text="Loading finance record..." className="status-text" />;
+    return <Loading text={t("Loading finance record...")} className="status-text" />;
   }
 
   if (error && !saving && !successMessage) {
@@ -91,7 +92,7 @@ function FinanceEdit() {
 
   return (
     <div className="page-card">
-      <h1>Edit Finance Record</h1>
+      <h1>{t("Edit Finance Record")}</h1>
 
       {error && <ErrorMessage message={error} className="error-text" />}
       {successMessage && <p className="status-text">{successMessage}</p>}
@@ -99,22 +100,22 @@ function FinanceEdit() {
       <form onSubmit={handleSubmit}>
         <div>
           <label>
-            Type:
+            {t("Type")}:
             <select
               name="record_type"
               value={formData.record_type}
               onChange={handleChange}
               required
             >
-              <option value="income">income</option>
-              <option value="expense">expense</option>
+              <option value="income">{tv("income")}</option>
+              <option value="expense">{tv("expense")}</option>
             </select>
           </label>
         </div>
 
         <div>
           <label>
-            Category:
+            {t("Category")}:
             <input
               name="category"
               value={formData.category}
@@ -126,7 +127,7 @@ function FinanceEdit() {
 
         <div>
           <label>
-            Amount:
+            {t("Amount")}:
             <input
               type="number"
               step="0.01"
@@ -140,7 +141,7 @@ function FinanceEdit() {
 
         <div>
           <label>
-            Date:
+            {t("Date")}:
             <input
               type="date"
               name="record_date"
@@ -153,7 +154,7 @@ function FinanceEdit() {
 
         <div>
           <label>
-            Description:
+            {t("Description")}:
             <input
               name="description"
               value={formData.description}
@@ -163,11 +164,11 @@ function FinanceEdit() {
         </div>
 
         <button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save"}
+          {saving ? t("Saving...") : t("Save")}
         </button>
 
         <Link to={`/finance/${id}`}>
-          <button type="button">Cancel</button>
+          <button type="button">{t("Cancel")}</button>
         </Link>
       </form>
     </div>

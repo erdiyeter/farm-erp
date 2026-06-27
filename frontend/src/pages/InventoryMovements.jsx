@@ -7,6 +7,7 @@ import {
 import ErrorMessage from "../components/ErrorMessage";
 import Loading from "../components/Loading";
 import PageHeader from "../components/PageHeader";
+import { tBusiness as t, tBusinessValue as tv } from "../i18n";
 
 const initialFormData = {
   item_id: "",
@@ -38,7 +39,7 @@ function InventoryMovements() {
         setMovements(movementData);
         setItems(itemData);
       } catch {
-        setError("Error: Failed to load inventory movements");
+        setError(t("Error: Failed to load inventory movements"));
       } finally {
         setLoading(false);
       }
@@ -81,7 +82,7 @@ function InventoryMovements() {
       setMovements(movementData);
       setItems(itemData);
       setFormData(initialFormData);
-      setSuccessMessage("Inventory movement created successfully.");
+      setSuccessMessage(t("Inventory movement created successfully."));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -92,8 +93,8 @@ function InventoryMovements() {
   return (
     <div className="page-card">
       <PageHeader
-        title="Inventory Movements"
-        subtitle="Create and review stock movements"
+        title={t("Inventory Movements")}
+        subtitle={t("Create and review stock movements")}
       />
 
       {error && <ErrorMessage message={error} className="error-text" />}
@@ -102,14 +103,14 @@ function InventoryMovements() {
       <form onSubmit={handleSubmit}>
         <div>
           <label>
-            Item:
+            {t("Item")}:
             <select
               name="item_id"
               value={formData.item_id}
               onChange={handleChange}
               required
             >
-              <option value="">Select item</option>
+              <option value="">{t("Select item")}</option>
               {activeItems.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.id} - {item.name}
@@ -121,23 +122,23 @@ function InventoryMovements() {
 
         <div>
           <label>
-            Movement Type:
+            {t("Movement Type")}:
             <select
               name="movement_type"
               value={formData.movement_type}
               onChange={handleChange}
               required
             >
-              <option value="in">in</option>
-              <option value="out">out</option>
-              <option value="adjustment">adjustment</option>
+              <option value="in">{tv("in")}</option>
+              <option value="out">{tv("out")}</option>
+              <option value="adjustment">{tv("adjustment")}</option>
             </select>
           </label>
         </div>
 
         <div>
           <label>
-            Quantity:
+            {t("Quantity")}:
             <input
               type="number"
               step="0.01"
@@ -151,7 +152,7 @@ function InventoryMovements() {
 
         <div>
           <label>
-            Movement Date:
+            {t("Movement Date")}:
             <input
               type="date"
               name="movement_date"
@@ -164,7 +165,7 @@ function InventoryMovements() {
 
         <div>
           <label>
-            Notes:
+            {t("Notes")}:
             <textarea
               name="notes"
               value={formData.notes}
@@ -174,23 +175,23 @@ function InventoryMovements() {
         </div>
 
         <button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Create Inventory Movement"}
+          {saving ? t("Saving...") : t("Create Inventory Movement")}
         </button>
       </form>
 
-      <h2>Active Items Stock Reference</h2>
+      <h2>{t("Active Items Stock Reference")}</h2>
 
       {activeItems.length === 0 ? (
-        <p className="empty-text">No active inventory items found.</p>
+        <p className="empty-text">{t("No active inventory items found.")}</p>
       ) : (
         <table className="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Current Quantity</th>
-              <th>Unit</th>
-              <th>Stock Status</th>
+              <th>{t("ID")}</th>
+              <th>{t("Name")}</th>
+              <th>{t("Current Quantity")}</th>
+              <th>{t("Unit")}</th>
+              <th>{t("Stock Status")}</th>
             </tr>
           </thead>
 
@@ -204,7 +205,7 @@ function InventoryMovements() {
                 <td>
                   {Number(item.current_quantity) <=
                   Number(item.minimum_quantity)
-                    ? "Low stock"
+                    ? t("Low stock")
                     : "-"}
                 </td>
               </tr>
@@ -213,26 +214,26 @@ function InventoryMovements() {
         </table>
       )}
 
-      <h2>Movement History</h2>
+      <h2>{t("Movement History")}</h2>
 
       {loading ? (
         <Loading
-          text="Loading inventory movements..."
+          text={t("Loading inventory movements...")}
           className="status-text"
         />
       ) : movements.length === 0 ? (
-        <p className="empty-text">No inventory movements found.</p>
+        <p className="empty-text">{t("No inventory movements found.")}</p>
       ) : (
         <table className="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Item ID</th>
-              <th>Movement Type</th>
-              <th>Quantity</th>
-              <th>Movement Date</th>
-              <th>Notes</th>
-              <th>Created At</th>
+              <th>{t("ID")}</th>
+              <th>{t("Item ID")}</th>
+              <th>{t("Movement Type")}</th>
+              <th>{t("Quantity")}</th>
+              <th>{t("Movement Date")}</th>
+              <th>{t("Notes")}</th>
+              <th>{t("Created At")}</th>
             </tr>
           </thead>
 
@@ -241,7 +242,7 @@ function InventoryMovements() {
               <tr key={movement.id}>
                 <td>{movement.id}</td>
                 <td>{movement.item_id}</td>
-                <td>{movement.movement_type}</td>
+                <td>{tv(movement.movement_type)}</td>
                 <td>{movement.quantity}</td>
                 <td>{movement.movement_date}</td>
                 <td>{movement.notes || "-"}</td>

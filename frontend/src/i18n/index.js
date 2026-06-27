@@ -12,3 +12,8 @@ export {
   tOperation,
   tOperationValue,
 } from "./tr/operations";
+
+export {
+  tBusiness,
+  tBusinessValue,
+} from "./tr/business";
