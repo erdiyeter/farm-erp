@@ -9,6 +9,7 @@ from app.routers.dashboard import router as dashboard_router
 from app.routers.finance import router as finance_router
 from app.routers.health_record import router as health_record_router
 from app.routers.inventory import router as inventory_router
+from app.routers.medicine_catalog import router as medicine_catalog_router
 from app.routers.milk_record import router as milk_record_router
 from app.routers.report import router as report_router
 from app.routers.reproduction_event import router as reproduction_event_router
@@ -60,6 +61,11 @@ app.include_router(
     inventory_router,
     prefix="/api/v1",
     dependencies=[Depends(require_roles("admin", "worker"))],
+)
+app.include_router(
+    medicine_catalog_router,
+    prefix="/api/v1",
+    dependencies=[Depends(require_roles("admin"))],
 )
 app.include_router(
     milk_record_router,

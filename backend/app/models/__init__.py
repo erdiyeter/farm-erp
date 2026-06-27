@@ -3,6 +3,7 @@ from app.models.animal import Animal
 from app.models.finance import FinancialRecord
 from app.models.health_record import HealthRecord
 from app.models.inventory import InventoryItem, InventoryMovement
+from app.models.medicine_catalog import MedicineCatalog
 from app.models.milk_record import MilkRecord
 from app.models.reproduction_event import ReproductionEvent
 from app.models.settings import Settings
@@ -19,6 +20,7 @@ __all__ = [
     "HealthRecord",
     "InventoryItem",
     "InventoryMovement",
+    "MedicineCatalog",
     "MilkRecord",
     "ReproductionEvent",
     "Settings",

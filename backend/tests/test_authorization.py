@@ -41,6 +41,7 @@ def get_role_check(path: str, method: str = "GET"):
         "/api/v1/finance",
         "/api/v1/health-records",
         "/api/v1/inventory/items",
+        "/api/v1/medicine-catalog",
         "/api/v1/milk-records",
         "/api/v1/reports/summary",
         "/api/v1/settings",
@@ -89,6 +90,8 @@ def test_worker_has_access_to_assigned_modules(path) -> None:
         ("worker", "/api/v1/health-records"),
         ("veterinarian", "/api/v1/inventory/items"),
         ("veterinarian", "/api/v1/dashboard"),
+        ("worker", "/api/v1/medicine-catalog"),
+        ("veterinarian", "/api/v1/medicine-catalog"),
     ],
 )
 def test_unassigned_roles_receive_403(role, path) -> None:
